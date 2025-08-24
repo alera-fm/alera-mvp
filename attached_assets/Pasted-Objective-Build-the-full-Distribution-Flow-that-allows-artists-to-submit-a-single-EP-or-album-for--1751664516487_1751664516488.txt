@@ -1,0 +1,260 @@
+Objective
+Build the full Distribution Flow that allows artists to submit a single, EP, or album for distribution. This data will then appear in the admin review panel (already started), where it will be processed and submitted manually to DistroKid by the admin.
+
+This flow should capture all required song and metadata inputs, validate inputs, and allow saving progress. Final submission sets release status to “Under Review.”
+
+Flow Overview
+User selects distribution type (Single, EP, Album)
+
+User enters metadata and uploads assets for each track
+
+User agrees to store terms and confirms
+
+Release is saved and sent to admin for review
+
+Admin can access from dashboard and update release status
+
+Required Form Fields
+1. Distribution Type
+Dropdown:
+
+Single (1 track)
+
+EP (2–8 tracks)
+
+Album (8+)
+
+Form dynamically adjusts to number of tracks
+
+2. Release Metadata
+Artist/Band Name
+
+Release Title
+
+Record Label
+
+Primary Genre
+
+Secondary Genre (optional)
+
+Language
+
+Explicit Lyrics: Yes / No
+
+Instrumental: Yes / No
+
+Version Info (Normal, Radio Edit, Other with field)
+
+Original Release Date (if applicable)
+
+Previously Released: Yes/No
+
+Album Cover Upload (.JPG, 3000x3000 recommended)
+
+Store Checklist (all selected by default)
+
+Full store list included (see appendix below)
+
+“Select all” / “Deselect all” toggle
+
+Track Price (dropdown: $0.69, $0.99, $1.29)
+
+3. Per-Track Metadata
+(Dynamic form for each track)
+
+Track Title
+
+Artist Name(s)
+
+Featured Artists (optional)
+
+Songwriters (with real names and roles)
+
+Producer & Performer Credits (Apple Music requirement)
+
+Genre
+
+Audio File Upload (.MP3, .WAV, .M4A, etc.)
+
+ISRC (optional)
+
+Lyrics Upload (optional toggle)
+
+4. Required Checkboxes (must be agreed before submission)
+I confirm this is original music or have full rights
+
+I won’t use fake/promo streaming services
+
+I’ve read and agree to the Alera distribution agreement
+
+No other artist names used without approval
+
+Opt-in to Snapchat terms if selected
+
+Agree to YouTube Music distribution condition
+
+5. Final Actions
+Save as Draft (optional)
+
+Submit for Review → Triggers:
+
+Status of release set to “Under Review”
+
+Data sent to Admin Review Tab (for manual DistroKid submission)
+
+Tech Notes
+Frontend: React + TailwindCSS
+
+Backend: FastAPI + PostgreSQL
+
+Save releases to releases table
+
+Track data saved in tracks table
+
+Submission sets flag to “under_review = true”
+
+Save artist’s user_id on the submission
+
+API should support Create, Read, Edit
+
+Deliverables
+Frontend flow built and styled to match cockpit
+
+All form validation complete
+
+Dynamic form support for Singles, EPs, Albums
+
+Store selection logic with toggle
+
+Final submission sends data to backend
+
+Connected to Admin Panel (release appears by artist with status)
+
+GitHub commit and deployment to staging when complete
+
+Appendix — Store List (for Checklist)
+All checked by default
+
+Spotify
+
+Apple Music
+
+iTunes
+
+Instagram & Facebook
+
+TikTok & other ByteDance stores
+
+YouTube Music
+
+Amazon
+
+Pandora
+
+Tidal
+
+iHeartRadio
+
+Claro Música
+
+Deezer
+
+Saavn
+
+Boomplay
+
+Anghami
+
+NetEase
+
+Tencent
+
+Qobuz (beta)
+
+Joox
+
+Kuack Media
+
+Adaptr
+
+Flo
+
+MediaNet
+
+Snapchat
+
+Roblox (beta)
+
+TikTok Commercial Music Library
+
+
+Genre List (Primary + Secondary dropdown options)
+This list should be used for both primary and optional secondary genre selection:
+
+Afrobeat
+
+Afropop
+
+Alternative
+
+Big Band
+
+Blues
+
+Children's Music
+
+Christian/Gospel
+
+Comedy
+
+Country
+
+Dance
+
+Electronic
+
+Fitness & Workout
+
+Folk
+
+French Pop
+
+German Folk
+
+German Pop
+
+Hip Hop/Rap
+
+Holiday
+
+J-Pop
+
+Jazz
+
+K-Pop
+
+Latin
+
+Latin Urban
+
+Metal
+
+New Age
+
+Pop
+
+Punk
+
+R&B/Soul
+
+Reggae
+
+Rock
+
+Singer/Songwriter
+
+Spoken Word
+
+Vocal
+
+World

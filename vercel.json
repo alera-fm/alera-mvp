@@ -1,0 +1,10 @@
+{
+  "crons": [
+    {
+      "path": "/api/ai-agent/notifications/dispatch",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
+
+

@@ -1,0 +1,69 @@
+{
+  "filter_range": "Last 30 Days",
+  "summary_cards": {
+    "total_earnings": 188.26,
+    "pending_earnings": 42.0,
+    "withdrawn": 146.26,
+    "last_payout_date": "2025-06-01"
+  },
+  "earnings_by_platform": [
+    {
+      "platform": "Spotify",
+      "amount": 102.5
+    },
+    {
+      "platform": "Apple Music",
+      "amount": 35.0
+    },
+    {
+      "platform": "YouTube",
+      "amount": 20.0
+    },
+    {
+      "platform": "Tips",
+      "amount": 15.76
+    },
+    {
+      "platform": "Fanzone",
+      "amount": 15.0
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2025-06-01",
+      "type": "Streaming",
+      "source": "ALERA",
+      "amount": 42.76,
+      "status": "Paid"
+    },
+    {
+      "date": "2025-06-10",
+      "type": "Tip",
+      "source": "ALERA",
+      "amount": 5.0,
+      "status": "Paid"
+    },
+    {
+      "date": "2025-06-12",
+      "type": "Fanzone",
+      "source": "ALERA",
+      "amount": 5.0,
+      "status": "Pending"
+    },
+    {
+      "date": "2025-06-14",
+      "type": "Tip",
+      "source": "ALERA",
+      "amount": 5.76,
+      "status": "Paid"
+    }
+  ],
+  "earnings_calculator": {
+    "monthly_streams": 20000,
+    "monthly_supporters": 8,
+    "stream_rate": 0.003,
+    "tip_rate": 2.5,
+    "sub_rate": 5.0,
+    "estimated_monthly_earnings": 104.0
+  }
+}

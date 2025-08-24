@@ -1,0 +1,249 @@
+{
+  "spotify_connected_account": {
+    "followers": 12432,
+    "top_track": "Solar Drift",
+    "avg_popularity": 72,
+    "recent_release": "Reflections EP",
+    "top_genre": "Alt R&B",
+    "top_tracks": [
+      {
+        "title": "Solar Drift",
+        "album": "Reflections",
+        "duration": "3:42",
+        "popularity": 88,
+        "cover": "url.jpg",
+        "spotify_url": "https://..."
+      },
+      {
+        "title": "Moon Dive",
+        "album": "Reflections",
+        "duration": "4:05",
+        "popularity": 82,
+        "cover": "url.jpg",
+        "spotify_url": "https://..."
+      }
+    ],
+    "audio_features": {
+      "Solar Drift": {
+        "tempo": 98,
+        "energy": 0.8,
+        "valence": 0.6,
+        "acousticness": 0.2,
+        "instrumentalness": 0.0,
+        "danceability": 0.9
+      },
+      "Moon Dive": {
+        "tempo": 120,
+        "energy": 0.7,
+        "valence": 0.5,
+        "acousticness": 0.1,
+        "instrumentalness": 0.05,
+        "danceability": 0.85
+      }
+    }
+  },
+  "youtube_connected_account": {
+    "subscribers": 5320,
+    "total_views": 195420,
+    "total_videos": 32,
+    "most_viewed_video": "Nova Live in Berlin",
+    "avg_views_per_video": 6106,
+    "top_videos": [
+      {
+        "title": "Nova Live in Berlin",
+        "views": 24000,
+        "likes": 1200,
+        "comments": 145,
+        "duration": "12:45",
+        "published": "2024-09-12",
+        "thumbnail": "url.jpg",
+        "link": "https://..."
+      }
+    ]
+  },
+  "instagram_connected_account": {
+    "followers": 8421,
+    "posts_last_30_days": 12,
+    "avg_likes": 346,
+    "avg_comments": 28,
+    "most_engaged_post": {
+      "caption": "Studio vibes...",
+      "likes": 620,
+      "comments": 50,
+      "thumbnail": "url.jpg",
+      "link": "https://..."
+    },
+    "top_posts": [
+      {
+        "caption": "Tour diary: LA",
+        "likes": 410,
+        "comments": 31,
+        "thumbnail": "url.jpg",
+        "posted": "2024-12-01",
+        "link": "https://..."
+      }
+    ]
+  },
+  "my_alera_releases": {
+    "dropdown_options": [
+      "(Total)",
+      "Solar Drift",
+      "Echo Pulse"
+    ],
+    "selected_release": "(Total)",
+    "summary": {
+      "total_streams": 183920,
+      "avg_streams_per_release": 22990,
+      "top_track": "Solar Drift",
+      "top_platform": "Spotify"
+    },
+    "streams_over_time": [
+      {
+        "date": "2024-11-01",
+        "streams": 5200
+      },
+      {
+        "date": "2024-11-02",
+        "streams": 7000
+      },
+      {
+        "date": "2024-11-03",
+        "streams": 6900
+      }
+    ],
+    "platform_breakdown": [
+      {
+        "platform": "Spotify",
+        "streams": 98000
+      },
+      {
+        "platform": "Apple Music",
+        "streams": 32000
+      },
+      {
+        "platform": "YouTube",
+        "streams": 21000
+      },
+      {
+        "platform": "Amazon Music",
+        "streams": 14000
+      },
+      {
+        "platform": "Tidal",
+        "streams": 9500
+      },
+      {
+        "platform": "Deezer",
+        "streams": 5200
+      },
+      {
+        "platform": "SoundCloud",
+        "streams": 220
+      }
+    ],
+    "releases": [
+      {
+        "title": "Solar Drift",
+        "date": "2024-11-01",
+        "status": "Live",
+        "cover": "https://img.cdn/solardrift.jpg",
+        "streams": 80000,
+        "platforms": [
+          {
+            "platform": "Spotify",
+            "streams": 48000
+          },
+          {
+            "platform": "Apple Music",
+            "streams": 15000
+          },
+          {
+            "platform": "YouTube",
+            "streams": 10000
+          },
+          {
+            "platform": "Amazon Music",
+            "streams": 4000
+          },
+          {
+            "platform": "Tidal",
+            "streams": 1800
+          },
+          {
+            "platform": "Deezer",
+            "streams": 1200
+          },
+          {
+            "platform": "SoundCloud",
+            "streams": 0
+          }
+        ],
+        "daily_streams": [
+          {
+            "date": "2024-11-01",
+            "streams": 2600
+          },
+          {
+            "date": "2024-11-02",
+            "streams": 3000
+          },
+          {
+            "date": "2024-11-03",
+            "streams": 3300
+          }
+        ]
+      },
+      {
+        "title": "Echo Pulse",
+        "date": "2024-09-20",
+        "status": "Live",
+        "cover": "https://img.cdn/echopulse.jpg",
+        "streams": 42000,
+        "platforms": [
+          {
+            "platform": "Spotify",
+            "streams": 25000
+          },
+          {
+            "platform": "Apple Music",
+            "streams": 8000
+          },
+          {
+            "platform": "YouTube",
+            "streams": 6000
+          },
+          {
+            "platform": "Amazon Music",
+            "streams": 2000
+          },
+          {
+            "platform": "Tidal",
+            "streams": 1000
+          },
+          {
+            "platform": "Deezer",
+            "streams": 0
+          },
+          {
+            "platform": "SoundCloud",
+            "streams": 0
+          }
+        ],
+        "daily_streams": [
+          {
+            "date": "2024-09-20",
+            "streams": 1800
+          },
+          {
+            "date": "2024-09-21",
+            "streams": 2400
+          },
+          {
+            "date": "2024-09-22",
+            "streams": 2700
+          }
+        ]
+      }
+    ]
+  }
+}

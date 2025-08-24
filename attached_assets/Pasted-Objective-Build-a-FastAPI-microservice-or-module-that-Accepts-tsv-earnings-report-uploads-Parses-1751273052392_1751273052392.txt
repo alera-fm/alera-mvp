@@ -1,0 +1,98 @@
+Objective
+Build a FastAPI microservice or module that:
+
+Accepts .tsv earnings report uploads
+
+Parses and stores earnings data (by artist, platform, and month)
+
+Serves that data to the frontend for summary charts + tables
+
+Accepts and stores withdrawal requests for manual admin handling
+
+Data Source: DistroKid .tsv Reports
+You will manually be sent .tsv reports weekly by Zaki. They contain:
+
+Reporting Month | Sale Month | Store | Artist | Title | Quantity | Song/Album | Customer Paid | Country Of Sale | Earnings (USD)
+
+We will use:
+
+Sale Month = actual month the stream/purchase happened
+
+Store = platform (Spotify, Apple Music, etc.)
+
+Earnings (USD) = revenue per row
+
+Artist = links to the internal artist record
+
+🔧 Backend Features to Build
+1. Upload Earnings Report
+POST /upload-revenue-report
+
+Accept .tsv file upload
+
+Parse each row and store:
+
+artist_id (map via name or metadata)
+
+sale_month
+
+platform
+
+earnings_usd
+
+Overwrite any existing entry if it already exists for artist + platform + month
+
+2. Aggregated Earnings Summary
+GET /wallet/summary?artist_id=xxx&range=30days
+
+Returns:
+
+total earnings over selected time period
+
+breakdown by platform
+
+GET /wallet/history?artist_id=xxx
+
+Returns:
+
+monthly totals for graphing
+
+Filters supported: 7 / 30 / 90 days / All time
+
+3. Withdrawal Functionality
+Artists can request payouts of their wallet balance. You do not need to handle actual transfers — just simulate and store them.
+
+POST /wallet/request-withdrawal
+Payload:
+
+{
+  "artist_id": "abc123",
+  "amount_requested": 100.00,
+  "method": "PayPal",
+  "account_details": "encrypted_email_or_bank_info"
+}
+
+Store this request with status pending
+
+Admin will mark as paid or rejected manually later
+
+
+GET /wallet/withdrawals?artist_id=xxx
+Returns a list of all withdrawal requests and their statuses
+
+4. Add: Payout Method Management
+This should be a separate backend feature, but part of the wallet module.
+
+POST /wallet/payout-method
+Artists can submit their preferred payout method and account details
+
+Payload:
+
+artist_id
+
+method (e.g. PayPal, Bank Transfer)
+
+account_info (email, IBAN, etc. — stored encrypted)
+
+GET /wallet/payout-method?artist_id=xxx
+Retrieves the current saved payout method info (masked or minimal data)

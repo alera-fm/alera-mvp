@@ -1,0 +1,80 @@
+Here’s the full scope for the Admin Panel 
+
+Admin Panel Scope
+Already Completed or Underway
+Admin login & role-based access
+
+Wallet TSV file uploader
+
+Upload history (showing file uploads)
+
+Withdrawal requests (frontend + backend flow)
+
+Next Features to Complete:
+1. Release Management Panel
+Admin can view all artist releases that are:
+
+Newly submitted for distribution
+
+Edited and flagged as “Under Review”
+
+Each release should display:
+
+Artist Name
+
+Release Title
+
+Date Submitted or Edited
+
+Current Status (dropdown: Under Review, Pending, Rejected, Sent to Stores, Live)
+
+As well as full release info so that can be information can be submitted to distrokid by the admin (Muhammad is currently working on distribution flow, so co-ordinate with him regarding release info, otherwise ask me)
+
+Admin can:
+
+Change status via dropdown
+
+Filter releases by artist name (for faster searching)
+
+View all submitted metadata for each release (full track + album data)
+
+After admin marks a release as “Sent to Stores”, it’s considered completed for manual DistroKid submission.
+
+2. Payout Method Viewer (Wallet Integration)
+Admin can view each artist’s saved payout methods:
+
+PayPal
+
+Bank Details
+
+Crypto Wallet
+
+These payment methods should be linked to artists who have submitted withdrawal requests.
+
+Admins use this info to process payouts manually.
+
+3. Upload History Enhancements
+Ensure that uploaded files are always logged and displayed reliably.
+
+Upload history should show:
+
+Artist name (linked to file)
+
+Upload date & time
+
+Optional notes or file descriptions
+
+Sorting by date or artist
+
+- admin should be able to delete uploaded tsv files in case of duplicates or incorrect upload
+
+Key Requirements
+Must remain fully restricted to admin users only.
+
+Needs to integrate cleanly with the current wallet & release database structures.
+
+Design must stay consistent with cockpit/admin pages already built.
+
+Simple, clean UI — no need for fancy charts or analytics at this stage.
+
+Make sure admin actions (uploading, changing status, etc.) are logged in the backend for future traceability if needed.

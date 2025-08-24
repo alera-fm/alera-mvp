@@ -1,0 +1,115 @@
+{
+  "artist_name": "Nova Kay",
+  "theme_color": "#C89CEC",
+  "blocks": [
+    {
+      "type": "release",
+      "title": "Starlight (Deluxe)",
+      "artwork_url": "https://example.com/artwork/starlight-deluxe.jpg",
+      "streaming_links": {
+        "spotify": "https://spotify.com/novakay/starlight",
+        "apple_music": "https://applemusic.com/novakay/starlight",
+        "youtube": "https://youtube.com/novakay/starlight"
+      }
+    },
+    {
+      "type": "release",
+      "title": "Galaxy Dreams",
+      "artwork_url": "https://example.com/artwork/galaxy_dreams.jpg",
+      "streaming_links": {
+        "spotify": "https://spotify.com/novakay/galaxy_dreams",
+        "apple_music": "https://applemusic.com/novakay/galaxy_dreams",
+        "youtube": "https://youtube.com/novakay/galaxy_dreams"
+      }
+    },
+    {
+      "type": "tour",
+      "title": "Nova Kay Live Tour 2025",
+      "dates": [
+        {
+          "city": "New York",
+          "date": "2025-06-12",
+          "venue": "Madison Square Garden",
+          "ticket_link": "https://example.com/tickets/new-york"
+        },
+        {
+          "city": "Los Angeles",
+          "date": "2025-06-18",
+          "venue": "The Forum",
+          "ticket_link": "https://example.com/tickets/los-angeles"
+        },
+        {
+          "city": "Chicago",
+          "date": "2025-06-25",
+          "venue": "United Center",
+          "ticket_link": "https://example.com/tickets/chicago"
+        }
+      ]
+    },
+    {
+      "type": "tip_jar",
+      "title": "Support Nova Kay",
+      "description": "If you\u2019ve enjoyed the music, consider leaving a tip to support more releases.",
+      "currency": "USD",
+      "preset_amounts": [
+        3,
+        5,
+        10
+      ],
+      "custom_amount_enabled": true,
+      "thank_you_message": "Thank you for supporting independent music.",
+      "payment_link": "https://example.com/tip"
+    },
+    {
+      "type": "merch",
+      "title": "Nova Kay Merch",
+      "items": [
+        {
+          "name": "Starlight T-Shirt",
+          "image_url": "https://example.com/merch/starlight_tshirt.jpg",
+          "price": "$25.00",
+          "product_link": "https://example.com/merch/starlight-tshirt"
+        },
+        {
+          "name": "Galaxy Dreams Hoodie",
+          "image_url": "https://example.com/merch/galaxy_dreams_hoodie.jpg",
+          "price": "$45.00",
+          "product_link": "https://example.com/merch/galaxy-dreams-hoodie"
+        }
+      ]
+    },
+    {
+      "type": "locked_content",
+      "title": "Behind the Scenes (Subscribers Only)",
+      "media_url": "https://example.com/media/behind-the-scenes.mp4",
+      "locked": true,
+      "unlock_method": "subscription"
+    },
+    {
+      "type": "bio",
+      "title": "About Nova Kay",
+      "content": "Nova Kay is a rising star in the music industry, known for her unique blend of electronic pop and soulful melodies. With a rapidly growing fanbase, Nova's music is making waves worldwide. Her debut album, 'Starlight,' and follow-up, 'Galaxy Dreams,' have received critical acclaim and chart-topping success."
+    },
+    {
+      "type": "video",
+      "title": "Official Music Video for Starlight",
+      "video_url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+      "thumbnail_url": "https://example.com/thumbnails/starlight_video.jpg"
+    }
+  ],
+  "social_links": {
+    "instagram": "https://instagram.com/novakay",
+    "tiktok": "https://tiktok.com/@novakay",
+    "twitter": "https://twitter.com/novakay"
+  },
+  "contact_info": {
+    "email": "contact@novakay.com",
+    "management": {
+      "name": "Emily Walker",
+      "email": "emily@novakay.com",
+      "phone": "+1 800 123 4567"
+    }
+  },
+  "unlock_token_required": true,
+  "preview_demo_url": "/api/landing-page/demo"
+}
