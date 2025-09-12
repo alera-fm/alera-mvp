@@ -1,0 +1,144 @@
+About ALERA
+At its core, ALERA gives independent artists a smart, all-in-one cockpit to manage distribution, analytics, earnings, campaigns, and fan engagement. Think of it as the “label in your pocket” — combining powerful backend infrastructure with clean, artist-friendly UI.
+
+We’re building the MVP module-by-module, and your focus will be on helping us accelerate the backend work, primarily with FastAPI, PostgreSQL, and deployment via Railway.
+
+The first task focuses on building out the backend logic that powers the Wallet view inside the ALERA artist cockpit.
+
+We receive streaming earnings data from DistroKid and need to process it on a weekly basis, per artist, and make it available to the frontend via API. The wallet also includes a basic withdrawal request system that lets artists request payouts manually.
+
+Objective
+Build a FastAPI microservice or module that:
+
+Accepts .tsv earnings report uploads
+
+Parses and stores earnings data (by artist, platform, and month)
+
+Serves that data to the frontend for summary charts + tables
+
+Accepts and stores withdrawal requests for manual admin handling
+
+Data Source: DistroKid .tsv Reports
+You will manually be sent .tsv reports weekly by Zaki. They contain:
+
+Reporting Month | Sale Month | Store | Artist | Title | Quantity | Song/Album | Customer Paid | Country Of Sale | Earnings (USD)
+
+We will use:
+
+Sale Month = actual month the stream/purchase happened
+
+Store = platform (Spotify, Apple Music, etc.)
+
+Earnings (USD) = revenue per row
+
+Artist = links to the internal artist record
+
+🔧 Backend Features to Build
+1. Upload Earnings Report
+POST /upload-revenue-report
+
+Accept .tsv file upload
+
+Parse each row and store:
+
+artist_id (map via name or metadata)
+
+sale_month
+
+platform
+
+earnings_usd
+
+Overwrite any existing entry if it already exists for artist + platform + month
+
+2. Aggregated Earnings Summary
+GET /wallet/summary?artist_id=xxx&range=30days
+
+Returns:
+
+total earnings over selected time period
+
+breakdown by platform
+
+GET /wallet/history?artist_id=xxx
+
+Returns:
+
+monthly totals for graphing
+
+Filters supported: 7 / 30 / 90 days / All time
+
+3. Withdrawal Functionality
+Artists can request payouts of their wallet balance. You do not need to handle actual transfers — just simulate and store them.
+
+POST /wallet/request-withdrawal
+Payload:
+
+{
+  "artist_id": "abc123",
+  "amount_requested": 100.00,
+  "method": "PayPal",
+  "account_details": "encrypted_email_or_bank_info"
+}
+
+Store this request with status pending
+
+Admin will mark as paid or rejected manually later
+
+
+GET /wallet/withdrawals?artist_id=xxx
+Returns a list of all withdrawal requests and their statuses
+
+4. Add: Payout Method Management
+This should be a separate backend feature, but part of the wallet module.
+
+POST /wallet/payout-method
+Artists can submit their preferred payout method and account details
+
+Payload:
+
+artist_id
+
+method (e.g. PayPal, Bank Transfer)
+
+account_info (email, IBAN, etc. — stored encrypted)
+
+GET /wallet/payout-method?artist_id=xxx
+Retrieves the current saved payout method info (masked or minimal data)
+
+Security Notes
+All sensitive info must be encrypted at rest (or stored via a secure third-party vault if used later)
+
+
+
+Suggested Database Schema
+
+streaming_earnings
+
+id	UUID	Primary key
+artist_id	UUID	Link to auth system
+sale_month	Date	Month of the earnings
+platform	Text	Store/platform name
+amount_usd	Decimal	Earnings
+uploaded_at	Timestamp	When this record was processed
+
+
+withdrawal_requests
+
+id	UUID	Primary key
+artist_id	UUID/Text	Who requested the payout
+amount_usd	Decimal	Requested amount
+method	Text	PayPal, Bank Transfer, etc.
+account_info	Text	Encrypted payout details
+status	Text	pending / paid / rejected
+created_at	Timestamp	When the request was made
+processed_at	Timestamp	When it was fulfilled (optional)
+
+payout_methods
+
+id	UUID	Primary key
+artist_id	UUID	Owner of the method
+method	Text	e.g., "PayPal", "Bank Transfer"
+account_info	Text	Encrypted email or bank details
+created_at	Timestamp	When saved
+updated_at	Timestamp	Last updated

@@ -1,0 +1,84 @@
+Great work getting the New Release flow wrapped up.
+
+Let’s move forward with the next slice: the Analytics tab, specifically the "My Alera Releases" section. This is where artists will be able to track the performance of their music released through ALERA across multiple DSPs.
+
+Objective
+Develop the My Alera Releases section of the Analytics tab. This view will display performance data based on CSV files that ALERA (admin) will upload daily from our internal distributor (Too Lost).
+
+For now, please grey out the “Connected Accounts” section — we’ll develop that after MVP launch.
+
+Data Sources
+We will be uploading analytics reports daily via CSV for the following platforms:
+
+Spotify
+
+Apple Music
+
+Deezer
+
+Meta
+
+TikTok
+
+Shazam
+
+Each CSV will include artist name and track info for matching against releases, and will be associated with a reporting date.
+
+Frontend UI Requirements
+Under My Alera Releases, display the following:
+
+1. Header Filters
+Release Selector (Dropdown):
+
+Default: “(Total)” (aggregated view across all releases)
+
+Each of the artist’s individual releases
+
+Platform Filter (Multi-select):
+
+Options: Spotify, Apple Music, Deezer, Meta, TikTok, Shazam
+
+Default = All platforms selected
+
+2. Analytics Cards/Charts
+All charts should reflect filtered release(s) and platform(s):
+
+Total Streams
+
+Aggregate stream count
+
+Streams by Platform
+
+Bar chart or stacked layout
+
+Top Countries
+
+Bar chart or list with stream counts
+
+Top Cities
+
+Same as above
+
+Daily Stream Activity
+
+Line graph showing daily streams over past 30 days
+
+Save Rate (if present in CSV)
+
+Shazam Stats (e.g. number of recognitions, if present)
+
+TikTok Usage (if data available from CSV)
+
+3. Empty States
+When no data exists, show appropriate messages like:
+
+“No data available for this release.”
+
+“Connect with admin if you think something is missing.”
+
+Backend Notes
+Accept and store daily-uploaded CSVs per artist in the admin section, matched via track and date.
+
+Parse and normalize data across platforms to allow aggregation and filtering on frontend.
+
+Store per-platform metrics in DB for fast querying.

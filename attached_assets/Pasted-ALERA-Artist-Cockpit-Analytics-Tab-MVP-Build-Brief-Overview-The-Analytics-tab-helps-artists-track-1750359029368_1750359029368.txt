@@ -1,0 +1,111 @@
+ALERA Artist Cockpit: Analytics Tab (MVP Build Brief) Overview The Analytics tab helps artists track their performance both on ALERA (distribution) and across their connected accounts (Spotify, YouTube, Instagram API's). The tab is split into two collapsible views, each housing relevant metrics, charts, and dynamic content.
+
+Layout Structure
+
+Connected Accounts Collapsible/expandable container
+Shows data for each platform the artist has connected via OAuth
+
+If not connected, show prompt to connect that account
+
+Platforms (Nested Sections): Spotify Followers
+
+Top Track
+
+Average Popularity (Top 10)
+
+Most Recent Release
+
+Top Genre
+
+Chart: Top 10 Tracks by Popularity (horizontal bar)
+
+Table: Top 10 Tracks (cover art, track name, album, duration, popularity, Spotify link)
+
+Audio Feature Cards per track: Tempo, Energy, Valence, Acousticness, Instrumentalness, Danceability
+
+Locked Section (blurred cards): Playlist Adds, Monthly Listeners, Save Rate, Streams Over Time, Demographics
+
+YouTube Subscribers
+
+Total Views
+
+Total Videos
+
+Most Viewed Video
+
+Avg Views per Video
+
+Chart: Top 5 Videos by Views
+
+Table: Top 10 Videos (thumbnail, title, views, likes, comments, duration, date, link)
+
+Locked Section: Watch time, Demographics, Subscribers Gained, Traffic Sources
+
+Instagram Followers
+
+Posts in Last 30 Days
+
+Avg Likes per Post
+
+Avg Comments per Post
+
+Most Engaged Post
+
+Chart: Engagement Over Time
+
+Chart: Top 5 Posts by Engagement
+
+Grid View: Latest Posts (thumbnail, caption, likes, comments, posted date, link)
+
+Locked Section: Reach/Impressions, Profile Visits, Audience Demographics
+
+My Alera Releases Collapsible/expandable container
+Displays all tracks the artist has released via ALERA
+
+Dropdown to select a release (defaults to "(Total)")
+
+All metrics/charts below adjust dynamically to selected track
+
+KPI Cards (Based on selected track or Total) Total Streams
+
+Avg Streams per Release (Total only)
+
+Top Performing Track (Total only)
+
+Top Platform
+
+Charts Streams Over Time (line chart)
+
+Table: All Releases Cover Art
+
+Title
+
+Release Date
+
+Streams
+
+Distribution Status
+
+View Performance (shortcut to auto-select in dropdown)
+
+UI Notes Use responsive card layouts and clean grid/table systems
+
+Use mocked JSON data for now
+
+All platforms can be conditionally rendered based on OAuth connection
+
+Charts via Recharts or other flexible library
+
+Maintain UI consistency with homepage (button size, card corner radius, font)
+
+Development Goals Build full front end of Analytics tab with two collapsible panels
+
+Each platform/component in its own section
+
+Dropdown filter for My Alera Releases (Total + each release)
+
+Mock all dynamic metrics + charts for now
+
+Indicate locked/future metrics visually with lock icon or blur effect
+
+I've attached JSON file for mock data. Make sure you keep the design preference as the current site uses

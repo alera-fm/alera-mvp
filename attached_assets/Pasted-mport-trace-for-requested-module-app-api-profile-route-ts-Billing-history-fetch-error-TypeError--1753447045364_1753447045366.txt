@@ -1,0 +1,64 @@
+mport trace for requested module:
+./app/api/profile/route.ts
+Billing history fetch error: TypeError: (0 , _lib_auth_middleware__WEBPACK_IMPORTED_MODULE_2__.authenticateUser) is not a function
+    at GET (app/api/profile/billing-history/route.ts:8:46)
+   6 | export async function GET(request: NextRequest) {
+   7 |   try {
+>  8 |     const authResult = await authenticateUser(request)
+     |                                              ^
+   9 |     if (!authResult.success || !authResult.user) {
+  10 |       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  11 |     }
+ GET /api/profile/billing-history 500 in 905ms
+Login history fetch error: TypeError: (0 , _lib_auth_middleware__WEBPACK_IMPORTED_MODULE_2__.authenticateUser) is not a function
+    at GET (app/api/profile/login-history/route.ts:8:46)
+   6 | export async function GET(request: NextRequest) {
+   7 |   try {
+>  8 |     const authResult = await authenticateUser(request)
+     |                                              ^
+   9 |     if (!authResult.success || !authResult.user) {
+  10 |       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  11 |     }
+ GET /api/profile/login-history 500 in 879ms
+Profile fetch error: TypeError: (0 , _lib_auth_middleware__WEBPACK_IMPORTED_MODULE_2__.authenticateUser) is not a function
+    at GET (app/api/profile/route.ts:8:46)
+   6 | export async function GET(request: NextRequest) {
+   7 |   try {
+>  8 |     const authResult = await authenticateUser(request)
+     |                                              ^
+   9 |     if (!authResult.success || !authResult.user) {
+  10 |       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  11 |     }
+ GET /api/profile 500 in 1339ms
+Billing history fetch error: TypeError: (0 , _lib_auth_middleware__WEBPACK_IMPORTED_MODULE_2__.authenticateUser) is not a function
+    at GET (app/api/profile/billing-history/route.ts:8:46)
+   6 | export async function GET(request: NextRequest) {
+   7 |   try {
+>  8 |     const authResult = await authenticateUser(request)
+     |                                              ^
+   9 |     if (!authResult.success || !authResult.user) {
+  10 |       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  11 |     }
+ GET /api/profile/billing-history 500 in 88ms
+Login history fetch error: TypeError: (0 , _lib_auth_middleware__WEBPACK_IMPORTED_MODULE_2__.authenticateUser) is not a function
+    at GET (app/api/profile/login-history/route.ts:8:46)
+   6 | export async function GET(request: NextRequest) {
+   7 |   try {
+>  8 |     const authResult = await authenticateUser(request)
+     |                                              ^
+   9 |     if (!authResult.success || !authResult.user) {
+  10 |       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  11 |     }
+ GET /api/profile/login-history 500 in 87ms
+Profile fetch error: TypeError: (0 , _lib_auth_middleware__WEBPACK_IMPORTED_MODULE_2__.authenticateUser) is not a function
+    at GET (app/api/profile/route.ts:8:46)
+   6 | export async function GET(request: NextRequest) {
+   7 |   try {
+>  8 |     const authResult = await authenticateUser(request)
+     |                                              ^
+   9 |     if (!authResult.success || !authResult.user) {
+  10 |       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  11 |     }
+ GET /api/profile 500 in 107ms
+ GET /api/auth/me 200 in 1636ms
+ GET /api/auth/me 200 in 1356ms

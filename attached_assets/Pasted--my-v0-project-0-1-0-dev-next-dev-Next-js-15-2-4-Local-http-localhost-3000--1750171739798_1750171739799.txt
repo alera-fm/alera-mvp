@@ -1,0 +1,104 @@
+my-v0-project@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.2.4
+   - Local:        http://localhost:3000
+   - Network:      http://172.31.128.46:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 4.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 5.2s (671 modules)
+ GET / 307 in 5589ms
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 4.8s (1589 modules)
+ GET /auth/login 200 in 4690ms
+ ⚠ Cross origin request detected from 6291f7db-e837-4d23-94ef-686ce7230d7c-00-1n4226kh5a3ue.sisko.replit.dev to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 1187ms (1679 modules)
+ POST /api/auth/login 401 in 2741ms
+ ✓ Compiled /auth/register in 388ms (1691 modules)
+ GET /auth/register 200 in 469ms
+ GET /auth/register 200 in 15ms
+ ⨯ ./lib/email.ts
+Error:   × Expected a semicolon
+    ╭─[/home/runner/workspace/lib/email.ts:46:1]
+ 43 │     `,
+ 44 │   })
+ 45 │ }
+ 46 │ </script>
+    · ─
+    ╰────
+  × Unterminated regexp literal
+    ╭─[/home/runner/workspace/lib/email.ts:46:1]
+ 43 │     `,
+ 44 │   })
+ 45 │ }
+ 46 │ </script>
+    ·  ────────
+    ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/email.ts
+./app/api/auth/register/route.ts
+ ○ Compiling /_not-found ...
+ ⨯ ./lib/email.ts
+Error:   × Expected a semicolon
+    ╭─[/home/runner/workspace/lib/email.ts:46:1]
+ 43 │     `,
+ 44 │   })
+ 45 │ }
+ 46 │ </script>
+    · ─
+    ╰────
+  × Unterminated regexp literal
+    ╭─[/home/runner/workspace/lib/email.ts:46:1]
+ 43 │     `,
+ 44 │   })
+ 45 │ }
+ 46 │ </script>
+    ·  ────────
+    ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/email.ts
+./app/api/auth/register/route.ts
+ ⨯ ./lib/email.ts
+Error:   × Expected a semicolon
+    ╭─[/home/runner/workspace/lib/email.ts:46:1]
+ 43 │     `,
+ 44 │   })
+ 45 │ }
+ 46 │ </script>
+    · ─
+    ╰────
+  × Unterminated regexp literal
+    ╭─[/home/runner/workspace/lib/email.ts:46:1]
+ 43 │     `,
+ 44 │   })
+ 45 │ }
+ 46 │ </script>
+    ·  ────────
+    ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/email.ts
+./app/api/auth/register/route.ts
+ GET /_next/static/webpack/70519ce92e100435.webpack.hot-update.json 500 in 6372ms
+ POST /api/auth/register 500 in 7914ms
+ GET /auth/register 500 in 12ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/register 500 in 71ms
+ GET /auth/register 500 in 73ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/home/runner/workspace/.next/cache/webpack/client-development-fallback/0.pack.gz_' -> '/home/runner/workspace/.next/cache/webpack/client-development-fallback/0.pack.gz'

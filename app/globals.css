@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 263 85% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 263 85% 50%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 263 85% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 12%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 240 4% 12%;
+    --input: 240 4% 12%;
+    --ring: 263 85% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ALERA brand colors */
+.bg-alera-lime {
+  background-color: #bfff00;
+}
+
+.text-alera-lime {
+  color: #bfff00;
+}
+
+.bg-alera-purple {
+  background-color: #5d2c91;
+}
+
+.text-alera-purple {
+  color: #5d2c91;
+}
+
+.bg-alera-dark-purple {
+  background-color: #2d1b69;
+}
+
+.text-alera-dark-purple {
+  color: #2d1b69;
+}
+
+/* Custom rounded corners for cards */
+.rounded-alera {
+  border-radius: 24px;
+}
+
+/* Custom EQ bar animation */
+@keyframes eq-bar {
+  0% {
+    height: 20%;
+  }
+  50% {
+    height: 80%;
+  }
+  100% {
+    height: 20%;
+  }
+}
+
+.eq-bar {
+  animation: eq-bar 1.5s ease-in-out infinite;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+
+/* Alera-specific styles */
+.alera-gradient {
+  background: linear-gradient(135deg, #1a0b2e, #2f1a45, #513a6b);
+}
+
+.alera-button {
+  @apply bg-alera-yellow text-alera-purple-dark font-medium rounded-full px-6 py-3 transition-all hover:shadow-lg hover:scale-105;
+}
+
+.alera-button-outline {
+  @apply bg-white/10 backdrop-blur-md text-white border border-white/20 font-medium rounded-full px-6 py-3 transition-all hover:bg-white/20 hover:shadow-lg;
+}
+
+.alera-card {
+  @apply bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-lg;
+}
+
+/* Unified surface for editor cards */
+.alera-surface {
+  @apply bg-white dark:bg-[#0f0f1a] backdrop-blur-md border border-white/10;
+}
+
+/* Login-style input for editor forms */
+.alera-form-input {
+  @apply w-full h-12 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a2e] text-[#333] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 focus:ring-0 transition-colors;
+}

@@ -1,0 +1,47 @@
+> my-v0-project@0.1.0 dev
+   ▲ Next.js 15.2.4
+   - Local:        http://localhost:3000
+   - Network:      http://172.31.128.46:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1699ms
+ ⚠ Cross origin request detected from 6291f7db-e837-4d23-94ef-686ce7230d7c-00-1n4226kh5a3ue.sisko.replit.dev to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ○ Compiling /api/auth/register ...
+ ✓ Compiled /api/auth/register in 2.8s (491 modules)
+ ⨯ TypeError: nodemailer__WEBPACK_IMPORTED_MODULE_0__.createTransporter is not a function
+    at eval (lib/email.ts:4:31)
+    at <unknown> (rsc)/./lib/email.ts (/home/runner/workspace/.next/server/app/api/auth/register/route.js:55:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./app/api/auth/register/route.ts:9:68)
+    at __webpack_require__.a (.next/server/webpack-runtime.js:102:13)
+    at eval (webpack-internal:///(rsc)/./app/api/auth/register/route.ts:1:21)
+    at <unknown> (rsc)/./app/api/auth/register/route.ts (/home/runner/workspace/.next/server/app/api/auth/register/route.js:22:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_require__.a (.next/server/webpack-runtime.js:102:13)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_exec__ (.next/server/app/api/auth/register/route.js:338:39)
+    at <unknown> (.next/server/app/api/auth/register/route.js:339:734)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:190:21)
+    at <unknown> (.next/server/app/api/auth/register/route.js:339:47)
+    at Object.<anonymous> (.next/server/app/api/auth/register/route.js:342:3)
+  2 | import nodemailer from 'nodemailer'
+  3 |
+> 4 | const transporter = nodemailer.createTransporter({
+    |                               ^
+  5 |   host: process.env.SMTP_HOST,
+  6 |   port: parseInt(process.env.SMTP_PORT || '465'),
+  7 |   secure: true, {
+  page: '/api/auth/register'
+}
+ ○ Compiling /_not-found ...
+ ✓ Compiled /auth/register in 8.2s (2075 modules)
+ GET /auth/register 200 in 6841ms
+ ✓ Compiled (2061 modules)
+ GET /_next/static/webpack/505d1dfd3b4383d1.webpack.hot-update.json 404 in 8809ms
+ GET /auth/register 200 in 147ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ POST /api/auth/register 500 in 12179ms
+ GET /auth/register 200 in 179ms
+ GET /auth/register 200 in 182ms

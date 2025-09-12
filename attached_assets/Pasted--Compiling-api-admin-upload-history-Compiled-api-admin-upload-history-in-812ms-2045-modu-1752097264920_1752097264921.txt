@@ -1,0 +1,46 @@
+○ Compiling /api/admin/upload-history ...
+ ✓ Compiled /api/admin/upload-history in 812ms (2045 modules)
+Admin get payout methods error: TypeError: Cannot read properties of null (reading 'valid')
+    at GET (app/api/admin/payout-methods/route.ts:9:20)
+   7 |   try {
+   8 |     const authResult = verifyToken(request)
+>  9 |     if (!authResult.valid || !authResult.user?.is_admin) {
+     |                    ^
+  10 |       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  11 |     }
+  12 |
+ GET /api/admin/payout-methods 500 in 768ms
+Admin get releases error: TypeError: Cannot read properties of null (reading 'valid')
+    at GET (app/api/admin/releases/route.ts:8:20)
+   6 |   try {
+   7 |     const authResult = verifyToken(request)
+>  8 |     if (!authResult.valid || !authResult.user?.is_admin) {
+     |                    ^
+   9 |       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  10 |     }
+  11 |
+ GET /api/admin/releases?status=under_review 500 in 1100ms
+ GET /api/admin/upload-history 200 in 2064ms
+ GET /api/admin/upload-history 200 in 1971ms
+ GET /api/admin/upload-history 200 in 1195ms
+ GET /api/admin/upload-history 200 in 1179ms
+Admin get payout methods error: TypeError: Cannot read properties of null (reading 'valid')
+    at GET (app/api/admin/payout-methods/route.ts:9:20)
+   7 |   try {
+   8 |     const authResult = verifyToken(request)
+>  9 |     if (!authResult.valid || !authResult.user?.is_admin) {
+     |                    ^
+  10 |       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  11 |     }
+  12 |
+ GET /api/admin/payout-methods 500 in 75ms
+ GET /api/admin/artists 200 in 2217ms
+Admin get releases error: TypeError: Cannot read properties of null (reading 'valid')
+    at GET (app/api/admin/releases/route.ts:8:20)
+   6 |   try {
+   7 |     const authResult = verifyToken(request)
+>  8 |     if (!authResult.valid || !authResult.user?.is_admin) {
+     |                    ^
+   9 |       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  10 |     }
+  11 |
