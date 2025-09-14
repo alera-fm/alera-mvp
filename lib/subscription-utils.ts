@@ -403,8 +403,15 @@ export async function updateSubscriptionTier(
   subscriptionExpiresAt?: Date
 ): Promise<boolean> {
   try {
-    // Convert Date to ISO string for PostgreSQL
-    const expiresAtISO = subscriptionExpiresAt?.toISOString()
+    // Safely convert Date to ISO string for PostgreSQL
+    let expiresAtISO: string | null = null
+    try {
+      if (subscriptionExpiresAt && !isNaN(subscriptionExpiresAt.getTime())) {
+        expiresAtISO = subscriptionExpiresAt.toISOString()
+      }
+    } catch (error) {
+      console.warn('Error converting expiration date to ISO string:', error)
+    }
     
     await query(`
       UPDATE subscriptions 

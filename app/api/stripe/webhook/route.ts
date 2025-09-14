@@ -90,8 +90,22 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     }
     
     const userId = userResult.rows[0].user_id
-    // Convert Unix timestamp to ISO string for PostgreSQL
-    const subscriptionExpiresAt = new Date(subscription.current_period_end * 1000).toISOString()
+    
+    // Safely convert Unix timestamp to Date
+    let subscriptionExpiresAt: Date | undefined
+    try {
+      if (subscription.current_period_end) {
+        subscriptionExpiresAt = new Date(subscription.current_period_end * 1000)
+        // Validate the date is valid
+        if (isNaN(subscriptionExpiresAt.getTime())) {
+          console.warn('Invalid subscription expiration date, setting to undefined')
+          subscriptionExpiresAt = undefined
+        }
+      }
+    } catch (error) {
+      console.warn('Error converting subscription expiration date:', error)
+      subscriptionExpiresAt = undefined
+    }
     
     // Update subscription
     await updateSubscriptionTier(
@@ -99,7 +113,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       tier,
       customerId,
       subscription.id,
-      new Date(subscriptionExpiresAt) // Convert back to Date for the function
+      subscriptionExpiresAt
     )
     
     console.log(`Subscription created for user ${userId}: ${tier}`)
@@ -134,8 +148,22 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     }
     
     const userId = userResult.rows[0].user_id
-    // Convert Unix timestamp to ISO string for PostgreSQL
-    const subscriptionExpiresAt = new Date(subscription.current_period_end * 1000).toISOString()
+    
+    // Safely convert Unix timestamp to Date
+    let subscriptionExpiresAt: string | null = null
+    try {
+      if (subscription.current_period_end) {
+        const expiresAtDate = new Date(subscription.current_period_end * 1000)
+        // Validate the date is valid
+        if (!isNaN(expiresAtDate.getTime())) {
+          subscriptionExpiresAt = expiresAtDate.toISOString()
+        } else {
+          console.warn('Invalid subscription expiration date')
+        }
+      }
+    } catch (error) {
+      console.warn('Error converting subscription expiration date:', error)
+    }
     
     // Update subscription
     await query(`
