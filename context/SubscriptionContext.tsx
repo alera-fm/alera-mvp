@@ -84,13 +84,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
+      const data = await response.json()
+      
       if (response.ok) {
-        const data = await response.json()
         setSubscription(data.subscription)
         setUsage(data.usage)
         setFeatureAccess(data.featureAccess)
       } else {
-        console.error('Failed to fetch subscription data')
+        // Log the error but don't show it to the user
+        console.error('Failed to fetch subscription data:', data.error)
+        
+        // Reset subscription state
+        setSubscription(null)
+        setUsage(null)
+        setFeatureAccess(null)
       }
     } catch (error) {
       console.error('Error fetching subscription data:', error)

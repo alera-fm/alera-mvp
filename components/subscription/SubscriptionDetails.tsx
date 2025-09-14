@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Loader2, Crown, Zap, XCircle, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 interface Subscription {
   tier: 'trial' | 'plus' | 'pro';
   status: 'active' | 'expired' | 'cancelled';
-  trial_expires_at?: string;
-  subscription_expires_at?: string;
-  stripe_customer_id?: string;
+  trialExpiresAt?: string;
+  subscriptionExpiresAt?: string;
+  stripeCustomerId?: string;
+  daysRemaining: number;
 }
 
 export function SubscriptionDetails() {
@@ -20,6 +22,7 @@ export function SubscriptionDetails() {
   const [loading, setLoading] = useState(true);
   const [managingSubscription, setManagingSubscription] = useState(false);
   const { toast } = useToast();
+  const { showUpgradeDialog } = useSubscription();
 
   useEffect(() => {
     fetchSubscriptionDetails();
@@ -59,21 +62,30 @@ export function SubscriptionDetails() {
       const response = await fetch("/api/stripe/customer-portal", {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          returnUrl: window.location.href // Return to the current page
+        })
       });
 
       if (response.ok) {
         const { url } = await response.json();
-        window.location.href = url;
+        if (url) {
+          window.location.href = url;
+        } else {
+          throw new Error("No portal URL returned");
+        }
       } else {
-        throw new Error("Failed to create portal session");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create portal session");
       }
     } catch (error) {
       console.error("Error accessing customer portal:", error);
       toast({
         title: "Error",
-        description: "Failed to access billing portal",
+        description: error instanceof Error ? error.message : "Failed to access billing portal",
         variant: "destructive",
       });
     } finally {
@@ -205,7 +217,7 @@ export function SubscriptionDetails() {
           </div>
           <div className="flex items-center gap-2">
             {/* Manage Subscription Button - Shows Stripe Portal */}
-            {subscription.stripe_customer_id && subscription.status === 'active' && (
+            {subscription.stripe_customer_id && (
               <Button
                 variant="outline"
                 onClick={handleManageSubscription}
@@ -225,34 +237,13 @@ export function SubscriptionDetails() {
             {/* Upgrade Button */}
             {subscription.tier !== 'pro' && subscription.status !== 'cancelled' && (
               <Button
-                onClick={async () => {
-                  try {
-                    const token = localStorage.getItem("authToken");
-                    const response = await fetch("/api/stripe/create-checkout-session", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({
-                        priceId: subscription.tier === 'trial' ? 'plus' : 'pro',
-                      }),
-                    });
-
-                    if (response.ok) {
-                      const { url } = await response.json();
-                      window.location.href = url;
-                    } else {
-                      throw new Error("Failed to create checkout session");
-                    }
-                  } catch (error) {
-                    console.error("Error upgrading subscription:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to start upgrade process",
-                      variant: "destructive",
-                    });
-                  }
+                onClick={() => {
+                  // Show the upgrade dialog with the next tier
+                  const targetTier = subscription.tier === 'trial' ? 'plus' : 'pro';
+                  showUpgradeDialog(
+                    `Upgrade to ${targetTier === 'plus' ? 'Plus' : 'Pro'}`,
+                    targetTier
+                  );
                 }}
                 className="flex items-center gap-2"
                 title={`Upgrade to ${subscription.tier === 'trial' ? 'Plus ($4.99/month)' : 'Pro ($14.99/month)'}`}
@@ -334,14 +325,14 @@ export function SubscriptionDetails() {
                 <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                   Trial Expires
                 </h4>
-                <p className="font-medium">{formatDate(subscription.trial_expires_at)}</p>
+                <p className="font-medium">{formatDate(subscription.trialExpiresAt)} ({subscription.daysRemaining} days remaining)</p>
               </div>
             ) : (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                   Next Billing Date
                 </h4>
-                <p className="font-medium">{formatDate(subscription.subscription_expires_at)}</p>
+                <p className="font-medium">{formatDate(subscription.subscriptionExpiresAt)}</p>
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/subscription-middleware'
-import { getSubscription, getDaysRemaining, isSubscriptionExpired, getDailyTokenUsage, getMonthlyTokenUsage, getPendingReleasesCount } from '@/lib/subscription-utils'
+import { getSubscription, createSubscription, getDaysRemaining, isSubscriptionExpired, getDailyTokenUsage, getMonthlyTokenUsage, getPendingReleasesCount } from '@/lib/subscription-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -98,8 +98,8 @@ export async function GET(request: NextRequest) {
         status: subscription.status,
         isExpired,
         daysRemaining,
-        trialExpiresAt: subscription.trial_expires_at,
-        subscriptionExpiresAt: subscription.subscription_expires_at,
+        trialExpiresAt: subscription.trial_expires_at?.toISOString(),
+        subscriptionExpiresAt: subscription.subscription_expires_at?.toISOString(),
         stripeCustomerId: subscription.stripe_customer_id,
         stripeSubscriptionId: subscription.stripe_subscription_id
       },

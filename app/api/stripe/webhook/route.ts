@@ -115,6 +115,40 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       subscription.id,
       subscriptionExpiresAt
     )
+
+    // Log subscription event
+    await query(`
+      INSERT INTO subscription_events (user_id, event_type, event_data)
+      VALUES ($1, 'created', $2)
+    `, [
+      userId,
+      JSON.stringify({
+        tier,
+        customerId,
+        subscriptionId: subscription.id,
+        expiresAt: subscriptionExpiresAt
+      })
+    ]);
+
+    // Add to billing history
+    await query(`
+      INSERT INTO billing_history (
+        user_id,
+        amount,
+        transaction_type,
+        status,
+        description,
+        reference_id,
+        payment_method
+      )
+      VALUES ($1, $2, 'subscription', 'pending', $3, $4, $5)
+    `, [
+      userId,
+      subscription.items.data[0]?.price?.unit_amount ? subscription.items.data[0].price.unit_amount / 100 : 0,
+      `New subscription created: ${tier} plan`,
+      subscription.id,
+      'card' // Default to card as it's through Stripe Checkout
+    ])
     
     console.log(`Subscription created for user ${userId}: ${tier}`)
   } catch (error) {
@@ -196,6 +230,21 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       subscriptionExpiresAt,
       userId
     ])
+
+    // Log subscription event
+    await query(`
+      INSERT INTO subscription_events (user_id, event_type, event_data)
+      VALUES ($1, 'updated', $2)
+    `, [
+      userId,
+      JSON.stringify({
+        tier,
+        status: subscription.status,
+        subscriptionId: subscription.id,
+        expiresAt: subscriptionExpiresAt,
+        previousTier: (await query('SELECT tier FROM subscriptions WHERE user_id = $1', [userId])).rows[0]?.tier
+      })
+    ])
     
     console.log(`Subscription updated for user ${userId}: ${tier} (${subscription.status})`)
   } catch (error) {
@@ -220,6 +269,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     
     const userId = userResult.rows[0].user_id
     
+    // Get current tier before update
+    const currentTier = (await query('SELECT tier FROM subscriptions WHERE user_id = $1', [userId])).rows[0]?.tier
+
     // Revert to trial status (expired)
     await query(`
       UPDATE subscriptions 
@@ -230,6 +282,37 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $1
     `, [userId])
+
+    // Log subscription event
+    await query(`
+      INSERT INTO subscription_events (user_id, event_type, event_data)
+      VALUES ($1, 'cancelled', $2)
+    `, [
+      userId,
+      JSON.stringify({
+        previousTier: currentTier,
+        subscriptionId: subscription.id
+      })
+    ]);
+
+    // Add to billing history
+    await query(`
+      INSERT INTO billing_history (
+        user_id,
+        amount,
+        transaction_type,
+        status,
+        description,
+        reference_id,
+        payment_method
+      )
+      VALUES ($1, 0, 'subscription', 'completed', $2, $3, $4)
+    `, [
+      userId,
+      `Subscription cancelled: ${currentTier} plan`,
+      subscription.id,
+      'card'
+    ])
     
     console.log(`Subscription cancelled for user ${userId}`)
   } catch (error) {
@@ -258,6 +341,39 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = $1
         `, [userId])
+
+        // Log subscription event
+        await query(`
+          INSERT INTO subscription_events (user_id, event_type, event_data)
+          VALUES ($1, 'payment_succeeded', $2)
+        `, [
+          userId,
+          JSON.stringify({
+            invoiceId: invoice.id,
+            amount: invoice.amount_paid,
+            subscriptionId: invoice.subscription
+          })
+        ]);
+
+        // Add to billing history
+        await query(`
+          INSERT INTO billing_history (
+            user_id,
+            amount,
+            transaction_type,
+            status,
+            description,
+            reference_id,
+            payment_method
+          )
+          VALUES ($1, $2, 'subscription', 'completed', $3, $4, $5)
+        `, [
+          userId,
+          invoice.amount_paid / 100, // Convert cents to dollars
+          `Subscription payment for ${invoice.lines.data[0]?.price?.nickname || 'plan'}`,
+          invoice.id,
+          invoice.payment_intent ? 'card' : invoice.payment_method_types[0] || 'unknown'
+        ]);
         
         console.log(`Payment succeeded for user ${userId}`)
       }
@@ -288,6 +404,40 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = $1
         `, [userId])
+
+        // Log subscription event
+        await query(`
+          INSERT INTO subscription_events (user_id, event_type, event_data)
+          VALUES ($1, 'payment_failed', $2)
+        `, [
+          userId,
+          JSON.stringify({
+            invoiceId: invoice.id,
+            amount: invoice.amount_due,
+            subscriptionId: invoice.subscription,
+            failureReason: invoice.last_payment_error?.message || 'Unknown error'
+          })
+        ]);
+
+        // Add to billing history
+        await query(`
+          INSERT INTO billing_history (
+            user_id,
+            amount,
+            transaction_type,
+            status,
+            description,
+            reference_id,
+            payment_method
+          )
+          VALUES ($1, $2, 'subscription', 'failed', $3, $4, $5)
+        `, [
+          userId,
+          invoice.amount_due / 100, // Convert cents to dollars
+          `Failed subscription payment for ${invoice.lines.data[0]?.price?.nickname || 'plan'}: ${invoice.last_payment_error?.message || 'Unknown error'}`,
+          invoice.id,
+          invoice.payment_intent ? 'card' : invoice.payment_method_types[0] || 'unknown'
+        ]);
         
         console.log(`Payment failed for user ${userId}`)
         
@@ -319,14 +469,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       if (userResult.rows.length > 0) {
         const userId = userResult.rows[0].user_id
         
-        // Update subscription with subscription ID
+        // Update subscription with subscription ID and customer ID
         await query(`
           UPDATE subscriptions 
           SET stripe_subscription_id = $1,
+              stripe_customer_id = $2,
               status = 'active',
               updated_at = CURRENT_TIMESTAMP
-          WHERE user_id = $2
-        `, [subscriptionId, userId])
+          WHERE user_id = $3
+        `, [subscriptionId, customerId, userId])
         
         console.log(`Checkout completed for user ${userId}`)
       }
