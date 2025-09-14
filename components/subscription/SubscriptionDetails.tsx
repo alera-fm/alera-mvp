@@ -217,7 +217,7 @@ export function SubscriptionDetails() {
           </div>
           <div className="flex items-center gap-2">
             {/* Manage Subscription Button - Shows Stripe Portal */}
-            {subscription.stripe_customer_id && (
+            {(subscription.stripe_customer_id || subscription.tier !== 'trial') && (
               <Button
                 variant="outline"
                 onClick={handleManageSubscription}
@@ -230,7 +230,7 @@ export function SubscriptionDetails() {
                 ) : (
                   <CreditCard className="h-4 w-4" />
                 )}
-                Manage Subscription
+                Manage Billing
               </Button>
             )}
 

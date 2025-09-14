@@ -142,7 +142,7 @@ export async function trackAIUsage(userId: number, tokens: number, date: Date = 
 export async function getPendingReleasesCount(userId: number): Promise<number> {
   try {
     const result = await query(
-      "SELECT COUNT(*) FROM releases WHERE artist_id = $1 AND status = 'under_review'",
+      "SELECT COUNT(*) FROM releases WHERE artist_id = $1 AND (status = 'under_review' OR status = 'draft')",
       [userId]
     )
     

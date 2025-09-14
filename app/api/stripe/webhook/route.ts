@@ -141,7 +141,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         reference_id,
         payment_method
       )
-      VALUES ($1, $2, 'subscription', 'pending', $3, $4, $5)
+      VALUES ($1, $2, 'subscription', 'active', $3, $4, $5)
     `, [
       userId,
       subscription.items.data[0]?.price?.unit_amount ? subscription.items.data[0].price.unit_amount / 100 : 0,
