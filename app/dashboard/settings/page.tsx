@@ -45,6 +45,7 @@ import { MobileNavigation } from "@/components/mobile-navigation";
 import { useToast } from "@/hooks/use-toast";
 import { HeaderSection } from "@/components/header-section";
 import { useAuth } from "@/context/AuthContext";
+import { SubscriptionDetails } from "@/components/subscription/SubscriptionDetails";
 
 interface UserProfile {
   id: number;
@@ -723,128 +724,134 @@ function SettingsPageContent() {
             </TabsContent>
 
             <TabsContent value="billing">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Billing History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Payment Method</TableHead>
-                          <TableHead>Reference</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {billingHistory.map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell className="font-medium">
+              <div className="space-y-6">
+                {/* Subscription Details */}
+                <SubscriptionDetails />
+
+                {/* Billing History */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Billing History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Payment Method</TableHead>
+                            <TableHead>Reference</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {billingHistory.map((transaction) => (
+                            <TableRow key={transaction.id}>
+                              <TableCell className="font-medium">
+                                {new Date(
+                                  transaction.transaction_date,
+                                ).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="max-w-xs truncate">
+                                {transaction.description}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {formatTransactionType(
+                                    transaction.transaction_type,
+                                  )}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                <div className="flex items-center gap-1">
+                                  <DollarSign className="h-3 w-3" />
+                                  {Number(transaction.amount).toFixed(2)}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(transaction.status)}
+                                  <Badge
+                                    className={getStatusColor(transaction.status)}
+                                  >
+                                    {transaction.status}
+                                  </Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>{transaction.payment_method}</TableCell>
+                              <TableCell className="font-mono text-sm">
+                                {transaction.reference_id}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4 p-4">
+                      {billingHistory.map((transaction) => (
+                        <div
+                          key={transaction.id}
+                          className="border rounded-lg p-4 space-y-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium">
                               {new Date(
                                 transaction.transaction_date,
                               ).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(transaction.status)}
+                              <Badge
+                                className={getStatusColor(transaction.status)}
+                              >
+                                {transaction.status}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
                               {transaction.description}
-                            </TableCell>
-                            <TableCell>
+                            </div>
+                            <div className="flex items-center justify-between">
                               <Badge variant="outline">
                                 {formatTransactionType(
                                   transaction.transaction_type,
                                 )}
                               </Badge>
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-1">
+                              <div className="font-medium flex items-center gap-1">
                                 <DollarSign className="h-3 w-3" />
                                 {Number(transaction.amount).toFixed(2)}
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {getStatusIcon(transaction.status)}
-                                <Badge
-                                  className={getStatusColor(transaction.status)}
-                                >
-                                  {transaction.status}
-                                </Badge>
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <div>Payment: {transaction.payment_method}</div>
+                              <div className="font-mono">
+                                Ref: {transaction.reference_id}
                               </div>
-                            </TableCell>
-                            <TableCell>{transaction.payment_method}</TableCell>
-                            <TableCell className="font-mono text-sm">
-                              {transaction.reference_id}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Mobile Card View */}
-                  <div className="md:hidden space-y-4 p-4">
-                    {billingHistory.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="border rounded-lg p-4 space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">
-                            {new Date(
-                              transaction.transaction_date,
-                            ).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(transaction.status)}
-                            <Badge
-                              className={getStatusColor(transaction.status)}
-                            >
-                              {transaction.status}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {transaction.description}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <Badge variant="outline">
-                              {formatTransactionType(
-                                transaction.transaction_type,
-                              )}
-                            </Badge>
-                            <div className="font-medium flex items-center gap-1">
-                              <DollarSign className="h-3 w-3" />
-                              {Number(transaction.amount).toFixed(2)}
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500 space-y-1">
-                            <div>Payment: {transaction.payment_method}</div>
-                            <div className="font-mono">
-                              Ref: {transaction.reference_id}
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {billingHistory.length === 0 && (
-                    <div className="p-8 text-center text-gray-500">
-                      No billing history found
+                      ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+
+                    {billingHistory.length === 0 && (
+                      <div className="p-8 text-center text-gray-500">
+                        No billing history found
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="login">
