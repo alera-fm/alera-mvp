@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/context/SubscriptionContext";
 import {
   Music,
   Upload,
@@ -196,6 +197,7 @@ export function DistributionFlow({
   onSave,
 }: DistributionFlowProps) {
   const { toast } = useToast();
+  const { canAccessFeature, showUpgradeDialog } = useSubscription();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -385,6 +387,19 @@ export function DistributionFlow({
   };
 
   const handleSaveDraft = async () => {
+    // Check subscription limits for draft saves too
+    const canCreate = await canAccessFeature('release_creation', { 
+      releaseType: formData.distribution_type 
+    });
+    
+    if (!canCreate) {
+      const message = formData.distribution_type === 'Single' 
+        ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+        : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
+      showUpgradeDialog(message, 'plus');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Guard: ensure audio URLs captured for all tracks that have a file name
@@ -451,6 +466,19 @@ export function DistributionFlow({
   };
 
   const handleSubmitForReview = async () => {
+    // Check subscription limits first
+    const canCreate = await canAccessFeature('release_creation', { 
+      releaseType: formData.distribution_type 
+    });
+    
+    if (!canCreate) {
+      const message = formData.distribution_type === 'Single' 
+        ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+        : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
+      showUpgradeDialog(message, 'plus');
+      return;
+    }
+
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
       toast({
         variant: "destructive",

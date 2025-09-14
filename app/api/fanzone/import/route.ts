@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pool } from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import { checkFanZoneAccess } from '@/lib/subscription-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,16 @@ export async function POST(request: NextRequest) {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
     const artistId = decoded.userId
+
+    // Check subscription access for import
+    const accessCheck = await checkFanZoneAccess(artistId, 'import')
+    if (!accessCheck.allowed) {
+      return NextResponse.json({
+        error: accessCheck.reason,
+        upgradeRequired: accessCheck.upgradeRequired,
+        subscriptionLimited: true
+      }, { status: 403 })
+    }
 
     const formData = await request.formData()
     const file = formData.get('file') as File

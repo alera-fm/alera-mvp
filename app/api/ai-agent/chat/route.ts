@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import { query } from '@/lib/db'
 import OpenAI from 'openai'
+import { checkAITokens, trackAIUsage, estimateTokenCount, countTokens } from '@/lib/subscription-utils'
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -879,6 +880,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
+    // Check AI token limits before processing
+    const estimatedTokens = estimateTokenCount(message)
+    const tokenCheck = await checkAITokens(decoded.userId, estimatedTokens)
+    
+    if (!tokenCheck.allowed) {
+      return NextResponse.json({
+        error: tokenCheck.reason,
+        upgradeRequired: tokenCheck.upgradeRequired,
+        remainingUsage: tokenCheck.remainingUsage
+      }, { status: 429 })
+    }
+
     // Save user message
     await saveChatMessage(decoded.userId, message, true, 'general')
 
@@ -936,10 +949,17 @@ export async function POST(request: NextRequest) {
     // Generate response using OpenAI with all data
     const response = await generateAIResponse('general', allData, message, artistName, chatHistory, artistContext, onboardingStatus)
 
+    // Count actual tokens used in response and track usage
+    const responseTokens = countTokens(response)
+    const totalTokensUsed = estimatedTokens + responseTokens
+    
+    // Track the actual token usage
+    await trackAIUsage(decoded.userId, totalTokensUsed)
+
     // Save AI response
     await saveChatMessage(decoded.userId, response, false, 'general', allData)
 
-    return NextResponse.json({ response })
+    return NextResponse.json({ response, tokensUsed: totalTokensUsed })
 
   } catch (error) {
     console.error('AI Agent chat error:', error)

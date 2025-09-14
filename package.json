@@ -74,6 +74,8 @@
     "recharts": "latest",
     "sonner": "latest",
     "sortablejs": "^1.15.6",
+    "stripe": "^17.3.1",
+    "@stripe/stripe-js": "^4.8.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "latest",

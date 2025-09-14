@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pool } from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import { checkFanZoneAccess } from '@/lib/subscription-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,6 +13,16 @@ export async function GET(request: NextRequest) {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
     const artistId = decoded.userId
+
+    // Check subscription access for campaigns
+    const accessCheck = await checkFanZoneAccess(artistId, 'campaigns')
+    if (!accessCheck.allowed) {
+      return NextResponse.json({
+        error: accessCheck.reason,
+        upgradeRequired: accessCheck.upgradeRequired,
+        subscriptionLimited: true
+      }, { status: 403 })
+    }
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -62,6 +73,16 @@ export async function POST(request: NextRequest) {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
     const artistId = decoded.userId
+
+    // Check subscription access for campaigns
+    const accessCheck = await checkFanZoneAccess(artistId, 'campaigns')
+    if (!accessCheck.allowed) {
+      return NextResponse.json({
+        error: accessCheck.reason,
+        upgradeRequired: accessCheck.upgradeRequired,
+        subscriptionLimited: true
+      }, { status: 403 })
+    }
 
     const { subject, body, link, audience_filter, send_immediately = false } = await request.json()
 

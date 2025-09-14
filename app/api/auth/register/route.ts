@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { query, initDB } from "@/lib/db"
 import { hashPassword, generateRandomToken } from "@/lib/auth"
 import { sendVerificationEmail } from "@/lib/email"
+import { createSubscription } from "@/lib/subscription-utils"
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +40,12 @@ export async function POST(request: NextRequest) {
     // Verify the token was saved by querying it back
     const verifyTokenSaved = await query("SELECT verification_token FROM users WHERE id = $1", [userId])
     console.log("Token in database:", verifyTokenSaved.rows[0]?.verification_token)
+
+    // Create subscription record for new user
+    const subscription = await createSubscription(userId)
+    if (!subscription) {
+      console.warn(`Failed to create subscription for user ${userId}, but user was created`)
+    }
 
     // Send verification email
     await sendVerificationEmail(email, verificationToken)

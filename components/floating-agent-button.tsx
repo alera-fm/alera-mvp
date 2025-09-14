@@ -154,6 +154,16 @@ export function FloatingAgentButton() {
         if (data.isOnboarding) {
           setIsOnboarding(true)
         }
+      } else if (response.status === 429) {
+        // Handle subscription limit errors
+        const errorData = await response.json()
+        const errorMessage = {
+          id: (Date.now() + 1).toString(),
+          text: `${errorData.error} ${errorData.upgradeRequired ? `Upgrade to ${errorData.upgradeRequired.charAt(0).toUpperCase() + errorData.upgradeRequired.slice(1)} for unlimited access.` : ''}`,
+          isUser: false,
+          timestamp: new Date()
+        }
+        addMessage(errorMessage)
       } else {
         const errorMessage = {
           id: (Date.now() + 1).toString(),

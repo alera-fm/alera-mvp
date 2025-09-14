@@ -27,6 +27,7 @@ import { EmailCampaigns } from "@/components/fanzone/email-campaigns";
 import { ImportFans } from "@/components/fanzone/import-fans";
 import { HeaderSection } from "@/components/header-section";
 import { MobileNavigation } from "@/components/mobile-navigation";
+import { FeatureGate, FeatureGateTab } from "@/components/subscription/FeatureGate";
 
 interface FanInsights {
   totalFans: number;
@@ -112,14 +113,20 @@ export default function FanZonePage() {
             <Users className="h-4 w-4" />
             Fans
           </TabsTrigger>
-          <TabsTrigger value="campaigns" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Campaigns
-          </TabsTrigger>
-          <TabsTrigger value="import" className="flex items-center gap-2">
-            <Upload className="h-4 w-4" />
-            Import
-          </TabsTrigger>
+          
+          <FeatureGateTab feature="fan_campaigns" tier="pro">
+            <TabsTrigger value="campaigns" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Campaigns
+            </TabsTrigger>
+          </FeatureGateTab>
+          
+          <FeatureGateTab feature="fan_import" tier="pro">
+            <TabsTrigger value="import" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Import
+            </TabsTrigger>
+          </FeatureGateTab>
         </TabsList>
 
         <TabsContent value="dashboard">
@@ -131,11 +138,37 @@ export default function FanZonePage() {
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <EmailCampaigns />
+          <FeatureGate 
+            feature="fan_campaigns" 
+            tier="pro"
+            fallback={
+              <div className="text-center py-12">
+                <h3 className="text-lg font-semibold mb-2">Email Campaigns - Pro Feature</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Upgrade to Pro to access advanced email marketing tools for your fans.
+                </p>
+              </div>
+            }
+          >
+            <EmailCampaigns />
+          </FeatureGate>
         </TabsContent>
 
         <TabsContent value="import">
-          <ImportFans onImportComplete={fetchInsights} />
+          <FeatureGate 
+            feature="fan_import" 
+            tier="pro"
+            fallback={
+              <div className="text-center py-12">
+                <h3 className="text-lg font-semibold mb-2">Fan Import - Pro Feature</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Upgrade to Pro to import fans in bulk and manage large fan databases.
+                </p>
+              </div>
+            }
+          >
+            <ImportFans onImportComplete={fetchInsights} />
+          </FeatureGate>
         </TabsContent>
       </Tabs>
       <MobileNavigation />

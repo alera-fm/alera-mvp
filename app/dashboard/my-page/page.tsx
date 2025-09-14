@@ -12,6 +12,8 @@ import { ReactSortable } from 'react-sortablejs'
 import LandingPage from '@/components/landing-page'
 import { HeaderSection } from '@/components/header-section'
 import { MobileNavigation } from '@/components/mobile-navigation'
+import { FeatureGate } from '@/components/subscription/FeatureGate'
+import { useSubscription } from '@/context/SubscriptionContext'
 // Drag & drop removed for stability; Up/Down buttons handle reordering
 
 type Theme = { backgroundColor: string; textColor: string; fontFamily: string }
@@ -197,8 +199,6 @@ export default function MyPageEditor() {
                   ['release', 'Release'],
                   ['tour', 'Tour'],
                   ['merch', 'Merch'],
-                  ['tip_jar', 'Tip Jar'],
-                  ['locked_content', 'Gated Content'],
                   ['welcome', 'Welcome'],
                 ].map(([t, label]) => (
                   <Button
@@ -212,6 +212,39 @@ export default function MyPageEditor() {
                     + {label}
                   </Button>
                 ))}
+                
+                {/* Gated monetization features */}
+                <FeatureGate 
+                  feature="tip_jar" 
+                  tier="pro"
+                  showUpgradePrompt={false}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={(config.blocks || []).some((b: any) => b.type === 'tip_jar')}
+                    onClick={() => addBlock('tip_jar')}
+                    title={(config.blocks || []).some((b: any) => b.type === 'tip_jar') ? 'Already added' : ''}
+                  >
+                    + Tip Jar
+                  </Button>
+                </FeatureGate>
+                
+                <FeatureGate 
+                  feature="paid_subscriptions" 
+                  tier="pro"
+                  showUpgradePrompt={false}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={(config.blocks || []).some((b: any) => b.type === 'locked_content')}
+                    onClick={() => addBlock('locked_content')}
+                    title={(config.blocks || []).some((b: any) => b.type === 'locked_content') ? 'Already added' : ''}
+                  >
+                    + Gated Content
+                  </Button>
+                </FeatureGate>
               </div>
 
               <div className="space-y-3">

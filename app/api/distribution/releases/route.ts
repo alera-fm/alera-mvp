@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pool } from '@/lib/db'
 import { verifyToken } from '@/lib/auth'
+import { checkReleaseLimit } from '@/lib/subscription-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,6 +49,16 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!distribution_type || !artist_name || !release_title || !primary_genre || !language) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Check subscription limits for release creation
+    const releaseCheck = await checkReleaseLimit(decoded.userId, distribution_type)
+    if (!releaseCheck.allowed) {
+      return NextResponse.json({
+        error: releaseCheck.reason,
+        upgradeRequired: releaseCheck.upgradeRequired,
+        subscriptionLimited: true
+      }, { status: 403 })
     }
 
     // Validate distribution type vs track count
