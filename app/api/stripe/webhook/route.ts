@@ -191,9 +191,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       
       if (subscription.current_period_end) {
         // Stripe sends timestamps in seconds, convert to milliseconds
-        const timestamp = typeof subscription.current_period_end === 'string' 
-          ? parseInt(subscription.current_period_end) * 1000
-          : subscription.current_period_end * 1000;
+        const timestamp = subscription.current_period_end * 1000;
           
         const expiresAtDate = new Date(timestamp)
         
@@ -272,12 +270,13 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     // Get current tier before update
     const currentTier = (await query('SELECT tier FROM subscriptions WHERE user_id = $1', [userId])).rows[0]?.tier
 
-    // Revert to trial status (expired)
+    // Revert to trial status (expired) and clear Stripe IDs
     await query(`
       UPDATE subscriptions 
       SET tier = 'trial',
           status = 'expired',
           stripe_subscription_id = NULL,
+          stripe_customer_id = NULL,
           subscription_expires_at = NULL,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $1

@@ -100,6 +100,7 @@ export async function GET(request: NextRequest) {
         daysRemaining,
         trialExpiresAt: subscription.trial_expires_at?.toISOString(),
         subscriptionExpiresAt: subscription.subscription_expires_at?.toISOString(),
+        current_period_end: subscription.subscription_expires_at?.toISOString(),
         stripeCustomerId: subscription.stripe_customer_id,
         stripeSubscriptionId: subscription.stripe_subscription_id
       },

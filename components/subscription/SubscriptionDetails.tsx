@@ -13,6 +13,7 @@ interface Subscription {
   status: 'active' | 'expired' | 'cancelled';
   trialExpiresAt?: string;
   subscriptionExpiresAt?: string;
+  current_period_end?: string;
   stripeCustomerId?: string;
   daysRemaining: number;
 }
@@ -237,13 +238,28 @@ export function SubscriptionDetails() {
             {/* Upgrade Button */}
             {subscription.tier !== 'pro' && subscription.status !== 'cancelled' && (
               <Button
-                onClick={() => {
-                  // Show the upgrade dialog with the next tier
-                  const targetTier = subscription.tier === 'trial' ? 'plus' : 'pro';
-                  showUpgradeDialog(
-                    `Upgrade to ${targetTier === 'plus' ? 'Plus' : 'Pro'}`,
-                    targetTier
-                  );
+                onClick={async () => {
+                  try {
+                    // For existing paid subscribers, redirect to portal
+                    if (subscription.stripeCustomerId && subscription.tier !== 'trial') {
+                      await handleManageSubscription();
+                      return;
+                    }
+
+                    // For trial users, show upgrade dialog
+                    const targetTier = subscription.tier === 'trial' ? 'plus' : 'pro';
+                    showUpgradeDialog(
+                      `Upgrade to ${targetTier === 'plus' ? 'Plus' : 'Pro'}`,
+                      targetTier
+                    );
+                  } catch (error) {
+                    console.error('Error handling upgrade:', error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to process upgrade request. Please try again.",
+                      variant: "destructive",
+                    });
+                  }
                 }}
                 className="flex items-center gap-2"
                 title={`Upgrade to ${subscription.tier === 'trial' ? 'Plus ($4.99/month)' : 'Pro ($14.99/month)'}`}
@@ -320,21 +336,18 @@ export function SubscriptionDetails() {
               </h4>
               <p className="font-medium">{subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}</p>
             </div>
-            {subscription.tier === 'trial' ? (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Trial Expires
-                </h4>
-                <p className="font-medium">{formatDate(subscription.trialExpiresAt)} ({subscription.daysRemaining} days remaining)</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Next Billing Date
-                </h4>
-                <p className="font-medium">{formatDate(subscription.subscriptionExpiresAt)}</p>
-              </div>
-            )}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {subscription.tier === 'trial' ? 'Trial Expires' : 'Next Billing Date'}
+              </h4>
+              <p className="font-medium">
+                {subscription.tier === 'trial' ? (
+                  `${formatDate(subscription.trialExpiresAt)} (${subscription.daysRemaining} days remaining)`
+                ) : (
+                  formatDate(subscription.current_period_end || subscription.subscriptionExpiresAt)
+                )}
+              </p>
+            </div>
           </div>
 
           {/* Price */}

@@ -173,19 +173,39 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ tier })
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        const data = await response.json()
         return data.checkoutUrl
       } else {
-        const error = await response.json()
-        console.error('Failed to create subscription:', error)
+        // Handle specific error cases
+        if (data.error === 'User already has an active subscription') {
+          toast({
+            title: "Subscription Active",
+            description: "Please use the billing portal to manage your existing subscription.",
+            variant: "default",
+          })
+          return null
+        }
+
+        // Handle other errors
+        toast({
+          title: "Error",
+          description: data.error || "Failed to create subscription",
+          variant: "destructive",
+        })
         return null
       }
     } catch (error) {
       console.error('Error creating subscription:', error)
+      toast({
+        title: "Error",
+        description: "Failed to process upgrade request. Please try again.",
+        variant: "destructive",
+      })
       return null
     }
-  }, [])
+  }, [toast])
 
   const refreshSubscription = useCallback(async () => {
     await fetchSubscriptionData()

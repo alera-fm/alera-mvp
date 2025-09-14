@@ -35,13 +35,26 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Check if user already has an active paid subscription
+    // Check subscription status
     if (subscription.tier !== 'trial' && subscription.status === 'active') {
       return NextResponse.json({ 
         error: 'User already has an active subscription',
         currentTier: subscription.tier,
         message: 'Please use the customer portal to manage your existing subscription'
       }, { status: 400 })
+    }
+
+    // If subscription is cancelled or expired, clear old Stripe IDs to allow new subscription
+    if (subscription.status === 'cancelled' || subscription.status === 'expired') {
+      await query(`
+        UPDATE subscriptions 
+        SET stripe_subscription_id = NULL,
+            stripe_customer_id = NULL
+        WHERE user_id = $1
+      `, [userId])
+      subscription.stripe_subscription_id = null
+      subscription.stripe_customer_id = null
+    }
     }
     
     let customerId = subscription.stripe_customer_id
