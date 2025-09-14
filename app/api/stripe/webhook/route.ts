@@ -90,7 +90,8 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     }
     
     const userId = userResult.rows[0].user_id
-    const subscriptionExpiresAt = new Date(subscription.current_period_end * 1000)
+    // Convert Unix timestamp to ISO string for PostgreSQL
+    const subscriptionExpiresAt = new Date(subscription.current_period_end * 1000).toISOString()
     
     // Update subscription
     await updateSubscriptionTier(
@@ -98,7 +99,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       tier,
       customerId,
       subscription.id,
-      subscriptionExpiresAt
+      new Date(subscriptionExpiresAt) // Convert back to Date for the function
     )
     
     console.log(`Subscription created for user ${userId}: ${tier}`)
@@ -133,7 +134,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     }
     
     const userId = userResult.rows[0].user_id
-    const subscriptionExpiresAt = new Date(subscription.current_period_end * 1000)
+    // Convert Unix timestamp to ISO string for PostgreSQL
+    const subscriptionExpiresAt = new Date(subscription.current_period_end * 1000).toISOString()
     
     // Update subscription
     await query(`

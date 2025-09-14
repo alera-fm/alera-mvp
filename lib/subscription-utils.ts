@@ -403,6 +403,9 @@ export async function updateSubscriptionTier(
   subscriptionExpiresAt?: Date
 ): Promise<boolean> {
   try {
+    // Convert Date to ISO string for PostgreSQL
+    const expiresAtISO = subscriptionExpiresAt?.toISOString()
+    
     await query(`
       UPDATE subscriptions 
       SET tier = $1, 
@@ -412,7 +415,7 @@ export async function updateSubscriptionTier(
           subscription_expires_at = $4,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $5
-    `, [tier, stripeCustomerId, stripeSubscriptionId, subscriptionExpiresAt, userId])
+    `, [tier, stripeCustomerId, stripeSubscriptionId, expiresAtISO, userId])
     
     return true
   } catch (error) {
