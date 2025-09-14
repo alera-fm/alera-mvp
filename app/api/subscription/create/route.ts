@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
       subscription.stripe_subscription_id = null
       subscription.stripe_customer_id = null
     }
-    }
     
     let customerId = subscription.stripe_customer_id
     
