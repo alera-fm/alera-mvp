@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
 import { useAuth } from './AuthContext'
+import { useToast } from '@/hooks/use-toast'
 
 export interface Subscription {
   id: number
@@ -60,6 +61,7 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth()
+  const { toast } = useToast()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [usage, setUsage] = useState<Usage | null>(null)
   const [featureAccess, setFeatureAccess] = useState<FeatureAccess | null>(null)
