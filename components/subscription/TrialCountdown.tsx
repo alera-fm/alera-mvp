@@ -3,7 +3,7 @@
 import { useSubscription } from '@/context/SubscriptionContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Clock, Zap } from 'lucide-react'
+import { Clock, Zap, ArrowRight, Timer } from 'lucide-react'
 
 export function TrialCountdown() {
   const { subscription, daysRemaining, showUpgradeDialog } = useSubscription()
@@ -26,24 +26,24 @@ export function TrialCountdown() {
     switch (urgencyLevel) {
       case 'critical':
         return {
-          container: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-          text: 'text-red-800 dark:text-red-200',
-          subtext: 'text-red-700 dark:text-red-300',
-          button: 'bg-red-600 hover:bg-red-700 text-white'
+          container: 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 border-2 border-red-300 dark:border-red-700 shadow-lg',
+          text: 'text-red-900 dark:text-red-100 font-bold',
+          subtext: 'text-red-800 dark:text-red-200',
+          button: 'bg-red-600 hover:bg-red-700 text-white font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200'
         }
       case 'warning':
         return {
-          container: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800',
-          text: 'text-orange-800 dark:text-orange-200',
-          subtext: 'text-orange-700 dark:text-orange-300',
-          button: 'bg-orange-600 hover:bg-orange-700 text-white'
+          container: 'bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-800/20 border-2 border-orange-300 dark:border-orange-700 shadow-lg',
+          text: 'text-orange-900 dark:text-orange-100 font-bold',
+          subtext: 'text-orange-800 dark:text-orange-200',
+          button: 'bg-orange-600 hover:bg-orange-700 text-white font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200'
         }
       default:
         return {
-          container: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
-          text: 'text-yellow-800 dark:text-yellow-200',
-          subtext: 'text-yellow-700 dark:text-yellow-300',
-          button: 'bg-gradient-to-r from-purple-600 to-yellow-500 hover:from-purple-700 hover:to-yellow-600 text-white'
+          container: 'bg-gradient-to-r from-purple-50 to-yellow-50 dark:from-purple-900/30 dark:to-yellow-800/20 border-2 border-purple-300 dark:border-purple-700 shadow-lg',
+          text: 'text-purple-900 dark:text-purple-100 font-bold',
+          subtext: 'text-purple-800 dark:text-purple-200',
+          button: 'bg-gradient-to-r from-purple-600 to-yellow-500 hover:from-purple-700 hover:to-yellow-600 text-white font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200'
         }
     }
   }
@@ -52,28 +52,28 @@ export function TrialCountdown() {
 
   const getMessage = () => {
     if (daysRemaining === 0) {
-      return 'Your trial expires today!'
+      return 'Keep your momentum going. Your trial expires today!'
     }
     if (daysRemaining === 1) {
-      return '1 day remaining in your free trial'
+      return 'Keep your momentum going. Your trial ends tomorrow!'
     }
     if (daysRemaining <= 3) {
-      return `Only ${daysRemaining} days left in your trial`
+      return `Keep your momentum going. Your trial ends in ${daysRemaining} days.`
     }
     if (daysRemaining <= 7) {
-      return `${daysRemaining} days remaining in your trial`
+      return `Keep your momentum going. Your trial ends in ${daysRemaining} days.`
     }
-    return `${daysRemaining} days remaining in your free trial`
+    return `Keep your momentum going. Your trial ends in ${daysRemaining} days.`
   }
 
   const getSubMessage = () => {
     if (daysRemaining <= 3) {
-      return 'Upgrade now to continue accessing all features without interruption.'
+      return 'Upgrade to Pro to ensure your music stays live and your career tools remain uninterrupted.'
     }
     if (daysRemaining <= 7) {
-      return 'Consider upgrading to ensure uninterrupted access to your music career tools.'
+      return 'Upgrade to Pro to ensure your music stays live and your career tools remain uninterrupted.'
     }
-    return 'Upgrade anytime to unlock unlimited access and support your music career.'
+    return 'Upgrade to Pro to ensure your music stays live and your career tools remain uninterrupted.'
   }
 
   const handleUpgradeClick = () => {
@@ -89,8 +89,8 @@ export function TrialCountdown() {
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`rounded-full p-2 ${urgencyLevel === 'critical' ? 'bg-red-100 dark:bg-red-900' : urgencyLevel === 'warning' ? 'bg-orange-100 dark:bg-orange-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
-              <Clock className={`h-5 w-5 ${urgencyLevel === 'critical' ? 'text-red-600' : urgencyLevel === 'warning' ? 'text-orange-600' : 'text-yellow-600'}`} />
+            <div className={`rounded-full p-2 ${urgencyLevel === 'critical' ? 'bg-red-100 dark:bg-red-900' : urgencyLevel === 'warning' ? 'bg-orange-100 dark:bg-orange-900' : 'bg-purple-100 dark:bg-purple-900'}`}>
+              <Timer className={`h-5 w-5 ${urgencyLevel === 'critical' ? 'text-red-600' : urgencyLevel === 'warning' ? 'text-orange-600' : 'text-purple-600'} ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`} />
             </div>
             <div>
               <h3 className={`font-semibold ${styles.text}`}>
@@ -109,6 +109,7 @@ export function TrialCountdown() {
           >
             <Zap className="h-4 w-4 mr-2" />
             Upgrade Now
+            <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
       </CardContent>

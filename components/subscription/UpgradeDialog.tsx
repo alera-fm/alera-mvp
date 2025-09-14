@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Check, Zap, Crown, Loader2 } from 'lucide-react'
+import { Check, Zap, Crown, Loader2, ArrowRight, Star } from 'lucide-react'
 
 export function UpgradeDialog() {
   const { 
@@ -40,22 +40,18 @@ export function UpgradeDialog() {
 
   const tierFeatures = {
     plus: [
-      'Unlimited Single releases',
-      'Unlimited EP releases', 
-      'Unlimited Album releases',
+      'Unlimited releases (Singles, EPs, & Albums)',
       '100,000 AI tokens per month',
-      'Basic fan management',
+      'Fan Zone Access',
       'Basic analytics'
     ],
     pro: [
       'Everything in Plus',
-      'Unlimited AI assistance',
-      'Advanced email campaigns',
-      'Fan import tools',
-      'Tip Jar monetization',
-      'Paid fan subscriptions',
-      'Advanced analytics',
-      'Priority support'
+      'Direct Fan Monetisation (Tips & Subscriptions)',
+      'Unlimited AI Career Manager',
+      'Advanced Fan Zone Access (Campaigns & Import)',
+      'Deeper Career Analytics',
+      'Priority Support'
     ]
   }
 
@@ -132,13 +128,21 @@ export function UpgradeDialog() {
                     <Zap className="h-4 w-4 mr-2" />
                   )}
                   {subscription?.tier === 'plus' ? 'Current Plan' : 'Upgrade to Plus'}
+                  {subscription?.tier !== 'plus' && <ArrowRight className="h-4 w-4 ml-2" />}
                 </Button>
               </CardContent>
             </Card>
 
             {/* Pro Tier */}
-            <Card className={`relative ${selectedTier === 'pro' ? 'ring-2 ring-yellow-500' : ''}`}>
-              <CardHeader>
+            <Card className={`relative ${selectedTier === 'pro' ? 'ring-2 ring-yellow-500' : ''} border-2 border-yellow-400 dark:border-yellow-500 shadow-lg`}>
+              {/* Most Popular Badge */}
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-purple-600 to-yellow-500 text-white px-4 py-1 text-sm font-semibold shadow-md">
+                  <Star className="h-3 w-3 mr-1" />
+                  Most Popular
+                </Badge>
+              </div>
+              <CardHeader className="pt-6">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Crown className="h-5 w-5 text-yellow-500" />
@@ -165,7 +169,7 @@ export function UpgradeDialog() {
                 <Button 
                   onClick={() => handleUpgrade('pro')}
                   disabled={loading || subscription?.tier === 'pro'}
-                  className="w-full bg-gradient-to-r from-purple-600 to-yellow-500 hover:from-purple-700 hover:to-yellow-600"
+                  className="w-full bg-gradient-to-r from-purple-600 to-yellow-500 hover:from-purple-700 hover:to-yellow-600 font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -173,6 +177,7 @@ export function UpgradeDialog() {
                     <Crown className="h-4 w-4 mr-2" />
                   )}
                   {subscription?.tier === 'pro' ? 'Current Plan' : 'Upgrade to Pro'}
+                  {subscription?.tier !== 'pro' && <ArrowRight className="h-4 w-4 ml-2" />}
                 </Button>
               </CardContent>
             </Card>

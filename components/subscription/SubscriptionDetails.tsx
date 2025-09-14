@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Loader2, Crown, Zap, XCircle, Receipt } from "lucide-react";
+import { CreditCard, Loader2, Crown, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/context/SubscriptionContext";
 
 interface Subscription {
   tier: 'trial' | 'plus' | 'pro';
-  status: 'active' | 'expired' | 'cancelled';
+  status: 'active' | 'expired' | 'cancelled' | 'cancelling';
   trialExpiresAt?: string;
   subscriptionExpiresAt?: string;
   current_period_end?: string;
@@ -118,9 +118,10 @@ export function SubscriptionDetails() {
           textColor: 'text-purple-500',
           price: '$4.99/month',
           features: [
-            'Unlimited releases',
+            'Unlimited releases (Singles, EPs, & Albums)',
             '100,000 AI tokens per month',
-            'Basic fan management',
+            'Fan Zone Access',
+            'Basic analytics',
           ],
         };
       case 'pro':
@@ -133,11 +134,11 @@ export function SubscriptionDetails() {
           price: '$14.99/month',
           features: [
             'Everything in Plus',
-            'Unlimited AI tokens',
-            'Advanced fan management',
-            'Email campaigns',
-            'Fan import tools',
-            'Monetization features',
+            'Direct Fan Monetisation (Tips & Subscriptions)',
+            'Unlimited AI Career Manager',
+            'Advanced Fan Zone Access (Campaigns & Import)',
+            'Deeper Career Analytics',
+            'Priority Support',
           ],
         };
       default:
@@ -168,6 +169,8 @@ export function SubscriptionDetails() {
     switch (status) {
       case 'active':
         return <Badge className="bg-green-500">Active</Badge>;
+      case 'cancelling':
+        return <Badge className="bg-orange-500">Cancelling</Badge>;
       case 'expired':
         return <Badge variant="destructive">Expired</Badge>;
       case 'cancelled':
@@ -218,7 +221,7 @@ export function SubscriptionDetails() {
           </div>
           <div className="flex items-center gap-2">
             {/* Manage Subscription Button - Shows Stripe Portal */}
-            {(subscription.stripe_customer_id || subscription.tier !== 'trial') && (
+            {(subscription.stripeCustomerId || subscription.tier !== 'trial') && (
               <Button
                 variant="outline"
                 onClick={handleManageSubscription}
@@ -269,60 +272,6 @@ export function SubscriptionDetails() {
               </Button>
             )}
 
-            {/* Cancel Subscription Button */}
-            {subscription.stripe_customer_id && subscription.status === 'active' && subscription.tier !== 'trial' && (
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  try {
-                    const token = localStorage.getItem("authToken");
-                    const response = await fetch("/api/subscription/cancel", {
-                      method: "POST",
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                      },
-                    });
-
-                    if (response.ok) {
-                      toast({
-                        title: "Subscription Cancelled",
-                        description: "Your subscription will remain active until the end of the current billing period.",
-                      });
-                      // Refresh subscription details
-                      fetchSubscriptionDetails();
-                    } else {
-                      throw new Error("Failed to cancel subscription");
-                    }
-                  } catch (error) {
-                    console.error("Error cancelling subscription:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to cancel subscription",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                className="flex items-center gap-2"
-                title="Cancel subscription at the end of current billing period"
-              >
-                <XCircle className="h-4 w-4" />
-                Cancel Subscription
-              </Button>
-            )}
-
-            {/* View Invoices Button */}
-            {subscription.stripe_customer_id && (
-              <Button
-                variant="outline"
-                onClick={handleManageSubscription}
-                disabled={managingSubscription}
-                className="flex items-center gap-2"
-                title="View all invoices in Stripe Portal"
-              >
-                <Receipt className="h-4 w-4" />
-                View Invoices
-              </Button>
-            )}
           </div>
         </div>
       </CardHeader>
@@ -338,7 +287,11 @@ export function SubscriptionDetails() {
             </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                {subscription.tier === 'trial' ? 'Trial Expires' : 'Next Billing Date'}
+                {subscription.tier === 'trial' 
+                  ? 'Trial Expires' 
+                  : subscription.status === 'cancelling' 
+                    ? 'Active Until' 
+                    : 'Next Billing Date'}
               </h4>
               <p className="font-medium">
                 {subscription.tier === 'trial' ? (
@@ -349,6 +302,22 @@ export function SubscriptionDetails() {
               </p>
             </div>
           </div>
+
+          {/* Cancellation Notice */}
+          {subscription.status === 'cancelling' && (
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+              <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-2">
+                Subscription Cancelled
+              </h4>
+              <p className="text-sm text-orange-700 dark:text-orange-300">
+                Your subscription has been cancelled but will remain active until{' '}
+                <span className="font-medium">
+                  {formatDate(subscription.current_period_end || subscription.subscriptionExpiresAt)}
+                </span>. 
+                You can continue using all {tierDetails.name} features until then.
+              </p>
+            </div>
+          )}
 
           {/* Price */}
           {tierDetails.price && (

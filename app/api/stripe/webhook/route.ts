@@ -212,6 +212,21 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       console.error('Error processing subscription expiration date:', error)
     }
     
+    // Determine status based on Stripe subscription state
+    let dbStatus = 'active'
+    if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+      dbStatus = 'cancelled'
+    } else if (subscription.cancel_at_period_end) {
+      // Subscription is cancelled but still active until period end
+      dbStatus = 'cancelling'
+    } else if (subscription.status === 'active') {
+      dbStatus = 'active'
+    } else {
+      dbStatus = 'cancelled'
+    }
+
+    console.log(`Subscription status mapping: Stripe=${subscription.status}, cancel_at_period_end=${subscription.cancel_at_period_end}, DB=${dbStatus}`)
+
     // Update subscription
     await query(`
       UPDATE subscriptions 
@@ -223,7 +238,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       WHERE user_id = $5
     `, [
       tier,
-      subscription.status === 'active' ? 'active' : 'cancelled',
+      dbStatus,
       subscription.id,
       subscriptionExpiresAt,
       userId
