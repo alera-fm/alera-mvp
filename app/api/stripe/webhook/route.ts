@@ -149,20 +149,35 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     
     const userId = userResult.rows[0].user_id
     
-    // Safely convert Unix timestamp to Date
+    // Get current period end from Stripe subscription
     let subscriptionExpiresAt: string | null = null
     try {
+      // Log the raw value for debugging
+      console.log('Raw current_period_end:', subscription.current_period_end)
+      
       if (subscription.current_period_end) {
-        const expiresAtDate = new Date(subscription.current_period_end * 1000)
+        // Stripe sends timestamps in seconds, convert to milliseconds
+        const timestamp = typeof subscription.current_period_end === 'string' 
+          ? parseInt(subscription.current_period_end) * 1000
+          : subscription.current_period_end * 1000;
+          
+        const expiresAtDate = new Date(timestamp)
+        
+        // Log the converted date for debugging
+        console.log('Converted date:', expiresAtDate)
+        
         // Validate the date is valid
         if (!isNaN(expiresAtDate.getTime())) {
           subscriptionExpiresAt = expiresAtDate.toISOString()
+          console.log('Final ISO string:', subscriptionExpiresAt)
         } else {
-          console.warn('Invalid subscription expiration date')
+          console.warn('Invalid date conversion result')
         }
+      } else {
+        console.warn('No current_period_end provided by Stripe')
       }
     } catch (error) {
-      console.warn('Error converting subscription expiration date:', error)
+      console.error('Error processing subscription expiration date:', error)
     }
     
     // Update subscription

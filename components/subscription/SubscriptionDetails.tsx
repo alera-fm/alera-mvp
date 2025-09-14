@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Loader2, Crown, Zap } from "lucide-react";
+import { CreditCard, Loader2, Crown, Zap, XCircle, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Subscription {
@@ -134,11 +134,21 @@ export function SubscriptionDetails() {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return 'N/A';
+      }
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -193,21 +203,120 @@ export function SubscriptionDetails() {
             </CardTitle>
             <CardDescription>{tierDetails.description}</CardDescription>
           </div>
-          {subscription.stripe_customer_id && (
-            <Button
-              variant="outline"
-              onClick={handleManageSubscription}
-              disabled={managingSubscription}
-              className="flex items-center gap-2"
-            >
-              {managingSubscription ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CreditCard className="h-4 w-4" />
-              )}
-              Manage Billing
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Manage Subscription Button - Shows Stripe Portal */}
+            {subscription.stripe_customer_id && subscription.status === 'active' && (
+              <Button
+                variant="outline"
+                onClick={handleManageSubscription}
+                disabled={managingSubscription}
+                className="flex items-center gap-2"
+                title="Access Stripe Portal to manage payment methods, view invoices, and more"
+              >
+                {managingSubscription ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                Manage Subscription
+              </Button>
+            )}
+
+            {/* Upgrade Button */}
+            {subscription.tier !== 'pro' && subscription.status !== 'cancelled' && (
+              <Button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem("authToken");
+                    const response = await fetch("/api/stripe/create-checkout-session", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        priceId: subscription.tier === 'trial' ? 'plus' : 'pro',
+                      }),
+                    });
+
+                    if (response.ok) {
+                      const { url } = await response.json();
+                      window.location.href = url;
+                    } else {
+                      throw new Error("Failed to create checkout session");
+                    }
+                  } catch (error) {
+                    console.error("Error upgrading subscription:", error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to start upgrade process",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                className="flex items-center gap-2"
+                title={`Upgrade to ${subscription.tier === 'trial' ? 'Plus ($4.99/month)' : 'Pro ($14.99/month)'}`}
+              >
+                <Crown className="h-4 w-4" />
+                Upgrade to {subscription.tier === 'trial' ? 'Plus' : 'Pro'}
+              </Button>
+            )}
+
+            {/* Cancel Subscription Button */}
+            {subscription.stripe_customer_id && subscription.status === 'active' && subscription.tier !== 'trial' && (
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem("authToken");
+                    const response = await fetch("/api/subscription/cancel", {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    });
+
+                    if (response.ok) {
+                      toast({
+                        title: "Subscription Cancelled",
+                        description: "Your subscription will remain active until the end of the current billing period.",
+                      });
+                      // Refresh subscription details
+                      fetchSubscriptionDetails();
+                    } else {
+                      throw new Error("Failed to cancel subscription");
+                    }
+                  } catch (error) {
+                    console.error("Error cancelling subscription:", error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to cancel subscription",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                className="flex items-center gap-2"
+                title="Cancel subscription at the end of current billing period"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancel Subscription
+              </Button>
+            )}
+
+            {/* View Invoices Button */}
+            {subscription.stripe_customer_id && (
+              <Button
+                variant="outline"
+                onClick={handleManageSubscription}
+                disabled={managingSubscription}
+                className="flex items-center gap-2"
+                title="View all invoices in Stripe Portal"
+              >
+                <Receipt className="h-4 w-4" />
+                View Invoices
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
