@@ -115,14 +115,14 @@ export default function FanZonePage() {
           </TabsTrigger>
           
           <FeatureGateTab feature="fan_campaigns" tier="pro">
-            <TabsTrigger value="campaigns" className="flex items-center gap-2">
+            <TabsTrigger value="campaigns" className="flex w-full items-center gap-2">
               <Mail className="h-4 w-4" />
               Campaigns
             </TabsTrigger>
           </FeatureGateTab>
           
           <FeatureGateTab feature="fan_import" tier="pro">
-            <TabsTrigger value="import" className="flex items-center gap-2">
+            <TabsTrigger value="import" className="flex w-full items-center gap-2">
               <Upload className="h-4 w-4" />
               Import
             </TabsTrigger>

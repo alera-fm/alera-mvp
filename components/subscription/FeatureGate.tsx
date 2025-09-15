@@ -199,12 +199,12 @@ export function FeatureGateTab({
 
   return (
     <div 
-      className={`${className} ${!hasAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
+      className={` !w-full inline-flex items-center justify-center ${!hasAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
       onClick={handleClick}
     >
       {children}
       {!hasAccess && (
-        <Lock className="h-3 w-3 ml-1 inline-block text-gray-400" />
+        <Lock className="h-3 w-3  inline-block text-gray-400 -ml-6" />
       )}
     </div>
   )
