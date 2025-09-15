@@ -44,6 +44,7 @@ import {
   Save,
   Send,
   Loader2,
+  Zap,
 } from "lucide-react";
 
 const STORES = [
@@ -197,12 +198,14 @@ export function DistributionFlow({
   onSave,
 }: DistributionFlowProps) {
   const { toast } = useToast();
-  const { canAccessFeature, showUpgradeDialog } = useSubscription();
+  const { canAccessFeature, showUpgradeDialog, subscription } = useSubscription();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [coverUploadProgress, setCoverUploadProgress] = useState(0);
   const [audioUploadStates, setAudioUploadStates] = useState<{[key: number]: {uploading: boolean, progress: number}}>({});
+  const [canCreateRelease, setCanCreateRelease] = useState(true);
+  const [checkingAccess, setCheckingAccess] = useState(true);
   const [formData, setFormData] = useState<Release>({
     distribution_type: "",
     artist_name: "",
@@ -235,6 +238,36 @@ export function DistributionFlow({
       setFormData(existingRelease);
     }
   }, [existingRelease]);
+
+  // Check if user can create releases on component mount
+  useEffect(() => {
+    const checkReleaseAccess = async () => {
+      if (!subscription) {
+        setCheckingAccess(true);
+        return;
+      }
+
+      try {
+        // If editing existing release, always allow access
+        if (existingRelease) {
+          setCanCreateRelease(true);
+          setCheckingAccess(false);
+          return;
+        }
+
+        // Check if user can create new releases
+        const canCreate = await canAccessFeature('release_creation');
+        setCanCreateRelease(canCreate);
+      } catch (error) {
+        console.error('Error checking release access:', error);
+        setCanCreateRelease(false);
+      } finally {
+        setCheckingAccess(false);
+      }
+    };
+
+    checkReleaseAccess();
+  }, [subscription, existingRelease, canAccessFeature]);
 
   useEffect(() => {
     // Initialize tracks based on distribution type
@@ -394,7 +427,7 @@ export function DistributionFlow({
     
     if (!canCreate) {
       const message = formData.distribution_type === 'Single' 
-        ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+        ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
         : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
       showUpgradeDialog(message, 'plus');
       return;
@@ -455,7 +488,7 @@ export function DistributionFlow({
         // Handle subscription-related errors with upgrade dialog
         if (response.status === 403 && errorData.subscriptionLimited) {
           const message = formData.distribution_type === 'Single' 
-            ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+            ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
             : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
           showUpgradeDialog(message, 'plus');
           return;
@@ -483,7 +516,7 @@ export function DistributionFlow({
     
     if (!canCreate) {
       const message = formData.distribution_type === 'Single' 
-        ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+        ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
         : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
       showUpgradeDialog(message, 'plus');
       return;
@@ -550,7 +583,7 @@ export function DistributionFlow({
         // Handle subscription-related errors with upgrade dialog
         if (response.status === 403 && errorData.subscriptionLimited) {
           const message = formData.distribution_type === 'Single' 
-            ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+            ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
             : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
           showUpgradeDialog(message, 'plus');
           return;
@@ -2009,6 +2042,47 @@ export function DistributionFlow({
     { number: 2, title: "Tracks", icon: Headphones },
     { number: 3, title: "Terms", icon: FileText },
   ];
+
+  // Show loading state while checking access
+  if (checkingAccess) {
+    return (
+      <div className="max-w-full mx-auto mt-6">
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show upgrade prompt if user cannot create releases
+  if (!canCreateRelease && !existingRelease) {
+    return (
+      <div className="max-w-full mx-auto mt-6">
+        <div className="text-center p-8">
+          <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+            <Music className="h-12 w-12 text-gray-400" />
+          </div>
+          
+          <h1 className="text-3xl font-bold mb-4">Release Creation Limit Reached</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases and unlock the full power of your music career.
+          </p>
+          
+          <Button 
+            onClick={() => showUpgradeDialog(
+              'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.',
+              'plus'
+            )}
+            className="bg-gradient-to-r from-[#BFFF00] to-[#9AFF00] hover:from-[#BFFF00]/90 hover:to-[#9AFF00]/90 text-black font-semibold px-8 py-3 text-lg"
+          >
+            <Zap className="h-5 w-5 mr-2" />
+            Upgrade Now →
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-full mx-auto mt-6">

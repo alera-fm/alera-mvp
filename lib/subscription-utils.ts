@@ -138,7 +138,7 @@ export async function trackAIUsage(userId: number, tokens: number, date: Date = 
   }
 }
 
-// Count pending releases for user
+// Count pending releases for user (draft + under_review)
 export async function getPendingReleasesCount(userId: number): Promise<number> {
   try {
     const result = await query(
@@ -149,6 +149,21 @@ export async function getPendingReleasesCount(userId: number): Promise<number> {
     return parseInt(result.rows[0]?.count || '0')
   } catch (error) {
     console.error('Error counting pending releases:', error)
+    return 0
+  }
+}
+
+// Count total releases for user (ALL statuses - for trial limit check)
+export async function getTotalReleasesCount(userId: number): Promise<number> {
+  try {
+    const result = await query(
+      "SELECT COUNT(*) FROM releases WHERE artist_id = $1",
+      [userId]
+    )
+    
+    return parseInt(result.rows[0]?.count || '0')
+  } catch (error) {
+    console.error('Error counting total releases:', error)
     return 0
   }
 }
@@ -184,12 +199,12 @@ export async function checkReleaseLimit(userId: number, releaseType?: string): P
     }
   }
   
-  const pendingReleases = await getPendingReleasesCount(userId)
+  const totalReleases = await getTotalReleasesCount(userId)
   
-  if (pendingReleases >= 1) {
+  if (totalReleases >= 1) {
     return {
       allowed: false,
-      reason: 'Trial users can only have 1 pending release',
+      reason: 'Trial users can only have 1 release total (regardless of status)',
       upgradeRequired: 'plus'
     }
   }
