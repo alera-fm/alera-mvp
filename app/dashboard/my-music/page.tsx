@@ -29,6 +29,7 @@ interface Release {
   label: string | null;
   copyright: string;
   upcEan: string | null;
+  upc?: string; // UPC code from distributor
   explicitContent: boolean;
   credits: {
     producers: string[];
@@ -41,6 +42,12 @@ interface Release {
   };
   lyrics: string | null;
   isrcCode: string | null;
+  tracks?: Array<{
+    id: string;
+    track_number: number;
+    track_title: string;
+    isrc: string;
+  }>;
   trackCount: number;
   distributionType: string;
 }
@@ -92,6 +99,7 @@ export default function MyMusicPage() {
           label: release.record_label || "Independent",
           copyright: `© ${new Date(release.created_at).getFullYear()} ${release.artist_name}`,
           upcEan: null, // This would be generated after approval
+          upc: release.upc, // UPC code from distributor
           explicitContent: release.explicit_lyrics || false,
           credits: {
             producers: [],
@@ -103,7 +111,8 @@ export default function MyMusicPage() {
             featuredArtists: [],
           },
           lyrics: null,
-          isrcCode: null, // This would be generated after approval
+          isrcCode: release.tracks && release.tracks.length > 0 ? release.tracks[0].isrc : null, // ISRC from first track
+          tracks: release.tracks, // Track details including ISRC codes
           trackCount: release.track_count || 0,
           distributionType: release.distribution_type,
         }));
@@ -133,10 +142,17 @@ export default function MyMusicPage() {
         return "Pending";
       case "under_review":
         return "Under Review";
-      case "approved":
+      case "sent_to_stores":
         return "Sent to Stores";
+      case "live":
+        return "Live";
       case "rejected":
         return "Rejected";
+      case "takedown":
+        return "Takedown";
+      // Legacy status mappings (for backwards compatibility)
+      case "approved":
+        return "Sent to Stores";
       case "distributed":
         return "Live";
       default:

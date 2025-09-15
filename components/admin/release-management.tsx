@@ -43,6 +43,7 @@ interface Release {
   artist_names_agreement?: boolean
   snapchat_terms?: boolean
   youtube_music_agreement?: boolean
+  upc?: string
 }
 
 interface Artist {
@@ -60,6 +61,10 @@ export function ReleaseManagement() {
   const [artists, setArtists] = useState<Artist[]>([])
   const [adminNotes, setAdminNotes] = useState("")
   const [processing, setProcessing] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState<string | null>(null)
+  const [upcCode, setUpcCode] = useState("")
+  const [trackIsrcCodes, setTrackIsrcCodes] = useState<{[key: string]: string}>({})
+  const [editingCodes, setEditingCodes] = useState(false)
 
   useEffect(() => {
     fetchArtists()
@@ -172,6 +177,61 @@ export function ReleaseManagement() {
     }
   }
 
+  const updateCodes = async (releaseId: string) => {
+    setProcessing(releaseId)
+    try {
+      const token = localStorage.getItem("authToken")
+      
+      // Prepare track codes array
+      const trackCodes = Object.entries(trackIsrcCodes).map(([trackId, isrc]) => ({
+        trackId,
+        isrc
+      }))
+
+      const response = await fetch(`/api/admin/releases/${releaseId}/codes`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          upc: upcCode || undefined,
+          trackCodes: trackCodes.length > 0 ? trackCodes : undefined,
+        }),
+      })
+
+      if (response.ok) {
+        toast.success("Codes updated successfully")
+        fetchReleases()
+        setEditingCodes(false)
+        setUpcCode("")
+        setTrackIsrcCodes({})
+        setSelectedRelease(null)
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || "Failed to update codes")
+      }
+    } catch (error) {
+      console.error("Error updating codes:", error)
+      toast.error("Error updating codes")
+    } finally {
+      setProcessing(null)
+    }
+  }
+
+  const initializeCodes = (release: Release) => {
+    setUpcCode(release.upc || "")
+    
+    // Initialize track ISRC codes
+    const initialTrackCodes: {[key: string]: string} = {}
+    if (release.tracks) {
+      release.tracks.forEach((track: any) => {
+        initialTrackCodes[track.id] = track.isrc || ""
+      })
+    }
+    setTrackIsrcCodes(initialTrackCodes)
+  }
+
   const getStatusBadge = (status: string) => {
     const variants = {
       draft: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
@@ -179,6 +239,7 @@ export function ReleaseManagement() {
       sent_to_stores: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
       live: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
       rejected: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+      takedown: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
       // Legacy statuses for backwards compatibility
       approved: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
       published: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -194,6 +255,8 @@ export function ReleaseManagement() {
           return 'Live'
         case 'rejected':
           return 'Rejected'
+        case 'takedown':
+          return 'Takedown'
         case 'approved':
           return 'Approved' // Legacy
         case 'published':
@@ -227,7 +290,42 @@ export function ReleaseManagement() {
     return `${header}\n${values}`;
   };
 
-  // Function to trigger the download of release data as CSV
+  // Function to trigger the download of complete release data as ZIP
+  const downloadCompleteReleaseData = async (release: Release) => {
+    if (!release) return;
+
+    setDownloading(release.id);
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(`/api/admin/releases/${release.id}/download`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${release.release_title.replace(/[^a-zA-Z0-9]/g, '_')}_complete_release_data.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        toast.success("Release data downloaded successfully!");
+      } else {
+        toast.error("Failed to download release data");
+      }
+    } catch (error) {
+      console.error("Error downloading release data:", error);
+      toast.error("Error downloading release data");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  // Function to trigger the download of release data as CSV (legacy)
   const downloadReleaseData = (release: Release) => {
     if (!release) return;
 
@@ -290,6 +388,7 @@ export function ReleaseManagement() {
                 <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                 <SelectItem value="live">Live</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="takedown">Takedown</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -328,6 +427,17 @@ export function ReleaseManagement() {
                       <span className="text-gray-500">{release.track_count} tracks</span>
                     </div>
 
+                    <div className="text-xs space-y-1">
+                      <div>
+                        <span className="font-medium text-gray-700">UPC:</span> {release.upc || 'N/A'}
+                      </div>
+                      {release.tracks && release.tracks.length > 0 && (
+                        <div>
+                          <span className="font-medium text-gray-700">ISRC:</span> {release.tracks[0]?.isrc || 'N/A'}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="text-xs text-gray-600">
                       {formatDistanceToNow(new Date(release.submitted_at), {
                         addSuffix: true,
@@ -351,14 +461,31 @@ export function ReleaseManagement() {
                           <DialogHeader>
                             <DialogTitle className="flex items-center justify-between">
                               Release Details
-                              <Button
-                                onClick={() => downloadReleaseData(selectedRelease)}
-                                variant="outline"
-                                size="sm"
-                                className="ml-4"
-                              >
-                                Download Full Data
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => downloadCompleteReleaseData(selectedRelease)}
+                                  variant="default"
+                                  size="sm"
+                                  disabled={downloading === selectedRelease?.id}
+                                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white disabled:opacity-50"
+                                >
+                                  {downloading === selectedRelease?.id ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                      Downloading...
+                                    </>
+                                  ) : (
+                                    <>📦 Download Complete ZIP</>
+                                  )}
+                                </Button>
+                                <Button
+                                  onClick={() => downloadReleaseData(selectedRelease)}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  📊 CSV Only
+                                </Button>
+                              </div>
                             </DialogTitle>
                           </DialogHeader>
                           {selectedRelease && (
@@ -587,6 +714,7 @@ export function ReleaseManagement() {
                             <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                             <SelectItem value="live">Live</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="takedown">Takedown</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -606,6 +734,7 @@ export function ReleaseManagement() {
                     <TableHead>Type</TableHead>
                     <TableHead>Genre</TableHead>
                     <TableHead>Tracks</TableHead>
+                    <TableHead>Codes</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Submitted</TableHead>
                     <TableHead>Actions</TableHead>
@@ -631,6 +760,18 @@ export function ReleaseManagement() {
                       </TableCell>
                       <TableCell className="text-sm">{release.primary_genre}</TableCell>
                       <TableCell className="text-center">{release.track_count}</TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-xs">
+                            <span className="font-medium">UPC:</span> {release.upc || 'N/A'}
+                          </div>
+                          {release.tracks && release.tracks.length > 0 && (
+                            <div className="text-xs">
+                              <span className="font-medium">ISRC:</span> {release.tracks[0]?.isrc || 'N/A'}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{getStatusBadge(release.status)}</TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {formatDistanceToNow(new Date(release.submitted_at), {
@@ -650,14 +791,31 @@ export function ReleaseManagement() {
                               <DialogHeader>
                                 <DialogTitle className="flex items-center justify-between">
                                   Release Details
-                                  <Button
-                                    onClick={() => downloadReleaseData(selectedRelease)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="ml-4"
-                                  >
-                                    Download Full Data
-                                  </Button>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      onClick={() => downloadCompleteReleaseData(selectedRelease)}
+                                      variant="default"
+                                      size="sm"
+                                      disabled={downloading === selectedRelease?.id}
+                                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white disabled:opacity-50"
+                                    >
+                                      {downloading === selectedRelease?.id ? (
+                                        <>
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                          Downloading...
+                                        </>
+                                      ) : (
+                                        <>📦 Download Complete ZIP</>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      onClick={() => downloadReleaseData(selectedRelease)}
+                                      variant="outline"
+                                      size="sm"
+                                    >
+                                      📊 CSV Only
+                                    </Button>
+                                  </div>
                                 </DialogTitle>
                               </DialogHeader>
                               {selectedRelease && (
@@ -836,6 +994,113 @@ export function ReleaseManagement() {
                                     </div>
                                   )}
 
+                                  {/* UPC and ISRC Code Management */}
+                                  <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                      <h3 className="font-medium text-lg border-b pb-2">Distribution Codes</h3>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          if (!editingCodes) {
+                                            initializeCodes(selectedRelease)
+                                          }
+                                          setEditingCodes(!editingCodes)
+                                        }}
+                                      >
+                                        {editingCodes ? 'Cancel' : 'Edit Codes'}
+                                      </Button>
+                                    </div>
+                                    
+                                    {editingCodes ? (
+                                      <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                                        {/* UPC Code */}
+                                        <div>
+                                          <label className="text-sm font-medium">UPC Code</label>
+                                          <input
+                                            type="text"
+                                            value={upcCode}
+                                            onChange={(e) => setUpcCode(e.target.value)}
+                                            placeholder="Enter UPC code from distributor"
+                                            className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                          />
+                                        </div>
+
+                                        {/* Track ISRC Codes */}
+                                        {selectedRelease.tracks && selectedRelease.tracks.length > 0 && (
+                                          <div>
+                                            <label className="text-sm font-medium">Track ISRC Codes</label>
+                                            <div className="space-y-2 mt-2">
+                                              {selectedRelease.tracks.map((track: any) => (
+                                                <div key={track.id} className="flex items-center gap-3">
+                                                  <span className="text-sm font-medium w-32">
+                                                    Track {track.track_number}:
+                                                  </span>
+                                                  <input
+                                                    type="text"
+                                                    value={trackIsrcCodes[track.id] || ''}
+                                                    onChange={(e) => setTrackIsrcCodes(prev => ({
+                                                      ...prev,
+                                                      [track.id]: e.target.value
+                                                    }))}
+                                                    placeholder="Enter ISRC code"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                                  />
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Save/Cancel Buttons */}
+                                        <div className="flex gap-2 pt-2">
+                                          <Button
+                                            onClick={() => updateCodes(selectedRelease.id)}
+                                            disabled={processing === selectedRelease.id}
+                                            className="bg-blue-600 hover:bg-blue-700"
+                                          >
+                                            {processing === selectedRelease.id ? 'Saving...' : 'Save Codes'}
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                              setEditingCodes(false)
+                                              setUpcCode("")
+                                              setTrackIsrcCodes({})
+                                            }}
+                                          >
+                                            Cancel
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-3">
+                                        {/* Display Current UPC */}
+                                        <div className="flex items-center gap-3">
+                                          <span className="text-sm font-medium w-24">UPC Code:</span>
+                                          <span className="text-sm">
+                                            {selectedRelease.upc || 'Not assigned'}
+                                          </span>
+                                        </div>
+
+                                        {/* Display Current ISRC Codes */}
+                                        {selectedRelease.tracks && selectedRelease.tracks.length > 0 && (
+                                          <div>
+                                            <span className="text-sm font-medium">Track ISRC Codes:</span>
+                                            <div className="space-y-1 mt-1">
+                                              {selectedRelease.tracks.map((track: any) => (
+                                                <div key={track.id} className="flex items-center gap-3 text-sm">
+                                                  <span className="w-32">Track {track.track_number}:</span>
+                                                  <span>{track.isrc || 'Not assigned'}</span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+
                                   <div className="space-y-4">
                                     <div>
                                       <label className="text-sm font-medium">Admin Notes</label>
@@ -862,6 +1127,7 @@ export function ReleaseManagement() {
                                             <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                                             <SelectItem value="live">Live</SelectItem>
                                             <SelectItem value="rejected">Rejected</SelectItem>
+                                            <SelectItem value="takedown">Takedown</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
@@ -885,6 +1151,7 @@ export function ReleaseManagement() {
                               <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                               <SelectItem value="live">Live</SelectItem>
                               <SelectItem value="rejected">Rejected</SelectItem>
+                              <SelectItem value="takedown">Takedown</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

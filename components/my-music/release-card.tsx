@@ -23,6 +23,7 @@ interface Release {
   label: string | null
   copyright: string
   upcEan: string | null
+  upc?: string
   explicitContent: boolean
   credits: {
     producers: string[]
@@ -56,6 +57,8 @@ const getStatusColor = (status: Release["status"]) => {
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
     case "Rejected":
       return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+    case "Takedown":
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
     default:
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
   }
@@ -127,6 +130,12 @@ export function ReleaseCard({ release, onEdit }: ReleaseCardProps) {
         {release.upcEan && (
           <div className="flex items-center justify-between text-xs text-[#666] dark:text-gray-400">
             <span>UPC/EAN: {release.upcEan}</span>
+          </div>
+        )}
+
+        {release.upc && (
+          <div className="flex items-center justify-between text-xs text-[#666] dark:text-gray-400">
+            <span>UPC: {release.upc}</span>
           </div>
         )}
 

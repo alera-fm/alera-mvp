@@ -38,7 +38,7 @@ export async function GET(
       JOIN users u ON r.artist_id = u.id
       LEFT JOIN tracks t ON r.id = t.release_id
       WHERE r.id = $1
-      GROUP BY r.id, u.artist_name, u.email
+      GROUP BY r.id, u.artist_name, u.email, r.upc
     `, [releaseId])
 
     if (releaseResult.rows.length === 0) {

@@ -12,7 +12,18 @@ export async function GET(request: NextRequest) {
 
     let query = `
       SELECT r.*, u.artist_name as artist_display_name, u.email as artist_email,
-             COUNT(t.id) as track_count
+             COUNT(t.id) as track_count,
+             COALESCE(
+               json_agg(
+                 json_build_object(
+                   'id', t.id,
+                   'track_number', t.track_number,
+                   'track_title', t.track_title,
+                   'isrc', t.isrc
+                 ) ORDER BY t.track_number
+               ) FILTER (WHERE t.id IS NOT NULL), 
+               '[]'
+             ) as tracks
       FROM releases r
       JOIN users u ON r.artist_id = u.id
       LEFT JOIN tracks t ON r.id = t.release_id
@@ -26,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
     
     query += `
-      GROUP BY r.id, u.artist_name, u.email
+      GROUP BY r.id, u.artist_name, u.email, r.upc
       ORDER BY r.submitted_at DESC`
 
     const releasesResult = await pool.query(query, params)
@@ -48,8 +59,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    if (!['under_review', 'sent_to_stores', 'live', 'rejected'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status. Must be one of: under_review, sent_to_stores, live, rejected' }, { status: 400 })
+    if (!['under_review', 'sent_to_stores', 'live', 'rejected', 'takedown'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status. Must be one of: under_review, sent_to_stores, live, rejected, takedown' }, { status: 400 })
     }
 
     const client = await pool.connect()

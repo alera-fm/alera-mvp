@@ -23,6 +23,7 @@ interface Release {
   label: string | null
   copyright: string
   upcEan: string | null
+  upc?: string
   explicitContent: boolean
   credits: {
     producers: string[]
@@ -56,6 +57,8 @@ const getStatusColor = (status: Release["status"]) => {
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
     case "Rejected":
       return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+    case "Takedown":
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
     default:
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
   }
@@ -145,9 +148,16 @@ export function ReleasesTable({ releases, onEdit }: ReleasesTableProps) {
                     <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded block">
                       ISRC: {release.isrcCode || "Pending"}
                     </code>
-                    <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded block">
-                      UPC: {release.upcEan || "Pending"}
-                    </code>
+                    {release.upc && (
+                      <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded block">
+                        UPC: {release.upc}
+                      </code>
+                    )}
+                    {release.upcEan && (
+                      <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded block">
+                        UPC/EAN: {release.upcEan}
+                      </code>
+                    )}
                   </div>
                 </TableCell>
 

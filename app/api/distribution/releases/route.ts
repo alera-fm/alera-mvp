@@ -242,11 +242,22 @@ export async function GET(request: NextRequest) {
       // Get all releases for the artist
       const releasesResult = await pool.query(`
         SELECT r.*, 
-               COUNT(t.id) as track_count
+               COUNT(t.id) as track_count,
+               COALESCE(
+                 json_agg(
+                   json_build_object(
+                     'id', t.id,
+                     'track_number', t.track_number,
+                     'track_title', t.track_title,
+                     'isrc', t.isrc
+                   ) ORDER BY t.track_number
+                 ) FILTER (WHERE t.id IS NOT NULL), 
+                 '[]'
+               ) as tracks
         FROM releases r
         LEFT JOIN tracks t ON r.id = t.release_id
         WHERE r.artist_id = $1
-        GROUP BY r.id
+        GROUP BY r.id, r.upc
         ORDER BY r.created_at DESC
       `, [decoded.userId])
 
