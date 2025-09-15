@@ -451,6 +451,16 @@ export function DistributionFlow({
         window.location.href = "/dashboard/my-music";
       } else {
         const errorData = await response.json();
+        
+        // Handle subscription-related errors with upgrade dialog
+        if (response.status === 403 && errorData.subscriptionLimited) {
+          const message = formData.distribution_type === 'Single' 
+            ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+            : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
+          showUpgradeDialog(message, 'plus');
+          return;
+        }
+        
         throw new Error(errorData.error || "Failed to save draft");
       }
     } catch (error) {
@@ -536,6 +546,16 @@ export function DistributionFlow({
         if (onSave) onSave(data.release);
       } else {
         const errorData = await response.json();
+        
+        // Handle subscription-related errors with upgrade dialog
+        if (response.status === 403 && errorData.subscriptionLimited) {
+          const message = formData.distribution_type === 'Single' 
+            ? 'Trial users can only have 1 pending release. Upgrade to create unlimited releases.'
+            : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
+          showUpgradeDialog(message, 'plus');
+          return;
+        }
+        
         throw new Error(errorData.error || "Failed to submit for review");
       }
     } catch (error) {
