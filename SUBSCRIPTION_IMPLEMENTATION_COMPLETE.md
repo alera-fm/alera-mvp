@@ -33,7 +33,7 @@ After comprehensive review and implementation, the ALERA subscription system is 
 
 ## 🎯 **FEATURE IMPLEMENTATION MATRIX**
 
-### **Trial Tier (3 months free)**
+### **Trial Tier (2 months free)**
 | Feature | Limitation | Backend | Frontend | Status |
 |---------|------------|---------|----------|--------|
 | Release Creation | 1 Single only | ✅ | ✅ | **COMPLETE** |

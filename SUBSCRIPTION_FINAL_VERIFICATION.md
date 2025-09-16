@@ -34,7 +34,7 @@ After systematic verification of every component against the SUBSCRIPTION_ARCHIT
 
 | Tier | Architecture Spec | Implementation Verification |
 |------|-------------------|----------------------------|
-| **Trial** | 3 months, 1 Single release, 1500 tokens/day | ✅ **PERFECT** - All limits enforced |
+| **Trial** | 2 months, 1 Single release, 1500 tokens/day | ✅ **PERFECT** - All limits enforced |
 | **Plus** | $4.99/month, Fan Zone limits, 100k tokens/month | ✅ **PERFECT** - All restrictions implemented |
 | **Pro** | $14.99/month, unlimited access | ✅ **PERFECT** - No restrictions |
 
@@ -202,7 +202,7 @@ idx_subscriptions_user_id, idx_subscriptions_tier, idx_subscriptions_status, etc
 - ✅ **Complete Stripe integration** with full event handling
 
 ### **Feature Verification: COMPLETE**
-- ✅ **Trial users**: 3 months, 1 Single release, 1,500 AI tokens/day
+- ✅ **Trial users**: 2 months, 1 Single release, 1,500 AI tokens/day
 - ✅ **Plus users**: $4.99/month, Fan Zone Dashboard+Fans only, 100k AI tokens/month
 - ✅ **Pro users**: $14.99/month, unlimited access to everything
 - ✅ **Expired trials**: Prompted to upgrade with limited access

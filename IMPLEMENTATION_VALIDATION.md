@@ -39,7 +39,7 @@
 
 | Tier | Architecture Spec | Implementation Status | Validation |
 |------|-------------------|----------------------|------------|
-| **Trial** | 3 months, 1 release, 1500 tokens/day | ✅ Implemented | ✅ All limits enforced |
+| **Trial** | 2 months, 1 release, 1500 tokens/day | ✅ Implemented | ✅ All limits enforced |
 | **Plus** | $4.99/month, Fan Zone limits, 100k tokens/month | ✅ Implemented | ✅ All limits enforced |
 | **Pro** | $14.99/month, unlimited access | ✅ Implemented | ✅ No restrictions |
 

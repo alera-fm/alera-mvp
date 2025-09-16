@@ -3,6 +3,7 @@ import { query, initDB } from "@/lib/db"
 import { hashPassword, generateRandomToken } from "@/lib/auth"
 import { sendVerificationEmail } from "@/lib/email"
 import { createSubscription } from "@/lib/subscription-utils"
+import { notifyNewArtistSignUp } from "@/lib/notifications"
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
 
     // Send verification email
     await sendVerificationEmail(email, verificationToken)
+
+    // Send Slack notification for new artist sign-up (non-blocking)
+    notifyNewArtistSignUp(artistName || email.split('@')[0], email)
 
     return NextResponse.json({
       message: "Registration successful. Please check your email to verify your account.",

@@ -3,13 +3,13 @@
 import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, BarChart3, Wallet, MessageSquare, Users, Rocket, Music, LogOut, Globe } from "lucide-react"
+import { Home, BarChart3, Wallet, MessageSquare, Users, Rocket, Music, LogOut, Globe, Settings } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import { useChat } from "@/context/ChatContext"
 
 export function MobileNavigation() {
   const pathname = usePathname()
-  const { logout, isAuthenticated } = useAuth()
+  const { logout, isAuthenticated, user } = useAuth()
   const { unread } = useChat()
   const [activeTab, setActiveTab] = useState("home")
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -23,6 +23,7 @@ export function MobileNavigation() {
     else if (pathname.startsWith("/dashboard/wallet")) setActiveTab("wallet")
     else if (pathname.startsWith("/dashboard/fanzone")) setActiveTab("fanzone")
     else if (pathname.startsWith("/dashboard/new-release")) setActiveTab("new-release")
+    else if (pathname.startsWith("/dashboard/admin")) setActiveTab("admin")
     else setActiveTab("home")
   }, [pathname])
 
@@ -34,6 +35,9 @@ export function MobileNavigation() {
     { name: "Analytics", icon: BarChart3, path: "/dashboard/analytics", id: "analytics" },
     { name: "Wallet", icon: Wallet, path: "/dashboard/wallet", id: "wallet" },
     { name: "Fanzone", icon: Users, path: "/dashboard/fanzone", id: "fanzone" },
+    ...(user?.isAdmin
+      ? [{ name: "Admin", icon: Settings, path: "/dashboard/admin", id: "admin" }]
+      : []),
   ]
 
   const handleNavClick = (id: string) => {

@@ -86,17 +86,17 @@ export function TrialCountdown() {
 
   return (
     <Card className={`${styles.container} border`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`rounded-full p-2 ${urgencyLevel === 'critical' ? 'bg-red-100 dark:bg-red-900' : urgencyLevel === 'warning' ? 'bg-orange-100 dark:bg-orange-900' : 'bg-purple-100 dark:bg-purple-900'}`}>
-              <Timer className={`h-5 w-5 ${urgencyLevel === 'critical' ? 'text-red-600' : urgencyLevel === 'warning' ? 'text-orange-600' : 'text-purple-600'} ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`} />
+      <CardContent className="p-3 md:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className={`rounded-full p-2 flex-shrink-0 ${urgencyLevel === 'critical' ? 'bg-red-100 dark:bg-red-900' : urgencyLevel === 'warning' ? 'bg-orange-100 dark:bg-orange-900' : 'bg-purple-100 dark:bg-purple-900'}`}>
+              <Timer className={`h-4 w-4 md:h-5 md:w-5 ${urgencyLevel === 'critical' ? 'text-red-600' : urgencyLevel === 'warning' ? 'text-orange-600' : 'text-purple-600'} ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`} />
             </div>
-            <div>
-              <h3 className={`font-semibold ${styles.text}`}>
+            <div className="min-w-0 flex-1">
+              <h3 className={`text-sm md:text-base font-semibold leading-tight ${styles.text}`}>
                 {getMessage()}
               </h3>
-              <p className={`text-sm ${styles.subtext}`}>
+              <p className={`text-xs md:text-sm mt-1 leading-tight ${styles.subtext} hidden sm:block`}>
                 {getSubMessage()}
               </p>
             </div>
@@ -104,14 +104,20 @@ export function TrialCountdown() {
           
           <Button 
             onClick={handleUpgradeClick}
-            className={styles.button}
+            className={`${styles.button} flex-shrink-0 w-full sm:w-auto`}
             size="sm"
           >
             <Zap className="h-4 w-4 mr-2" />
-            Upgrade Now
+            <span className="hidden xs:inline">Upgrade Now</span>
+            <span className="xs:hidden">Upgrade</span>
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
+        
+        {/* Mobile-only subtitle */}
+        <p className={`text-xs mt-2 leading-tight ${styles.subtext} sm:hidden`}>
+          {getSubMessage()}
+        </p>
       </CardContent>
     </Card>
   )

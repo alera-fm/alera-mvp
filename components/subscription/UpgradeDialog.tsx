@@ -64,15 +64,15 @@ export function UpgradeDialog() {
 
   return (
     <Dialog open={upgradeDialogOpen} onOpenChange={closeUpgradeDialog}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Upgrade Your Plan</DialogTitle>
-          <DialogDescription className="text-lg">
+          <DialogTitle className="text-xl md:text-2xl font-bold">Upgrade Your Plan</DialogTitle>
+          <DialogDescription className="text-sm md:text-lg">
             {upgradeDialogReason}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6 py-4">
           {/* Current tier info */}
           <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -92,27 +92,27 @@ export function UpgradeDialog() {
           </div>
 
           {/* Tier comparison */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
             {/* Plus Tier */}
             <Card className={`relative ${selectedTier === 'plus' ? 'ring-2 ring-purple-500' : ''}`}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Zap className="h-5 w-5 text-purple-500" />
                     Plus
                   </CardTitle>
-                  <Badge className="bg-purple-500 text-white">$4.99/month</Badge>
+                  <Badge className="bg-purple-500 text-white self-start sm:self-center">$4.99/month</Badge>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Perfect for growing artists
                 </p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-0">
                 <ul className="space-y-2">
                   {tierFeatures.plus.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      {feature}
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -142,13 +142,13 @@ export function UpgradeDialog() {
                   Most Popular
                 </Badge>
               </div>
-              <CardHeader className="pt-6">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pt-6 pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Crown className="h-5 w-5 text-yellow-500" />
                     Pro
                   </CardTitle>
-                  <Badge className="bg-gradient-to-r from-purple-600 to-yellow-500 text-white">
+                  <Badge className="bg-gradient-to-r from-purple-600 to-yellow-500 text-white self-start sm:self-center">
                     $14.99/month
                   </Badge>
                 </div>
@@ -156,12 +156,12 @@ export function UpgradeDialog() {
                   For serious artists and labels
                 </p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-0">
                 <ul className="space-y-2">
                   {tierFeatures.pro.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      {feature}
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -184,7 +184,7 @@ export function UpgradeDialog() {
           </div>
 
           {/* Additional info */}
-          <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-center text-xs md:text-sm text-gray-600 dark:text-gray-400 pt-4 border-t border-border/10 mt-6">
             <p>All plans include secure payment processing and can be cancelled anytime.</p>
             <p className="mt-1">Billing is monthly and you can upgrade or downgrade at any time.</p>
           </div>

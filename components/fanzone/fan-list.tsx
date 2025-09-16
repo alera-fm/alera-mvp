@@ -238,20 +238,20 @@ export function FanList({ onFanUpdate }: FanListProps) {
   return (
     <div className="space-y-6">
       {/* Header and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex gap-2">
-          <div className="relative">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search fans..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 w-64"
+              className="pl-10 w-full sm:w-64"
             />
           </div>
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-32">
-              <Filter className="h-4 w-4 mr-2" />
+            <SelectTrigger className="w-full sm:w-32">
+              <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -261,19 +261,21 @@ export function FanList({ onFanUpdate }: FanListProps) {
             </SelectContent>
           </Select>
         </div>
-
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button
-              onClick={() => {
-                resetForm();
-                setShowAddDialog(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Fan
-            </Button>
-          </DialogTrigger>
+        
+        <div className="flex justify-end">
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+            <DialogTrigger asChild>
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setShowAddDialog(true);
+                }}
+                className="w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Fan
+              </Button>
+            </DialogTrigger>
           <DialogContent
             className="max-w-2xl"
             key={editingFan?.id || "add-fan"}
@@ -479,6 +481,7 @@ export function FanList({ onFanUpdate }: FanListProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Fans Table */}

@@ -1,12 +1,12 @@
 # ALERA Subscription Architecture
 
 ## Overview
-ALERA implements a 3-tier subscription system with a 3-month free trial that funnels users into paid Plus or Pro tiers. The system includes feature gating, usage tracking, and Stripe integration for payment processing.
+ALERA implements a 3-tier subscription system with a 2-month free trial that funnels users into paid Plus or Pro tiers. The system includes feature gating, usage tracking, and Stripe integration for payment processing.
 
 ## Subscription Tiers
 
-### 1. **Trial (Free - 3 Months)**
-- **Duration**: 3 months from registration
+### 1. **Trial (Free - 2 Months)**
+- **Duration**: 2 months from registration
 - **Access**: Full feature access with specific limitations
 - **Limitations**:
   - **Release Limit**: Only 1 single release (pending review status)

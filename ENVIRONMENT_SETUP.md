@@ -110,6 +110,9 @@ EMAIL_PORT=587
 EMAIL_USER=your-email@your-domain.com
 EMAIL_PASS=your-email-password
 
+# Slack Notifications
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+
 # ===== NEW STRIPE CONFIGURATION =====
 # Stripe API Keys
 STRIPE_SECRET_KEY=sk_test_51...
@@ -133,6 +136,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51...
 - [ ] Get Price IDs and add to environment
 - [ ] Set up webhook endpoint
 - [ ] Get webhook secret and add to environment
+- [ ] Add Slack webhook URL to environment
 
 ### **2. Dependencies**
 ```bash
@@ -161,7 +165,7 @@ npm run dev
 
 | Tier | Price | Features |
 |------|-------|----------|
-| **Trial** | Free (3 months) | 1 Single release, 1,500 AI tokens/day |
+| **Trial** | Free (2 months) | 1 Single release, 1,500 AI tokens/day |
 | **Plus** | **$4.99/month** | Unlimited releases, 100k AI tokens/month, basic fan management |
 | **Pro** | **$14.99/month** | Everything + email campaigns, fan import, monetization |
 

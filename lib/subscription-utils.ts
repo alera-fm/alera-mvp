@@ -394,7 +394,7 @@ export function countTokens(text: string): number {
 export async function createSubscription(userId: number): Promise<Subscription | null> {
   try {
     const trialExpiresAt = new Date()
-    trialExpiresAt.setMonth(trialExpiresAt.getMonth() + 3)
+    trialExpiresAt.setMonth(trialExpiresAt.getMonth() + 2)
     
     const result = await query(`
       INSERT INTO subscriptions (user_id, tier, status, trial_expires_at)

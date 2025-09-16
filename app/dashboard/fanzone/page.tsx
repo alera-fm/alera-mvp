@@ -77,54 +77,54 @@ export default function FanZonePage() {
 
   if (loading) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-4 md:space-y-6 p-3 md:p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="h-6 md:h-8 bg-gray-200 rounded w-1/3 md:w-1/4 mb-4"></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 md:h-24 bg-gray-200 rounded"></div>
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+          <div className="h-64 md:h-96 bg-gray-200 rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 p-3 md:p-6">
       <HeaderSection />
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[#333] dark:text-white">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#333] dark:text-white">
           Fan Zone
         </h1>
-        <Badge variant="secondary" className="text-sm">
+        <Badge variant="secondary" className="text-sm self-start sm:self-center">
           {insights?.totalFans || 0} Total Fans
         </Badge>
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Dashboard
+          <TabsTrigger value="dashboard" className="flex items-center justify-center gap-2 px-2 sm:px-3">
+            <BarChart3 className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Dashboard</span>
           </TabsTrigger>
-          <TabsTrigger value="fans" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Fans
+          <TabsTrigger value="fans" className="flex items-center justify-center gap-2 px-2 sm:px-3">
+            <Users className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Fans</span>
           </TabsTrigger>
           
           <FeatureGateTab feature="fan_campaigns" tier="pro">
-            <TabsTrigger value="campaigns" className="flex w-full items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Campaigns
+            <TabsTrigger value="campaigns" className="flex w-full items-center justify-center gap-2 px-2 sm:px-3">
+              <Mail className="h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Campaigns</span>
             </TabsTrigger>
           </FeatureGateTab>
           
           <FeatureGateTab feature="fan_import" tier="pro">
-            <TabsTrigger value="import" className="flex w-full items-center gap-2">
-              <Upload className="h-4 w-4" />
-              Import
+            <TabsTrigger value="import" className="flex w-full items-center justify-center gap-2 px-2 sm:px-3">
+              <Upload className="h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Import</span>
             </TabsTrigger>
           </FeatureGateTab>
         </TabsList>
