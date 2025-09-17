@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
     const existingUser = await query("SELECT id FROM users WHERE email = $1", [email])
 
     if (existingUser.rows.length > 0) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 })
+      return NextResponse.json({ 
+        error: "You already have an account associated with that email address. Please try logging in instead." 
+      }, { status: 400 })
     }
 
     // Hash password and generate verification token

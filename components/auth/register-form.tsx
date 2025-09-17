@@ -51,8 +51,8 @@ export function RegisterForm() {
         router.push('/auth/welcome')
       } else {
         toast({
-          title: "Error",
-          description: data.message || "Registration failed",
+          title: "Registration Failed",
+          description: data.error || data.message || "Registration failed",
           variant: "destructive",
         })
       }
