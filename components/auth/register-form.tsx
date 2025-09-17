@@ -48,7 +48,7 @@ export function RegisterForm() {
           title: "Success",
           description: "Registration successful! Please check your email to verify your account.",
         })
-        router.push('/auth/login')
+        router.push('/auth/welcome')
       } else {
         toast({
           title: "Error",

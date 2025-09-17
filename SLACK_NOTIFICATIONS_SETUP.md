@@ -11,7 +11,7 @@ Add the following environment variable to your `.env.local` file:
 
 ```bash
 # Slack Notifications
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/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
+SLACK_WEBHOOK_URL=your-slack-webhook-url-here
 ```
 
 ### 2. Notification Features

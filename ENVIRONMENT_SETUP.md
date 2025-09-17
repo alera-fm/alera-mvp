@@ -111,7 +111,7 @@ EMAIL_USER=your-email@your-domain.com
 EMAIL_PASS=your-email-password
 
 # Slack Notifications
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+SLACK_WEBHOOK_URL=your-slack-webhook-url-here
 
 # ===== NEW STRIPE CONFIGURATION =====
 # Stripe API Keys
