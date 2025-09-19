@@ -142,7 +142,7 @@ const ADDITIONAL_DELIVERY_OPTIONS = [
   "SoundCloud Monetization & Content Protection",
   "SoundExchange",
   "Tracklib",
-  "Beatport (*Please note this is only for specific genre's. If you're selected genre doesn't apply we won't be able to send to Beatport)",
+  "Beatport (*Please note this is only for specific genres. If your selected genre doesn't apply we won't be able to send to Beatport)",
   "Juno Download",
   "Hook",
   "LyricFind (Requires lyrics to be provided)",
@@ -410,6 +410,9 @@ export function DistributionFlow({
           formData.distribution_type &&
           formData.artist_name &&
           formData.release_title &&
+          formData.record_label &&
+          formData.c_line &&
+          formData.p_line &&
           formData.primary_genre &&
           formData.language &&
           formData.release_date &&
@@ -698,33 +701,36 @@ export function DistributionFlow({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="record_label">Record Label</Label>
+            <Label htmlFor="record_label">Record Label *</Label>
             <Input
               id="record_label"
               value={formData.record_label}
               onChange={(e) => updateFormData("record_label", e.target.value)}
               placeholder="Independent or your label name"
+              required
             />
           </div>
 
           {/* Copyright Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="c_line">C-Line (©)</Label>
+              <Label htmlFor="c_line">C-Line (©) *</Label>
               <Input
                 id="c_line"
                 value={formData.c_line}
                 onChange={(e) => updateFormData("c_line", e.target.value)}
                 placeholder="© 2025 Your Name"
+                required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="p_line">P-Line (℗)</Label>
+              <Label htmlFor="p_line">P-Line (℗) *</Label>
               <Input
                 id="p_line"
                 value={formData.p_line}
                 onChange={(e) => updateFormData("p_line", e.target.value)}
                 placeholder="℗ 2025 Your Name"
+                required
               />
             </div>
           </div>
@@ -952,32 +958,6 @@ export function DistributionFlow({
             </div>
           </div>
 
-          {/* Additional Delivery Options */}
-          <div className="space-y-4">
-            <h4 className="text-md font-medium">Additional Delivery</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Select additional services where you'd like your release to be delivered:
-            </p>
-            <div className="grid gap-3">
-              {ADDITIONAL_DELIVERY_OPTIONS.map((option) => (
-                <label key={option} className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={formData.additional_delivery?.includes(option) || false}
-                    onChange={(e) => {
-                      const currentOptions = formData.additional_delivery || [];
-                      const newOptions = e.target.checked
-                        ? [...currentOptions, option]
-                        : currentOptions.filter((o) => o !== option);
-                      updateFormData("additional_delivery", newOptions);
-                    }}
-                    className="mt-1 rounded border-gray-300"
-                  />
-                  <span className="text-sm leading-relaxed">{option}</span>
-                </label>
-              ))}
-            </div>
-          </div>
 
           <div className="grid gap-4">
             <div className="grid gap-2">
@@ -1039,67 +1019,118 @@ export function DistributionFlow({
             <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
               <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Upload album cover (JPG, 3000x3000 recommended)
+                Upload album cover (Must be square, minimum 1500x1500px)
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                Accepted formats: JPG, PNG, JPEG
               </p>
               <Input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png"
                 className="mt-2"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setIsUploading(true);
-                    setCoverUploadProgress(0);
-                    try {
-                      const uploadData = new FormData();
-                      uploadData.append("file", file);
-                      uploadData.append("folder", "covers");
-
-                      // Simulate progress for better UX (since we can't track real progress with fetch)
-                      const progressInterval = setInterval(() => {
-                        setCoverUploadProgress(prev => {
-                          if (prev >= 90) {
-                            clearInterval(progressInterval);
-                            return 90;
-                          }
-                          return prev + 10;
-                        });
-                      }, 200);
-
-                      const response = await fetch("/api/upload", {
-                        method: "POST",
-                        body: uploadData,
-                        headers: {
-                          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-                        },
-                      });
-
-                      clearInterval(progressInterval);
-                      setCoverUploadProgress(100);
-
-                      if (response.ok) {
-                        const result = await response.json();
-                        updateFormData("album_cover_url", result.url);
-                        toast({
-                          title: "Success",
-                          description: "Album cover uploaded successfully",
-                        });
-                      } else {
-                        throw new Error("Upload failed");
-                      }
-                    } catch (error) {
-                      setCoverUploadProgress(0);
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    if (!validTypes.includes(file.type)) {
                       toast({
                         variant: "destructive",
-                        title: "Error",
-                        description: "Failed to upload album cover",
+                        title: "Invalid file type",
+                        description: "Please upload a JPG or PNG image file",
                       });
-                    } finally {
-                      setTimeout(() => {
-                        setIsUploading(false);
-                        setCoverUploadProgress(0);
-                      }, 1000);
+                      return;
                     }
+
+                    // Validate image dimensions
+                    const img = new Image();
+                    img.onload = async () => {
+                      const { width, height } = img;
+                      
+                      // Check if image is square
+                      if (width !== height) {
+                        toast({
+                          variant: "destructive",
+                          title: "Invalid image dimensions",
+                          description: "Album cover must be square (equal width and height)",
+                        });
+                        return;
+                      }
+                      
+                      // Check minimum dimensions
+                      if (width < 1500 || height < 1500) {
+                        toast({
+                          variant: "destructive",
+                          title: "Image too small",
+                          description: "Album cover must be at least 1500x1500 pixels",
+                        });
+                        return;
+                      }
+
+                      // If validation passes, proceed with upload
+                      setIsUploading(true);
+                      setCoverUploadProgress(0);
+                      try {
+                        const uploadData = new FormData();
+                        uploadData.append("file", file);
+                        uploadData.append("folder", "covers");
+
+                        // Simulate progress for better UX (since we can't track real progress with fetch)
+                        const progressInterval = setInterval(() => {
+                          setCoverUploadProgress(prev => {
+                            if (prev >= 90) {
+                              clearInterval(progressInterval);
+                              return 90;
+                            }
+                            return prev + 10;
+                          });
+                        }, 200);
+
+                        const response = await fetch("/api/upload", {
+                          method: "POST",
+                          body: uploadData,
+                          headers: {
+                            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                          },
+                        });
+
+                        clearInterval(progressInterval);
+                        setCoverUploadProgress(100);
+
+                        if (response.ok) {
+                          const result = await response.json();
+                          updateFormData("album_cover_url", result.url);
+                          toast({
+                            title: "Success",
+                            description: "Album cover uploaded successfully",
+                          });
+                        } else {
+                          throw new Error("Upload failed");
+                        }
+                      } catch (error) {
+                        setCoverUploadProgress(0);
+                        toast({
+                          variant: "destructive",
+                          title: "Error",
+                          description: "Failed to upload album cover",
+                        });
+                      } finally {
+                        setTimeout(() => {
+                          setIsUploading(false);
+                          setCoverUploadProgress(0);
+                        }, 1000);
+                      }
+                    };
+                    
+                    img.onerror = () => {
+                      toast({
+                        variant: "destructive",
+                        title: "Invalid image",
+                        description: "Please upload a valid image file",
+                      });
+                    };
+                    
+                    img.src = URL.createObjectURL(file);
                   }
                 }}
                 disabled={isUploading}
@@ -1170,6 +1201,33 @@ export function DistributionFlow({
               {formData.selected_stores.length} of {STORES.length} stores
               selected
             </p>
+          </div>
+
+          {/* Additional Delivery Options - Moved after store selection */}
+          <div className="space-y-4">
+            <h4 className="text-md font-medium">Additional Delivery</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Select additional services for this release:
+            </p>
+            <div className="grid gap-3">
+              {ADDITIONAL_DELIVERY_OPTIONS.map((option) => (
+                <label key={option} className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={formData.additional_delivery?.includes(option) || false}
+                    onChange={(e) => {
+                      const currentOptions = formData.additional_delivery || [];
+                      const newOptions = e.target.checked
+                        ? [...currentOptions, option]
+                        : currentOptions.filter((o) => o !== option);
+                      updateFormData("additional_delivery", newOptions);
+                    }}
+                    className="mt-1 rounded border-gray-300"
+                  />
+                  <span className="text-sm leading-relaxed">{option}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -2349,6 +2407,9 @@ export function DistributionFlow({
                           {!formData.distribution_type && <li>Select distribution type</li>}
                           {!formData.artist_name && <li>Enter artist/band name</li>}
                           {!formData.release_title && <li>Enter release title</li>}
+                          {!formData.record_label && <li>Enter record label</li>}
+                          {!formData.c_line && <li>Enter C-Line copyright</li>}
+                          {!formData.p_line && <li>Enter P-Line copyright</li>}
                           {!formData.primary_genre && <li>Select primary genre</li>}
                           {!formData.language && <li>Select language</li>}
                           {!formData.release_date && <li>Choose release date</li>}
@@ -2362,6 +2423,7 @@ export function DistributionFlow({
                           {formData.tracks.some(track => !track.artist_names.length || !track.artist_names[0].trim()) && <li>Enter artist name for all tracks</li>}
                           {formData.tracks.some(track => !track.genre) && <li>Select genre for all tracks</li>}
                           {formData.tracks.some(track => !track.audio_file_url) && <li>Upload audio file for all tracks</li>}
+                          {formData.tracks.some(track => !track.songwriters.length || track.songwriters.some(s => !s.firstName.trim() || !s.lastName.trim() || !s.role.trim())) && <li>Complete songwriter information for all tracks (first name, last name, and role required)</li>}
                         </>
                       )}
                       {currentStep === 3 && (

@@ -93,8 +93,8 @@ export async function PUT(
     } = data
 
     // Validate required fields
-    if (!distribution_type || !artist_name || !release_title || !primary_genre || !language || !release_date) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!distribution_type || !artist_name || !release_title || !record_label || !c_line || !p_line || !primary_genre || !language || !release_date) {
+      return NextResponse.json({ error: 'Missing required fields: Distribution Type, Artist Name, Release Title, Record Label, C-Line, P-Line, Primary Genre, Language, and Release Date are all required' }, { status: 400 })
     }
 
     // Validate songwriter requirements for each track
