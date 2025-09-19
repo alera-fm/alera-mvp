@@ -136,6 +136,18 @@ const TRACK_PRICES = [
   { value: 1.29, label: "$1.29" },
 ];
 
+const ADDITIONAL_DELIVERY_OPTIONS = [
+  "YouTube Content ID",
+  "Meta Rights Manager",
+  "SoundCloud Monetization & Content Protection",
+  "SoundExchange",
+  "Tracklib",
+  "Beatport (*Please note this is only for specific genre's. If you're selected genre doesn't apply we won't be able to send to Beatport)",
+  "Juno Download",
+  "Hook",
+  "LyricFind (Requires lyrics to be provided)",
+];
+
 interface Songwriter {
   firstName: string;
   middleName: string;
@@ -165,6 +177,13 @@ interface Release {
   artist_name: string;
   release_title: string;
   record_label?: string;
+  c_line?: string; // C-Line (©) copyright field
+  p_line?: string; // P-Line (℗) copyright field
+  has_spotify_profile?: boolean; // Spotify for Artists profile question
+  spotify_profile_url?: string; // Spotify profile URL if they have one
+  has_apple_profile?: boolean; // Apple Music for Artists profile question
+  apple_profile_url?: string; // Apple profile URL if they have one
+  additional_delivery?: string[]; // Additional delivery options checklist
   primary_genre: string;
   secondary_genre?: string;
   language: string;
@@ -211,6 +230,13 @@ export function DistributionFlow({
     artist_name: "",
     release_title: "",
     record_label: "",
+    c_line: "",
+    p_line: "",
+    has_spotify_profile: false,
+    spotify_profile_url: "",
+    has_apple_profile: false,
+    apple_profile_url: "",
+    additional_delivery: [],
     primary_genre: "",
     secondary_genre: "",
     language: "English",
@@ -397,7 +423,13 @@ export function DistributionFlow({
             track.artist_names.length > 0 && 
             track.artist_names[0].trim() !== "" &&
             track.genre &&
-            track.audio_file_url
+            track.audio_file_url &&
+            track.songwriters.length > 0 &&
+            track.songwriters.every(songwriter => 
+              songwriter.firstName.trim() !== "" && 
+              songwriter.lastName.trim() !== "" && 
+              songwriter.role.trim() !== ""
+            )
         );
       case 3:
         const requiredAgreements = [
@@ -675,6 +707,28 @@ export function DistributionFlow({
             />
           </div>
 
+          {/* Copyright Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="c_line">C-Line (©)</Label>
+              <Input
+                id="c_line"
+                value={formData.c_line}
+                onChange={(e) => updateFormData("c_line", e.target.value)}
+                placeholder="© 2025 Your Name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="p_line">P-Line (℗)</Label>
+              <Input
+                id="p_line"
+                value={formData.p_line}
+                onChange={(e) => updateFormData("p_line", e.target.value)}
+                placeholder="℗ 2025 Your Name"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="primary_genre">Primary Genre *</Label>
@@ -815,6 +869,114 @@ export function DistributionFlow({
                 className="mt-2"
               />
             )}
+          </div>
+
+          {/* Existing Profile Links Section */}
+          <div className="space-y-4">
+            <h4 className="text-md font-medium">Existing Artist Profiles</h4>
+            
+            <div className="grid gap-4">
+              <div className="space-y-3">
+                <Label>Do you already have a Spotify for Artists Profile?</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="has_spotify_profile"
+                      checked={formData.has_spotify_profile === true}
+                      onChange={() => updateFormData("has_spotify_profile", true)}
+                      className="rounded border-gray-300"
+                    />
+                    <span>Yes</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="has_spotify_profile"
+                      checked={formData.has_spotify_profile === false}
+                      onChange={() => updateFormData("has_spotify_profile", false)}
+                      className="rounded border-gray-300"
+                    />
+                    <span>No</span>
+                  </label>
+                </div>
+                {formData.has_spotify_profile && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="spotify_profile_url">Spotify for Artists Profile URL</Label>
+                    <Input
+                      id="spotify_profile_url"
+                      value={formData.spotify_profile_url}
+                      onChange={(e) => updateFormData("spotify_profile_url", e.target.value)}
+                      placeholder="https://artists.spotify.com/c/artist/..."
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <Label>Do you already have an Apple Music for Artists Profile?</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="has_apple_profile"
+                      checked={formData.has_apple_profile === true}
+                      onChange={() => updateFormData("has_apple_profile", true)}
+                      className="rounded border-gray-300"
+                    />
+                    <span>Yes</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="has_apple_profile"
+                      checked={formData.has_apple_profile === false}
+                      onChange={() => updateFormData("has_apple_profile", false)}
+                      className="rounded border-gray-300"
+                    />
+                    <span>No</span>
+                  </label>
+                </div>
+                {formData.has_apple_profile && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="apple_profile_url">Apple Music for Artists Profile URL</Label>
+                    <Input
+                      id="apple_profile_url"
+                      value={formData.apple_profile_url}
+                      onChange={(e) => updateFormData("apple_profile_url", e.target.value)}
+                      placeholder="https://artists.apple.com/artist/..."
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Delivery Options */}
+          <div className="space-y-4">
+            <h4 className="text-md font-medium">Additional Delivery</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Select additional services where you'd like your release to be delivered:
+            </p>
+            <div className="grid gap-3">
+              {ADDITIONAL_DELIVERY_OPTIONS.map((option) => (
+                <label key={option} className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={formData.additional_delivery?.includes(option) || false}
+                    onChange={(e) => {
+                      const currentOptions = formData.additional_delivery || [];
+                      const newOptions = e.target.checked
+                        ? [...currentOptions, option]
+                        : currentOptions.filter((o) => o !== option);
+                      updateFormData("additional_delivery", newOptions);
+                    }}
+                    className="mt-1 rounded border-gray-300"
+                  />
+                  <span className="text-sm leading-relaxed">{option}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="grid gap-4">

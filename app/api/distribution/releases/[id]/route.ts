@@ -62,6 +62,13 @@ export async function PUT(
       artist_name,
       release_title,
       record_label,
+      c_line,
+      p_line,
+      has_spotify_profile,
+      spotify_profile_url,
+      has_apple_profile,
+      apple_profile_url,
+      additional_delivery,
       primary_genre,
       secondary_genre,
       language,
@@ -88,6 +95,25 @@ export async function PUT(
     // Validate required fields
     if (!distribution_type || !artist_name || !release_title || !primary_genre || !language || !release_date) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Validate songwriter requirements for each track
+    if (tracks && tracks.length > 0) {
+      for (const track of tracks) {
+        if (!track.songwriters || track.songwriters.length === 0) {
+          return NextResponse.json({ 
+            error: 'Each track must have at least one songwriter with first name, last name, and role' 
+          }, { status: 400 })
+        }
+        
+        for (const songwriter of track.songwriters) {
+          if (!songwriter.firstName?.trim() || !songwriter.lastName?.trim() || !songwriter.role?.trim()) {
+            return NextResponse.json({ 
+              error: 'Songwriter information is incomplete. Please provide first name, last name, and role for all songwriters' 
+            }, { status: 400 })
+          }
+        }
+      }
     }
 
     // Validate release date is at least 7 days in the future
@@ -134,19 +160,28 @@ export async function PUT(
       const updateResult = await client.query(`
         UPDATE releases SET
           distribution_type = $1, artist_name = $2, release_title = $3, record_label = $4,
-          primary_genre = $5, secondary_genre = $6, language = $7, explicit_lyrics = $8,
-          instrumental = $9, version_info = $10, version_other = $11, release_date = $12, original_release_date = $13,
-          previously_released = $14, album_cover_url = $15, selected_stores = $16, track_price = $17,
-          status = $18, terms_agreed = $19, fake_streaming_agreement = $20, distribution_agreement = $21,
-          artist_names_agreement = $22, snapchat_terms = $23, youtube_music_agreement = $24,
-          submitted_at = $25, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $26 AND artist_id = $27
+          c_line = $5, p_line = $6, has_spotify_profile = $7, spotify_profile_url = $8, 
+          has_apple_profile = $9, apple_profile_url = $10, additional_delivery = $11,
+          primary_genre = $12, secondary_genre = $13, language = $14, explicit_lyrics = $15,
+          instrumental = $16, version_info = $17, version_other = $18, release_date = $19, original_release_date = $20,
+          previously_released = $21, album_cover_url = $22, selected_stores = $23, track_price = $24,
+          status = $25, terms_agreed = $26, fake_streaming_agreement = $27, distribution_agreement = $28,
+          artist_names_agreement = $29, snapchat_terms = $30, youtube_music_agreement = $31,
+          submitted_at = $32, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $33 AND artist_id = $34
         RETURNING *
       `, [
         distribution_type,
         artist_name,
         release_title,
         record_label,
+        c_line || null,
+        p_line || null,
+        has_spotify_profile || false,
+        spotify_profile_url || null,
+        has_apple_profile || false,
+        apple_profile_url || null,
+        JSON.stringify(additional_delivery || []),
         primary_genre,
         secondary_genre,
         language,

@@ -8,7 +8,6 @@ import { WalletSummaryCards } from "@/components/wallet/wallet-summary-cards"
 import { EarningsByPlatformChart } from "@/components/wallet/earnings-by-platform-chart"
 import { WithdrawalSection } from "@/components/wallet/withdrawal-section"
 import { TransactionHistory } from "@/components/wallet/transaction-history"
-import { EarningsCalculator } from "@/components/wallet/earnings-calculator"
 import { getWalletSummary, getWalletHistory } from "@/lib/wallet-api"
 import { useAuth } from "@/context/AuthContext"
 import { useToast } from "@/hooks/use-toast"
@@ -53,12 +52,7 @@ export default function WalletPage() {
         summary_cards: summaryData,
         earnings_by_platform: summaryData.earnings_by_platform || [],
         transactions: historyData.transactions || [],
-        withdrawals: withdrawalsData.withdrawals || [],
-        earnings_calculator: {
-          current_month_earnings: summaryData.total_earnings,
-          projected_annual: summaryData.total_earnings * 12,
-          growth_rate: 15.2
-        }
+        withdrawals: withdrawalsData.withdrawals || []
       })
     } catch (error) {
       console.error('Error fetching wallet data:', error)
@@ -106,8 +100,6 @@ export default function WalletPage() {
         />
 
         <TransactionHistory transactions={walletData.transactions} withdrawals={walletData.withdrawals} />
-
-        <EarningsCalculator initialData={walletData.earnings_calculator} />
       </div>
 
       <MobileNavigation />

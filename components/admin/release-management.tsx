@@ -27,6 +27,13 @@ interface Release {
   selected_stores?: string[]
   updated_at?: string
   record_label?: string
+  c_line?: string
+  p_line?: string
+  has_spotify_profile?: boolean
+  spotify_profile_url?: string
+  has_apple_profile?: boolean
+  apple_profile_url?: string
+  additional_delivery?: string[]
   secondary_genre?: string
   language?: string
   explicit_lyrics?: boolean
@@ -849,6 +856,8 @@ export function ReleaseManagement() {
                                         <div><strong>Release Title:</strong> {selectedRelease.release_title}</div>
                                         <div><strong>Distribution Type:</strong> {selectedRelease.distribution_type}</div>
                                         <div><strong>Record Label:</strong> {selectedRelease.record_label || 'Not specified'}</div>
+                                        <div><strong>C-Line (©):</strong> {selectedRelease.c_line || 'Not specified'}</div>
+                                        <div><strong>P-Line (℗):</strong> {selectedRelease.p_line || 'Not specified'}</div>
                                         <div><strong>Primary Genre:</strong> {selectedRelease.primary_genre}</div>
                                         <div><strong>Secondary Genre:</strong> {selectedRelease.secondary_genre || 'Not specified'}</div>
                                         <div><strong>Language:</strong> {selectedRelease.language}</div>
@@ -897,6 +906,59 @@ export function ReleaseManagement() {
                                       )) || <span className="text-sm text-gray-500">No stores selected</span>}
                                     </div>
                                   </div>
+
+                                  {/* Artist Profiles */}
+                                  <div className="space-y-4">
+                                    <h3 className="font-medium text-lg border-b pb-2">Artist Profiles</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <strong>Spotify for Artists:</strong> {selectedRelease.has_spotify_profile ? '✅ Yes' : '❌ No'}
+                                        {selectedRelease.has_spotify_profile && selectedRelease.spotify_profile_url && (
+                                          <div className="mt-1">
+                                            <a 
+                                              href={selectedRelease.spotify_profile_url} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="text-blue-600 dark:text-blue-400 hover:underline text-xs break-all"
+                                            >
+                                              {selectedRelease.spotify_profile_url}
+                                            </a>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div>
+                                        <strong>Apple Music for Artists:</strong> {selectedRelease.has_apple_profile ? '✅ Yes' : '❌ No'}
+                                        {selectedRelease.has_apple_profile && selectedRelease.apple_profile_url && (
+                                          <div className="mt-1">
+                                            <a 
+                                              href={selectedRelease.apple_profile_url} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="text-blue-600 dark:text-blue-400 hover:underline text-xs break-all"
+                                            >
+                                              {selectedRelease.apple_profile_url}
+                                            </a>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Additional Delivery Options */}
+                                  {selectedRelease.additional_delivery && selectedRelease.additional_delivery.length > 0 && (
+                                    <div className="space-y-4">
+                                      <h3 className="font-medium text-lg border-b pb-2">Additional Delivery Options ({selectedRelease.additional_delivery.length} selected)</h3>
+                                      <div className="grid gap-2">
+                                        {selectedRelease.additional_delivery.map((option) => (
+                                          <div key={option} className="flex items-center gap-2">
+                                            <Badge variant="secondary" className="text-xs">
+                                              ✅ {option}
+                                            </Badge>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
 
                                   {/* Track Details */}
                                   {selectedRelease.tracks && selectedRelease.tracks.length > 0 && (

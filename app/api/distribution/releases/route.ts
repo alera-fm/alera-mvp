@@ -23,6 +23,13 @@ export async function POST(request: NextRequest) {
       artist_name,
       release_title,
       record_label,
+      c_line,
+      p_line,
+      has_spotify_profile,
+      spotify_profile_url,
+      has_apple_profile,
+      apple_profile_url,
+      additional_delivery,
       primary_genre,
       secondary_genre,
       language,
@@ -49,6 +56,25 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!distribution_type || !artist_name || !release_title || !primary_genre || !language) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Validate songwriter requirements for each track
+    if (tracks && tracks.length > 0) {
+      for (const track of tracks) {
+        if (!track.songwriters || track.songwriters.length === 0) {
+          return NextResponse.json({ 
+            error: 'Each track must have at least one songwriter with first name, last name, and role' 
+          }, { status: 400 })
+        }
+        
+        for (const songwriter of track.songwriters) {
+          if (!songwriter.firstName?.trim() || !songwriter.lastName?.trim() || !songwriter.role?.trim()) {
+            return NextResponse.json({ 
+              error: 'Songwriter information is incomplete. Please provide first name, last name, and role for all songwriters' 
+            }, { status: 400 })
+          }
+        }
+      }
     }
 
     // Check subscription limits for release creation
@@ -88,13 +114,14 @@ export async function POST(request: NextRequest) {
       const releaseResult = await client.query(`
         INSERT INTO releases (
           artist_id, distribution_type, artist_name, release_title, record_label,
+          c_line, p_line, has_spotify_profile, spotify_profile_url, has_apple_profile, apple_profile_url, additional_delivery,
           primary_genre, secondary_genre, language, explicit_lyrics, instrumental,
           version_info, version_other, release_date, original_release_date, previously_released,
           album_cover_url, selected_stores, track_price, status, terms_agreed,
           fake_streaming_agreement, distribution_agreement, artist_names_agreement,
           snapchat_terms, youtube_music_agreement, submitted_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33
         )
         RETURNING *
       `, [
@@ -103,6 +130,13 @@ export async function POST(request: NextRequest) {
         artist_name,
         release_title,
         record_label,
+        c_line || null,
+        p_line || null,
+        has_spotify_profile || false,
+        spotify_profile_url || null,
+        has_apple_profile || false,
+        apple_profile_url || null,
+        JSON.stringify(additional_delivery || []),
         primary_genre,
         secondary_genre,
         language,
