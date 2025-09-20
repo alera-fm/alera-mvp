@@ -164,14 +164,12 @@ export function ReleaseManagement() {
         body: JSON.stringify({
           release_id: releaseId,
           status: newStatus,
-          admin_notes: adminNotes,
         }),
       })
 
       if (response.ok) {
         toast.success(`Release ${newStatus} successfully`)
         fetchReleases()
-        setAdminNotes("")
         setSelectedRelease(null)
       } else {
         toast.error("Failed to update release status")
