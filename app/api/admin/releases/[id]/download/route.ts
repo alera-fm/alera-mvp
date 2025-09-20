@@ -146,9 +146,38 @@ function convertReleaseToCSV(release: any): string {
   // Add header
   rows.push(['Field', 'Value'].join(','))
   
-  // Add release data
+  // Define field order for better organization
+  const fieldOrder = [
+    'id', 'artist_name', 'artist_email', 'release_title', 'distribution_type', 
+    'record_label', 'c_line', 'p_line', 'primary_genre', 'secondary_genre',
+    'language', 'explicit_lyrics', 'instrumental', 'version_info', 'version_other',
+    'release_date', 'original_release_date', 'previously_released', 'album_cover_url',
+    'has_spotify_profile', 'spotify_profile_url', 'has_apple_profile', 'apple_profile_url',
+    'additional_delivery', 'selected_stores', 'track_price', 'status',
+    'terms_agreed', 'fake_streaming_agreement', 'distribution_agreement', 
+    'artist_names_agreement', 'snapchat_terms', 'youtube_music_agreement',
+    'created_at', 'updated_at', 'upc'
+  ]
+  
+  // Add ordered fields first
+  fieldOrder.forEach(key => {
+    if (release.hasOwnProperty(key)) {
+      const value = release[key]
+      let csvValue = ''
+      if (Array.isArray(value)) {
+        csvValue = `"${value.join('; ')}"`
+      } else if (typeof value === 'object' && value !== null) {
+        csvValue = `"${JSON.stringify(value)}"`
+      } else {
+        csvValue = `"${String(value || '')}"`
+      }
+      rows.push([key, csvValue].join(','))
+    }
+  })
+  
+  // Add any remaining fields not in the ordered list
   Object.entries(release).forEach(([key, value]) => {
-    if (key !== 'tracks') {
+    if (key !== 'tracks' && !fieldOrder.includes(key)) {
       let csvValue = ''
       if (Array.isArray(value)) {
         csvValue = `"${value.join('; ')}"`
@@ -198,6 +227,7 @@ Release Title: ${release.release_title}
 Artist: ${release.artist_name}
 Artist Email: ${release.artist_email}
 Distribution Type: ${release.distribution_type}
+Record Label: ${release.record_label || 'Not specified'}
 Status: ${release.status}
 Submission Date: ${new Date(release.created_at).toLocaleString()}
 Download Date: ${new Date().toLocaleString()}
@@ -208,6 +238,19 @@ CONTENTS OF THIS ZIP FILE:
 - album_cover.[ext]: Album artwork (if available)
 - audio_files/: Folder containing all track audio files
 - README.txt: This file
+
+COPYRIGHT INFORMATION:
+- C-Line (©): ${release.c_line || 'Not specified'}
+- P-Line (℗): ${release.p_line || 'Not specified'}
+
+EXISTING ARTIST PROFILES:
+- Spotify for Artists: ${release.has_spotify_profile ? 'YES' : 'NO'}${release.spotify_profile_url ? ` (${release.spotify_profile_url})` : ''}
+- Apple Music for Artists: ${release.has_apple_profile ? 'YES' : 'NO'}${release.apple_profile_url ? ` (${release.apple_profile_url})` : ''}
+
+ADDITIONAL DELIVERY OPTIONS:
+${release.additional_delivery && Array.isArray(release.additional_delivery) && release.additional_delivery.length > 0 
+  ? release.additional_delivery.join(', ') 
+  : 'None selected'}
 
 TRACKS INCLUDED:
 ${tracks.map((track: any) => 
