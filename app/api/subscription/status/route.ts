@@ -107,14 +107,21 @@ export async function GET(request: NextRequest) {
     
     // Feature access based on tier AND status (users with payment issues get trial access)
     const featureAccess = {
-      release_creation: (subscription.tier !== 'trial' && isActiveSubscription) || (isTrialOrPaymentIssue && pendingReleases < 1),
+      // Release creation: Only active paid users OR trial users with limits
+      release_creation: (subscription.tier !== 'trial' && isActiveSubscription) || (subscription.tier === 'trial' && subscription.status === 'active' && pendingReleases < 1),
+      
+      // AI agent: Only active paid users OR trial users with limits
       ai_agent: (subscription.tier === 'pro' && isActiveSubscription) || 
-                (isTrialOrPaymentIssue && dailyTokenUsage < 1500) ||
+                (subscription.tier === 'trial' && subscription.status === 'active' && dailyTokenUsage < 1500) ||
                 (subscription.tier === 'plus' && isActiveSubscription && monthlyTokenUsage < 100000),
-      fan_campaigns: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
-      fan_import: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
-      tip_jar: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
-      paid_subscriptions: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
+      
+      // CRITICAL FIX: Fan features ONLY for active paid users OR actual trial users
+      // Users with pending/failed payments get NO access to these premium features
+      fan_campaigns: (subscription.tier === 'trial' && subscription.status === 'active') || (subscription.tier === 'pro' && isActiveSubscription) || (subscription.tier === 'plus' && isActiveSubscription),
+      fan_import: (subscription.tier === 'trial' && subscription.status === 'active') || (subscription.tier === 'pro' && isActiveSubscription) || (subscription.tier === 'plus' && isActiveSubscription),
+      tip_jar: (subscription.tier === 'trial' && subscription.status === 'active') || (subscription.tier === 'pro' && isActiveSubscription) || (subscription.tier === 'plus' && isActiveSubscription),
+      paid_subscriptions: (subscription.tier === 'trial' && subscription.status === 'active') || (subscription.tier === 'pro' && isActiveSubscription) || (subscription.tier === 'plus' && isActiveSubscription),
+      
       analytics_advanced: true // All tiers have access
     }
     
