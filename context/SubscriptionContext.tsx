@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 export interface Subscription {
   id: number
   tier: 'trial' | 'plus' | 'pro'
-  status: 'active' | 'expired' | 'cancelled'
+  status: 'active' | 'expired' | 'cancelled' | 'pending_payment' | 'payment_failed'
   isExpired: boolean
   daysRemaining: number
   trialExpiresAt?: string

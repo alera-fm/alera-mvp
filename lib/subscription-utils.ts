@@ -4,7 +4,7 @@ export interface Subscription {
   id: number
   user_id: number
   tier: 'trial' | 'plus' | 'pro'
-  status: 'active' | 'expired' | 'cancelled'
+  status: 'active' | 'expired' | 'cancelled' | 'pending_payment' | 'payment_failed'
   trial_expires_at?: Date
   subscription_expires_at?: Date
   stripe_customer_id?: string
@@ -185,8 +185,14 @@ export async function checkReleaseLimit(userId: number, releaseType?: string): P
     }
   }
   
-  // Only trial users have release limits
-  if (subscription.tier !== 'trial') {
+  // CRITICAL FIX: Users with pending or failed payments should be treated as trial users
+  if (subscription.status === 'pending_payment' || subscription.status === 'payment_failed') {
+    // Treat as trial user for access control
+    console.log(`User ${userId} has ${subscription.status} status - treating as trial user`)
+  }
+  
+  // Only trial users (and users with payment issues) have release limits
+  if (subscription.tier !== 'trial' && subscription.status === 'active') {
     return { allowed: true }
   }
   
@@ -220,6 +226,12 @@ export async function checkAITokens(userId: number, requestedTokens: number): Pr
     return { allowed: false, reason: 'No subscription found' }
   }
   
+  // CRITICAL FIX: Users with pending or failed payments should be treated as trial users
+  if (subscription.status === 'pending_payment' || subscription.status === 'payment_failed') {
+    // Treat as trial user for AI access control
+    console.log(`User ${userId} has ${subscription.status} status - treating as trial user for AI access`)
+  }
+  
   // Check if subscription is expired
   if (isSubscriptionExpired(subscription)) {
     return {
@@ -229,12 +241,13 @@ export async function checkAITokens(userId: number, requestedTokens: number): Pr
     }
   }
   
-  // Pro tier has unlimited tokens
-  if (subscription.tier === 'pro') {
+  // Pro tier has unlimited tokens (but only if active)
+  if (subscription.tier === 'pro' && subscription.status === 'active') {
     return { allowed: true }
   }
   
-  if (subscription.tier === 'trial') {
+  // Trial users and users with payment issues get trial limits
+  if (subscription.tier === 'trial' || subscription.status === 'pending_payment' || subscription.status === 'payment_failed') {
     // Daily limit: 1,500 tokens
     const todayUsage = await getDailyTokenUsage(userId)
     const remainingTokens = 1500 - todayUsage
@@ -249,7 +262,7 @@ export async function checkAITokens(userId: number, requestedTokens: number): Pr
     }
   }
   
-  if (subscription.tier === 'plus') {
+  if (subscription.tier === 'plus' && subscription.status === 'active') {
     // Monthly limit: 100,000 tokens (resets 30 days from subscription)
     const monthlyUsage = await getMonthlyTokenUsage(userId, subscription.created_at)
     const remainingTokens = 100000 - monthlyUsage
@@ -284,13 +297,13 @@ export async function checkFanZoneAccess(userId: number, tab: string): Promise<S
     }
   }
   
-  // Pro and trial users have full access
-  if (subscription.tier === 'pro' || subscription.tier === 'trial') {
+  // Pro and trial users have full access (but not if payment is pending/failed)
+  if ((subscription.tier === 'pro' || subscription.tier === 'trial') && subscription.status === 'active') {
     return { allowed: true }
   }
   
-  // Plus users can only access dashboard and fans tabs
-  if (subscription.tier === 'plus') {
+  // Plus users can only access dashboard and fans tabs (but only if active)
+  if (subscription.tier === 'plus' && subscription.status === 'active') {
     const allowedTabs = ['dashboard', 'fans']
     if (!allowedTabs.includes(tab.toLowerCase())) {
       return {
@@ -321,8 +334,8 @@ export async function checkMonetizationAccess(userId: number, feature: 'tip_jar'
     }
   }
   
-  // Only Pro and trial users can access monetization features
-  if (subscription.tier === 'pro' || subscription.tier === 'trial') {
+  // Only Pro and trial users can access monetization features (but not if payment is pending/failed)
+  if ((subscription.tier === 'pro' || subscription.tier === 'trial') && subscription.status === 'active') {
     return { allowed: true }
   }
   

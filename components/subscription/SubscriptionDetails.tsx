@@ -10,11 +10,12 @@ import { useSubscription } from "@/context/SubscriptionContext";
 
 interface Subscription {
   tier: 'trial' | 'plus' | 'pro';
-  status: 'active' | 'expired' | 'cancelled' | 'cancelling';
+  status: 'active' | 'expired' | 'cancelled' | 'cancelling' | 'pending_payment' | 'payment_failed';
   trialExpiresAt?: string;
   subscriptionExpiresAt?: string;
   current_period_end?: string;
   stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
   daysRemaining: number;
 }
 
@@ -175,6 +176,10 @@ export function SubscriptionDetails() {
         return <Badge variant="destructive">Expired</Badge>;
       case 'cancelled':
         return <Badge variant="secondary">Cancelled</Badge>;
+      case 'pending_payment':
+        return <Badge className="bg-yellow-500 text-white">Payment Pending</Badge>;
+      case 'payment_failed':
+        return <Badge variant="destructive">Payment Failed</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -297,7 +302,16 @@ export function SubscriptionDetails() {
                 {subscription.tier === 'trial' ? (
                   `${formatDate(subscription.trialExpiresAt)} (${subscription.daysRemaining} days remaining)`
                 ) : (
-                  formatDate(subscription.current_period_end || subscription.subscriptionExpiresAt)
+                  (() => {
+                    const billingDate = subscription.current_period_end || subscription.subscriptionExpiresAt;
+                    if (billingDate) {
+                      return formatDate(billingDate);
+                    } else if (subscription.stripeCustomerId || subscription.stripeSubscriptionId) {
+                      return 'Loading billing date...';
+                    } else {
+                      return 'No billing cycle (Manual subscription)';
+                    }
+                  })()
                 )}
               </p>
             </div>
@@ -312,7 +326,14 @@ export function SubscriptionDetails() {
               <p className="text-sm text-orange-700 dark:text-orange-300">
                 Your subscription has been cancelled but will remain active until{' '}
                 <span className="font-medium">
-                  {formatDate(subscription.current_period_end || subscription.subscriptionExpiresAt)}
+                  {(() => {
+                    const billingDate = subscription.current_period_end || subscription.subscriptionExpiresAt;
+                    if (billingDate) {
+                      return formatDate(billingDate);
+                    } else {
+                      return 'the end of your current billing period';
+                    }
+                  })()}
                 </span>. 
                 You can continue using all {tierDetails.name} features until then.
               </p>

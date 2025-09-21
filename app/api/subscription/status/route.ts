@@ -47,7 +47,12 @@ export async function GET(request: NextRequest) {
       getPendingReleasesCount(userId)
     ])
     
-    // Calculate limits based on tier
+    // Calculate limits based on tier AND status
+    const isActiveSubscription = subscription.status === 'active'
+    const isTrialOrPaymentIssue = subscription.tier === 'trial' || 
+                                  subscription.status === 'pending_payment' || 
+                                  subscription.status === 'payment_failed'
+    
     let aiTokenLimits = {
       used: 0,
       limit: 0,
@@ -55,7 +60,7 @@ export async function GET(request: NextRequest) {
       resetType: 'unlimited' as 'daily' | 'monthly' | 'unlimited'
     }
     
-    if (subscription.tier === 'trial') {
+    if (isTrialOrPaymentIssue) {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
       tomorrow.setHours(0, 0, 0, 0)
@@ -66,7 +71,7 @@ export async function GET(request: NextRequest) {
         resetDate: tomorrow,
         resetType: 'daily'
       }
-    } else if (subscription.tier === 'plus') {
+    } else if (subscription.tier === 'plus' && isActiveSubscription) {
       // Calculate next billing cycle date (30 days from subscription start)
       const startDate = new Date(subscription.created_at)
       const dayOfMonth = startDate.getDate()
@@ -94,22 +99,22 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Release limits
+    // Release limits (users with payment issues get trial limits)
     const releaseLimits = {
       pending: pendingReleases,
-      limit: subscription.tier === 'trial' ? 1 : -1 // -1 means unlimited
+      limit: isTrialOrPaymentIssue ? 1 : -1 // -1 means unlimited
     }
     
-    // Feature access based on tier
+    // Feature access based on tier AND status (users with payment issues get trial access)
     const featureAccess = {
-      release_creation: subscription.tier !== 'trial' || pendingReleases < 1,
-      ai_agent: subscription.tier === 'pro' || 
-                (subscription.tier === 'trial' && dailyTokenUsage < 1500) ||
-                (subscription.tier === 'plus' && monthlyTokenUsage < 100000),
-      fan_campaigns: subscription.tier === 'pro' || subscription.tier === 'trial',
-      fan_import: subscription.tier === 'pro' || subscription.tier === 'trial',
-      tip_jar: subscription.tier === 'pro' || subscription.tier === 'trial',
-      paid_subscriptions: subscription.tier === 'pro' || subscription.tier === 'trial',
+      release_creation: (subscription.tier !== 'trial' && isActiveSubscription) || (isTrialOrPaymentIssue && pendingReleases < 1),
+      ai_agent: (subscription.tier === 'pro' && isActiveSubscription) || 
+                (isTrialOrPaymentIssue && dailyTokenUsage < 1500) ||
+                (subscription.tier === 'plus' && isActiveSubscription && monthlyTokenUsage < 100000),
+      fan_campaigns: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
+      fan_import: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
+      tip_jar: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
+      paid_subscriptions: ((subscription.tier === 'pro' || subscription.tier === 'plus') && isActiveSubscription) || isTrialOrPaymentIssue,
       analytics_advanced: true // All tiers have access
     }
     

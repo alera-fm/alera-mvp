@@ -107,30 +107,34 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       subscriptionExpiresAt = undefined
     }
     
-    // Update subscription
-    await updateSubscriptionTier(
-      userId,
-      tier,
-      customerId,
-      subscription.id,
-      subscriptionExpiresAt
-    )
+    // CRITICAL FIX: Only store subscription info, don't upgrade tier yet
+    // Wait for payment success before upgrading user
+    await query(`
+      UPDATE subscriptions 
+      SET stripe_subscription_id = $1,
+          tier = $2,
+          status = 'pending_payment', -- Set to pending until payment succeeds
+          subscription_expires_at = $3,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $4
+    `, [subscription.id, tier, subscriptionExpiresAt, userId])
 
     // Log subscription event
     await query(`
       INSERT INTO subscription_events (user_id, event_type, event_data)
-      VALUES ($1, 'created', $2)
+      VALUES ($1, 'subscription_created_pending', $2)
     `, [
       userId,
       JSON.stringify({
         tier,
         customerId,
         subscriptionId: subscription.id,
-        expiresAt: subscriptionExpiresAt
+        expiresAt: subscriptionExpiresAt,
+        status: 'pending_payment'
       })
     ]);
 
-    // Add to billing history
+    // Add to billing history as pending
     await query(`
       INSERT INTO billing_history (
         user_id,
@@ -141,16 +145,16 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         reference_id,
         payment_method
       )
-      VALUES ($1, $2, 'subscription', 'active', $3, $4, $5)
+      VALUES ($1, $2, 'subscription', 'pending', $3, $4, $5)
     `, [
       userId,
       subscription.items.data[0]?.price?.unit_amount ? subscription.items.data[0].price.unit_amount / 100 : 0,
-      `New subscription created: ${tier} plan`,
+      `New subscription created (pending payment): ${tier} plan`,
       subscription.id,
       'card' // Default to card as it's through Stripe Checkout
     ])
     
-    console.log(`Subscription created for user ${userId}: ${tier}`)
+    console.log(`Subscription created (pending payment) for user ${userId}: ${tier}`)
   } catch (error) {
     console.error('Error handling subscription created:', error)
   }
@@ -404,17 +408,19 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     if (invoice.subscription) {
       // Find user by subscription ID
       const userResult = await query(
-        'SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1',
+        'SELECT user_id, tier FROM subscriptions WHERE stripe_subscription_id = $1',
         [invoice.subscription]
       )
       
       if (userResult.rows.length > 0) {
         const userId = userResult.rows[0].user_id
+        const currentTier = userResult.rows[0].tier
         
-        // Update subscription status (but don't immediately cancel)
+        // CRITICAL FIX: Downgrade user immediately on payment failure
         await query(`
           UPDATE subscriptions 
-          SET status = 'active', -- Keep active for now, Stripe will handle retries
+          SET status = 'payment_failed',
+              tier = 'trial', -- Downgrade to trial immediately
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = $1
         `, [userId])
@@ -422,14 +428,16 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         // Log subscription event
         await query(`
           INSERT INTO subscription_events (user_id, event_type, event_data)
-          VALUES ($1, 'payment_failed', $2)
+          VALUES ($1, 'payment_failed_downgraded', $2)
         `, [
           userId,
           JSON.stringify({
             invoiceId: invoice.id,
             amount: invoice.amount_due,
             subscriptionId: invoice.subscription,
-            failureReason: invoice.last_payment_error?.message || 'Unknown error'
+            failureReason: invoice.last_payment_error?.message || 'Unknown error',
+            previousTier: currentTier,
+            newTier: 'trial'
           })
         ]);
 
@@ -453,11 +461,11 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
           invoice.payment_intent ? 'card' : invoice.payment_method_types[0] || 'unknown'
         ]);
         
-        console.log(`Payment failed for user ${userId}`)
+        console.log(`Payment failed for user ${userId} - downgraded from ${currentTier} to trial`)
         
-        // Note: In production, you might want to:
-        // 1. Send email notification to user
-        // 2. Set a grace period before downgrading
+        // TODO: In production, you should:
+        // 1. Send email notification to user about payment failure
+        // 2. Notify admin about failed payment
         // 3. Log the payment failure for analytics
       }
     }
@@ -483,17 +491,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       if (userResult.rows.length > 0) {
         const userId = userResult.rows[0].user_id
         
-        // Update subscription with subscription ID and customer ID
+        // CRITICAL FIX: Only store subscription ID, don't set active yet
+        // Wait for payment success before activating subscription
         await query(`
           UPDATE subscriptions 
           SET stripe_subscription_id = $1,
               stripe_customer_id = $2,
-              status = 'active',
+              status = 'pending_payment', -- Keep pending until payment succeeds
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = $3
         `, [subscriptionId, customerId, userId])
         
-        console.log(`Checkout completed for user ${userId}`)
+        console.log(`Checkout completed (pending payment) for user ${userId}`)
       }
     }
   } catch (error) {
