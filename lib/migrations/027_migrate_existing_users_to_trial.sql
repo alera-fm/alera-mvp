@@ -1,6 +1,6 @@
 -- Migration 027: Migrate existing users to trial status
 -- Date: 2025-01-27
--- Description: Set all existing users to 2-month trial status
+-- Description: Set all existing users to 1-month trial status
 
 -- Insert subscription records for existing users who don't have one
 INSERT INTO subscriptions (user_id, tier, status, trial_expires_at)
@@ -8,7 +8,7 @@ SELECT
   id as user_id,
   'trial' as tier,
   'active' as status,
-  (created_at + INTERVAL '2 months') as trial_expires_at
+  (created_at + INTERVAL '1 month') as trial_expires_at
 FROM users
 WHERE NOT EXISTS (
   SELECT 1 FROM subscriptions WHERE subscriptions.user_id = users.id
@@ -20,7 +20,7 @@ SET
   tier = 'trial',
   status = 'active',
   trial_expires_at = COALESCE(trial_expires_at, (
-    SELECT created_at + INTERVAL '2 months' 
+    SELECT created_at + INTERVAL '1 month' 
     FROM users 
     WHERE users.id = subscriptions.user_id
   ))

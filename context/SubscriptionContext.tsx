@@ -49,7 +49,7 @@ interface SubscriptionContextType {
   canAccessFeature: (feature: string, data?: any) => Promise<boolean>
   showUpgradeDialog: (reason: string, requiredTier: 'plus' | 'pro') => void
   refreshSubscription: () => Promise<void>
-  upgradeToTier: (tier: 'plus' | 'pro') => Promise<string | null>
+  upgradeToTier: (tier: 'plus' | 'pro', country?: string, billing?: 'monthly' | 'yearly') => Promise<string | null>
   // Upgrade dialog state
   upgradeDialogOpen: boolean
   upgradeDialogReason: string
@@ -161,18 +161,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     setUpgradeDialogTier('plus')
   }, [])
 
-  const upgradeToTier = useCallback(async (tier: 'plus' | 'pro'): Promise<string | null> => {
+  const upgradeToTier = useCallback(async (tier: 'plus' | 'pro', country = 'US', billing = 'monthly'): Promise<string | null> => {
     try {
       const token = localStorage.getItem('authToken')
       if (!token) return null
 
-      const response = await fetch('/api/subscription/create', {
+      const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ tier })
+        body: JSON.stringify({ tier, country, billing })
       })
 
       const data = await response.json()

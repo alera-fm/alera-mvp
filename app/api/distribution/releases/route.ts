@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       artist_names_agreement,
       snapchat_terms,
       youtube_music_agreement,
+      fraud_prevention_agreement,
       tracks,
       submit_for_review,
       release_date // Added release_date
@@ -119,9 +120,9 @@ export async function POST(request: NextRequest) {
           version_info, version_other, release_date, original_release_date, previously_released,
           album_cover_url, selected_stores, track_price, status, terms_agreed,
           fake_streaming_agreement, distribution_agreement, artist_names_agreement,
-          snapchat_terms, youtube_music_agreement, submitted_at
+          snapchat_terms, youtube_music_agreement, fraud_prevention_agreement, submitted_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34
         )
         RETURNING *
       `, [
@@ -157,6 +158,7 @@ export async function POST(request: NextRequest) {
         artist_names_agreement,
         snapchat_terms,
         youtube_music_agreement,
+        fraud_prevention_agreement,
         submit_for_review ? new Date() : null
       ])
 

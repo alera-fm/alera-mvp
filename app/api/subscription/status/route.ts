@@ -102,13 +102,13 @@ export async function GET(request: NextRequest) {
     // Release limits (users with payment issues get trial limits)
     const releaseLimits = {
       pending: pendingReleases,
-      limit: isTrialOrPaymentIssue ? 1 : -1 // -1 means unlimited
+      limit: isTrialOrPaymentIssue ? 0 : -1 // -1 means unlimited, 0 means no releases allowed
     }
     
     // Feature access based on tier AND status (users with payment issues get trial access)
     const featureAccess = {
-      // Release creation: Only active paid users OR trial users with limits
-      release_creation: (subscription.tier !== 'trial' && isActiveSubscription) || (subscription.tier === 'trial' && subscription.status === 'active' && pendingReleases < 1),
+      // Release creation: Only active paid users (trial users cannot create releases)
+      release_creation: subscription.tier !== 'trial' && isActiveSubscription,
       
       // AI agent: Only active paid users OR trial users with limits
       ai_agent: (subscription.tier === 'pro' && isActiveSubscription) || 

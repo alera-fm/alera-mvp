@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/subscription-middleware'
 import { getSubscription, createSubscription } from '@/lib/subscription-utils'
 import { createStripeCustomer, createCheckoutSession, getPriceIdFromTier, validateStripeConfig } from '@/lib/stripe'
+import { getPricingForCountry } from '@/lib/regional-pricing'
 import { query } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
@@ -12,10 +13,14 @@ export async function POST(request: NextRequest) {
     // Verify authentication
     const userId = await requireAuth(request)
     
-    const { tier } = await request.json()
+    const { tier, country = 'US', billing = 'monthly' } = await request.json()
     
     if (!tier || (tier !== 'plus' && tier !== 'pro')) {
       return NextResponse.json({ error: 'Invalid tier specified' }, { status: 400 })
+    }
+    
+    if (billing !== 'monthly' && billing !== 'yearly') {
+      return NextResponse.json({ error: 'Invalid billing cycle specified' }, { status: 400 })
     }
     
     // Get user information
@@ -65,10 +70,18 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Get price ID for the tier
+    // Get price ID for the tier based on country and billing cycle
     let priceId: string
     try {
-      priceId = getPriceIdFromTier(tier)
+      const pricing = getPricingForCountry(country)
+      priceId = billing === 'monthly' 
+        ? pricing[tier].monthly.priceId 
+        : pricing[tier].yearly.priceId
+      
+      if (!priceId) {
+        // Fallback to default pricing if regional pricing not available
+        priceId = getPriceIdFromTier(tier)
+      }
     } catch (error) {
       return NextResponse.json({ error: 'Invalid tier specified' }, { status: 400 })
     }

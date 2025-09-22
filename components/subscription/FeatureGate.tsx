@@ -89,7 +89,7 @@ export function FeatureGate({
   const getUpgradeMessage = () => {
     if (subscription?.tier === 'trial') {
       if (feature === 'release_creation') {
-        return 'Trial users can only create 1 Single release. Upgrade to Plus to create unlimited releases.'
+        return 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
       }
       if (feature === 'ai_agent') {
         return 'You\'ve reached your daily AI token limit. Upgrade to Pro for unlimited AI assistance.'

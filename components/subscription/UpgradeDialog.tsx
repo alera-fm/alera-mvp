@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { useSubscription } from '@/context/SubscriptionContext'
+import { useRegionalPricing } from '@/hooks/use-regional-pricing'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Check, Zap, Crown, Loader2, ArrowRight, Star } from 'lucide-react'
+import { Check, Zap, Crown, Loader2, ArrowRight, Star, Globe } from 'lucide-react'
 
 export function UpgradeDialog() {
   const { 
@@ -18,13 +19,15 @@ export function UpgradeDialog() {
     upgradeToTier
   } = useSubscription()
   
+  const { pricing, country, isSupported, formatPrice } = useRegionalPricing()
   const [loading, setLoading] = useState(false)
   const [selectedTier, setSelectedTier] = useState<'plus' | 'pro'>(upgradeDialogTier)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
   const handleUpgrade = async (tier: 'plus' | 'pro') => {
     setLoading(true)
     try {
-      const checkoutUrl = await upgradeToTier(tier)
+      const checkoutUrl = await upgradeToTier(tier, country, billingCycle)
       if (checkoutUrl) {
         // Redirect to Stripe checkout
         window.location.href = checkoutUrl
@@ -86,9 +89,29 @@ export function UpgradeDialog() {
               </div>
               <Badge variant="outline">
                 {subscription?.tier === 'trial' ? 'Free Trial' : 
-                 subscription?.tier === 'plus' ? '$4.99/month' : '$14.99/month'}
+                 subscription?.tier === 'plus' ? formatPrice(pricing.plus.monthly.amount, pricing.plus.monthly.currency) + '/month' : 
+                 formatPrice(pricing.pro.monthly.amount, pricing.pro.monthly.currency) + '/month'}
               </Badge>
             </div>
+          </div>
+
+
+          {/* Billing Cycle Toggle */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant={billingCycle === 'monthly' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setBillingCycle('monthly')}
+            >
+              Monthly
+            </Button>
+            <Button
+              variant={billingCycle === 'yearly' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setBillingCycle('yearly')}
+            >
+              Yearly
+            </Button>
           </div>
 
           {/* Tier comparison */}
@@ -101,7 +124,12 @@ export function UpgradeDialog() {
                     <Zap className="h-5 w-5 text-purple-500" />
                     Plus
                   </CardTitle>
-                  <Badge className="bg-purple-500 text-white self-start sm:self-center">$4.99/month</Badge>
+                  <Badge className="bg-purple-500 text-white self-start sm:self-center">
+                    {billingCycle === 'monthly' 
+                      ? formatPrice(pricing.plus.monthly.amount, pricing.plus.monthly.currency) + '/month'
+                      : formatPrice(pricing.plus.yearly.amount, pricing.plus.yearly.currency) + '/year'
+                    }
+                  </Badge>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Perfect for growing artists
@@ -149,7 +177,10 @@ export function UpgradeDialog() {
                     Pro
                   </CardTitle>
                   <Badge className="bg-gradient-to-r from-purple-600 to-yellow-500 text-white self-start sm:self-center">
-                    $14.99/month
+                    {billingCycle === 'monthly' 
+                      ? formatPrice(pricing.pro.monthly.amount, pricing.pro.monthly.currency) + '/month'
+                      : formatPrice(pricing.pro.yearly.amount, pricing.pro.yearly.currency) + '/year'
+                    }
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">

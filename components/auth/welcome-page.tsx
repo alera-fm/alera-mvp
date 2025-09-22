@@ -140,7 +140,7 @@ export function WelcomePage() {
             className="text-center"
           >
             <p className="text-xs text-[#666] dark:text-gray-400">
-              Your 2-month free trial starts as soon as you verify your email
+              Your 1-month free trial starts as soon as you verify your email
             </p>
           </motion.div>
         </CardContent>

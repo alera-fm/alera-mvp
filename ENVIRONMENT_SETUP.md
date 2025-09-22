@@ -3,6 +3,7 @@
 ## 🔧 **REQUIRED ENVIRONMENT VARIABLES**
 
 ### **1. Stripe Configuration (Required for Subscription System)**
+
 ```bash
 # Stripe Secret Key (from Stripe Dashboard > Developers > API Keys)
 STRIPE_SECRET_KEY=sk_test_51...  # or sk_live_51... for production
@@ -18,15 +19,17 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51...  # Must match STRIPE_PUBLISHABL
 ```
 
 ### **2. Stripe Product Price IDs (Required)**
+
 ```bash
 # Plus Plan Price ID - $4.99/month (create in Stripe Dashboard > Products)
 STRIPE_PLUS_PRICE_ID=price_...
 
-# Pro Plan Price ID - $14.99/month (create in Stripe Dashboard > Products)  
+# Pro Plan Price ID - $14.99/month (create in Stripe Dashboard > Products)
 STRIPE_PRO_PRICE_ID=price_...
 ```
 
 ### **3. Existing Environment Variables (Keep These)**
+
 ```bash
 # Database
 DATABASE_URL=postgresql://user:password@host:port/database
@@ -51,16 +54,19 @@ EMAIL_PASS=your-email-password
 ## 📋 **STRIPE SETUP INSTRUCTIONS**
 
 ### **Step 1: Get API Keys**
+
 1. Go to [Stripe Dashboard](https://dashboard.stripe.com)
 2. Navigate to **Developers > API Keys**
 3. Copy **Publishable key** (starts with `pk_test_` or `pk_live_`)
 4. Copy **Secret key** (starts with `sk_test_` or `sk_live_`)
 
 ### **Step 2: Create Products (UPDATED PRICING)**
+
 1. In Stripe Dashboard, go to **Products**
 2. Click **+ Add product**
 
 #### **Create Plus Plan:**
+
 - **Name**: "ALERA Plus"
 - **Price**: **$4.99 USD**
 - **Billing**: Monthly
@@ -68,13 +74,15 @@ EMAIL_PASS=your-email-password
 - Copy the **Price ID** (starts with `price_`)
 
 #### **Create Pro Plan:**
+
 - **Name**: "ALERA Pro"
 - **Price**: **$14.99 USD**
-- **Billing**: Monthly  
+- **Billing**: Monthly
 - **Description**: "For serious artists and labels"
 - Copy the **Price ID** (starts with `price_`)
 
 ### **Step 3: Set Up Webhook**
+
 1. In Stripe Dashboard, go to **Developers > Webhooks**
 2. Click **+ Add endpoint**
 3. **URL**: `https://your-domain.com/api/stripe/webhook`
@@ -94,7 +102,7 @@ EMAIL_PASS=your-email-password
 # Database
 DATABASE_URL=postgresql://user:password@host:port/database
 
-# JWT Authentication  
+# JWT Authentication
 JWT_SECRET=your-jwt-secret-key
 
 # OpenAI
@@ -130,6 +138,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51...
 ## 🚀 **DEPLOYMENT CHECKLIST**
 
 ### **1. Environment Variables**
+
 - [ ] Add all Stripe keys to `.env.local`
 - [ ] Create Plus plan ($4.99/month) in Stripe
 - [ ] Create Pro plan ($14.99/month) in Stripe
@@ -139,20 +148,23 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51...
 - [ ] Add Slack webhook URL to environment
 
 ### **2. Dependencies**
+
 ```bash
 npm install stripe @stripe/stripe-js
 ```
 
 ### **3. Database Migrations**
+
 ```bash
 # Run in order:
 psql -d your_database -f lib/migrations/025_create_subscriptions_table.sql
-psql -d your_database -f lib/migrations/026_create_ai_usage_table.sql  
+psql -d your_database -f lib/migrations/026_create_ai_usage_table.sql
 psql -d your_database -f lib/migrations/027_migrate_existing_users_to_trial.sql
 psql -d your_database -f lib/migrations/028_create_subscription_events_table.sql
 ```
 
 ### **4. Test Subscription Flow**
+
 ```bash
 npm run dev
 # 1. Navigate to /dashboard - see trial countdown
@@ -163,11 +175,11 @@ npm run dev
 
 ## 💰 **UPDATED PRICING STRUCTURE**
 
-| Tier | Price | Features |
-|------|-------|----------|
-| **Trial** | Free (2 months) | 1 Single release, 1,500 AI tokens/day |
-| **Plus** | **$4.99/month** | Unlimited releases, 100k AI tokens/month, basic fan management |
-| **Pro** | **$14.99/month** | Everything + email campaigns, fan import, monetization |
+| Tier      | Price            | Features                                                       |
+| --------- | ---------------- | -------------------------------------------------------------- |
+| **Trial** | Free (1 month)   | 1,500 AI tokens/day                                            |
+| **Plus**  | **$4.99/month**  | Unlimited releases, 100k AI tokens/month, basic fan management |
+| **Pro**   | **$14.99/month** | Everything + email campaigns, fan import, monetization         |
 
 ## ⚠️ **IMPORTANT NOTES**
 

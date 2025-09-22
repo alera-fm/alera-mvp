@@ -1,6 +1,7 @@
 -- Migration 034: Update trial duration from 3 months to 2 months
 -- Date: 2025-01-27
 -- Description: Update existing trial users to 2-month trial duration
+-- NOTE: This migration is now superseded by migration 038 (1 month)
 
 -- Update existing trial users to have 2-month duration instead of 3
 -- This will adjust the trial_expires_at for users who still have active trials

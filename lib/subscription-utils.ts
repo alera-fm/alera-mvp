@@ -196,26 +196,12 @@ export async function checkReleaseLimit(userId: number, releaseType?: string): P
     return { allowed: true }
   }
   
-  // Trial users can only create Singles
-  if (releaseType && releaseType !== 'Single') {
-    return {
-      allowed: false,
-      reason: 'Trial users can only create Single releases. Upgrade to create EPs or Albums.',
-      upgradeRequired: 'plus'
-    }
+  // Trial users cannot create any releases - must upgrade first
+  return {
+    allowed: false,
+    reason: 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.',
+    upgradeRequired: 'plus'
   }
-  
-  const totalReleases = await getTotalReleasesCount(userId)
-  
-  if (totalReleases >= 1) {
-    return {
-      allowed: false,
-      reason: 'Trial users can only have 1 release total (regardless of status)',
-      upgradeRequired: 'plus'
-    }
-  }
-  
-  return { allowed: true }
 }
 
 // Check AI token limits
@@ -407,7 +393,7 @@ export function countTokens(text: string): number {
 export async function createSubscription(userId: number): Promise<Subscription | null> {
   try {
     const trialExpiresAt = new Date()
-    trialExpiresAt.setMonth(trialExpiresAt.getMonth() + 2)
+    trialExpiresAt.setMonth(trialExpiresAt.getMonth() + 1)
     
     const result = await query(`
       INSERT INTO subscriptions (user_id, tier, status, trial_expires_at)

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard, Loader2, Crown, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { useRegionalPricing } from "@/hooks/use-regional-pricing";
 
 interface Subscription {
   tier: 'trial' | 'plus' | 'pro';
@@ -25,6 +26,7 @@ export function SubscriptionDetails() {
   const [managingSubscription, setManagingSubscription] = useState(false);
   const { toast } = useToast();
   const { showUpgradeDialog } = useSubscription();
+  const { pricing, formatPrice } = useRegionalPricing();
 
   useEffect(() => {
     fetchSubscriptionDetails();
@@ -117,7 +119,7 @@ export function SubscriptionDetails() {
           icon: Crown,
           color: 'bg-purple-500',
           textColor: 'text-purple-500',
-          price: '$4.99/month',
+          price: formatPrice(pricing.plus.monthly.amount, pricing.plus.monthly.currency) + '/month',
           features: [
             'Unlimited releases (Singles, EPs, & Albums)',
             '100,000 AI tokens per month',
@@ -132,7 +134,7 @@ export function SubscriptionDetails() {
           icon: Crown,
           color: 'bg-gradient-to-r from-purple-600 to-yellow-500',
           textColor: 'text-yellow-500',
-          price: '$14.99/month',
+          price: formatPrice(pricing.pro.monthly.amount, pricing.pro.monthly.currency) + '/month',
           features: [
             'Everything in Plus',
             'Direct Fan Monetisation (Tips & Subscriptions)',
@@ -270,7 +272,7 @@ export function SubscriptionDetails() {
                   }
                 }}
                 className="flex items-center gap-2"
-                title={`Upgrade to ${subscription.tier === 'trial' ? 'Plus ($4.99/month)' : 'Pro ($14.99/month)'}`}
+                title={`Upgrade to ${subscription.tier === 'trial' ? `Plus (${formatPrice(pricing.plus.monthly.amount, pricing.plus.monthly.currency)}/month)` : `Pro (${formatPrice(pricing.pro.monthly.amount, pricing.pro.monthly.currency)}/month)`}`}
               >
                 <Crown className="h-4 w-4" />
                 Upgrade to {subscription.tier === 'trial' ? 'Plus' : 'Pro'}

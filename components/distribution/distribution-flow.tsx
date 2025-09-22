@@ -203,6 +203,7 @@ interface Release {
   artist_names_agreement: boolean;
   snapchat_terms: boolean;
   youtube_music_agreement: boolean;
+  fraud_prevention_agreement: boolean;
   tracks: Track[];
   status?: string;
 }
@@ -256,6 +257,7 @@ export function DistributionFlow({
     artist_names_agreement: false,
     snapchat_terms: false,
     youtube_music_agreement: false,
+    fraud_prevention_agreement: false,
     tracks: [],
   });
 
@@ -440,7 +442,8 @@ export function DistributionFlow({
           formData.fake_streaming_agreement,
           formData.distribution_agreement,
           formData.artist_names_agreement,
-          formData.youtube_music_agreement
+          formData.youtube_music_agreement,
+          formData.fraud_prevention_agreement
         ];
         
         // Add snapchat terms if snapchat is selected
@@ -462,7 +465,7 @@ export function DistributionFlow({
     
     if (!canCreate) {
       const message = formData.distribution_type === 'Single' 
-        ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
+        ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
         : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
       showUpgradeDialog(message, 'plus');
       return;
@@ -523,7 +526,7 @@ export function DistributionFlow({
         // Handle subscription-related errors with upgrade dialog
         if (response.status === 403 && errorData.subscriptionLimited) {
           const message = formData.distribution_type === 'Single' 
-            ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
+            ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
             : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
           showUpgradeDialog(message, 'plus');
           return;
@@ -551,7 +554,7 @@ export function DistributionFlow({
     
     if (!canCreate) {
       const message = formData.distribution_type === 'Single' 
-        ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
+        ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
         : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
       showUpgradeDialog(message, 'plus');
       return;
@@ -618,7 +621,7 @@ export function DistributionFlow({
         // Handle subscription-related errors with upgrade dialog
         if (response.status === 403 && errorData.subscriptionLimited) {
           const message = formData.distribution_type === 'Single' 
-            ? 'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.'
+            ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
             : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
           showUpgradeDialog(message, 'plus');
           return;
@@ -2225,6 +2228,19 @@ export function DistributionFlow({
             </Label>
           </div>
         )}
+
+        <div className="flex items-start space-x-2">
+          <Checkbox
+            id="fraud_prevention_agreement"
+            checked={formData.fraud_prevention_agreement}
+            onCheckedChange={(checked) =>
+              updateFormData("fraud_prevention_agreement", checked)
+            }
+          />
+          <Label htmlFor="fraud_prevention_agreement" className="text-sm font-medium text-red-600 dark:text-red-400">
+            I understand that submitting fraudulent content will result in immediate account termination.
+          </Label>
+        </div>
       </div>
 
       <Separator />
@@ -2286,12 +2302,12 @@ export function DistributionFlow({
           
           <h1 className="text-3xl font-bold mb-4">Release Creation Limit Reached</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-            Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases and unlock the full power of your music career.
+            Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music and unlock the full power of your music career.
           </p>
           
           <Button 
             onClick={() => showUpgradeDialog(
-              'Trial users can only have 1 release total (regardless of status). Upgrade to create unlimited releases.',
+              'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.',
               'plus'
             )}
             className="bg-gradient-to-r from-[#BFFF00] to-[#9AFF00] hover:from-[#BFFF00]/90 hover:to-[#9AFF00]/90 text-black font-semibold px-8 py-3 text-lg"
@@ -2434,6 +2450,7 @@ export function DistributionFlow({
                           {!formData.artist_names_agreement && <li>Confirm artist names approval</li>}
                           {!formData.youtube_music_agreement && <li>Accept YouTube Music terms</li>}
                           {formData.selected_stores.includes("Snapchat") && !formData.snapchat_terms && <li>Accept Snapchat terms</li>}
+                          {!formData.fraud_prevention_agreement && <li>Confirm fraud prevention agreement</li>}
                         </>
                       )}
                     </ul>
