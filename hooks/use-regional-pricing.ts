@@ -32,22 +32,34 @@ export function useRegionalPricing(): UseRegionalPricingReturn {
         } else if (timezone.includes('Europe/Istanbul') || timezone.includes('Asia/Istanbul')) {
           detectedCountry = 'TR';
         }
+        
 
-        // Try IP-based geolocation as fallback
-        try {
-          const response = await fetch('https://ipapi.co/json/');
-          const data = await response.json();
-          if (data.country_code) {
-            detectedCountry = data.country_code;
+        // Try IP-based geolocation as fallback (only if timezone detection didn't work)
+        if (detectedCountry === 'US') {
+          try {
+            const response = await fetch('https://ipapi.co/json/', {
+              mode: 'cors',
+              headers: {
+                'Accept': 'application/json',
+              }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.country_code && ['IN', 'ZA', 'TR'].includes(data.country_code)) {
+                detectedCountry = data.country_code;
+              }
+            }
+          } catch (error) {
+            console.log('IP geolocation failed, using timezone detection result');
           }
-        } catch (error) {
-          console.log('IP geolocation failed, using timezone detection');
         }
 
         setCountry(detectedCountry);
         setPricing(getPricingForCountry(detectedCountry));
       } catch (error) {
         console.error('Country detection failed:', error);
+        // Fallback to US pricing if everything fails
         setCountry('US');
         setPricing(getPricingForCountry('US'));
       } finally {

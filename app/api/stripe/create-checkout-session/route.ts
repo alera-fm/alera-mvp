@@ -79,10 +79,14 @@ export async function POST(request: NextRequest) {
         : pricing[tier].yearly.priceId
       
       if (!priceId) {
+        console.log(`No regional price ID found for ${country} ${tier} ${billing}, falling back to default`)
         // Fallback to default pricing if regional pricing not available
         priceId = getPriceIdFromTier(tier)
       }
+      
+      console.log(`Using price ID: ${priceId} for ${country} ${tier} ${billing}`)
     } catch (error) {
+      console.error('Error getting price ID:', error)
       return NextResponse.json({ error: 'Invalid tier specified' }, { status: 400 })
     }
     

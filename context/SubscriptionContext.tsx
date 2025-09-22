@@ -176,10 +176,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       })
 
       const data = await response.json()
+      console.log('Checkout session response:', { status: response.status, data })
 
       if (response.ok) {
-        return data.checkoutUrl
+        return data.url || data.checkoutUrl
       } else {
+        console.error('Checkout session creation failed:', data)
         // Handle specific error cases
         if (data.error === 'User already has an active subscription') {
           toast({

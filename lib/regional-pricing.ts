@@ -29,36 +29,36 @@ export const REGIONAL_PRICING: Record<string, RegionalPricing> = {
     country: 'India',
     currency: 'INR',
     plus: {
-      monthly: { amount: 249, priceId: process.env.STRIPE_PLUS_INDIA_MONTHLY_PRICE_ID || '' },
-      yearly: { amount: 2499, priceId: process.env.STRIPE_PLUS_INDIA_YEARLY_PRICE_ID || '' }
+      monthly: { amount: 249, priceId: process.env.STRIPE_PLUS_INDIA_MONTHLY_PRICE_ID || process.env.STRIPE_PLUS_PRICE_ID || '' },
+      yearly: { amount: 2499, priceId: process.env.STRIPE_PLUS_INDIA_YEARLY_PRICE_ID || process.env.STRIPE_PLUS_YEARLY_PRICE_ID || '' }
     },
     pro: {
-      monthly: { amount: 499, priceId: process.env.STRIPE_PRO_INDIA_MONTHLY_PRICE_ID || '' },
-      yearly: { amount: 4999, priceId: process.env.STRIPE_PRO_INDIA_YEARLY_PRICE_ID || '' }
+      monthly: { amount: 499, priceId: process.env.STRIPE_PRO_INDIA_MONTHLY_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID || '' },
+      yearly: { amount: 4999, priceId: process.env.STRIPE_PRO_INDIA_YEARLY_PRICE_ID || process.env.STRIPE_PRO_YEARLY_PRICE_ID || '' }
     }
   },
   ZA: {
     country: 'South Africa',
     currency: 'ZAR',
     plus: {
-      monthly: { amount: 79, priceId: process.env.STRIPE_PLUS_SA_MONTHLY_PRICE_ID || '' },
-      yearly: { amount: 799, priceId: process.env.STRIPE_PLUS_SA_YEARLY_PRICE_ID || '' }
+      monthly: { amount: 79, priceId: process.env.STRIPE_PLUS_SA_MONTHLY_PRICE_ID || process.env.STRIPE_PLUS_PRICE_ID || '' },
+      yearly: { amount: 799, priceId: process.env.STRIPE_PLUS_SA_YEARLY_PRICE_ID || process.env.STRIPE_PLUS_YEARLY_PRICE_ID || '' }
     },
     pro: {
-      monthly: { amount: 149, priceId: process.env.STRIPE_PRO_SA_MONTHLY_PRICE_ID || '' },
-      yearly: { amount: 1499, priceId: process.env.STRIPE_PRO_SA_YEARLY_PRICE_ID || '' }
+      monthly: { amount: 149, priceId: process.env.STRIPE_PRO_SA_MONTHLY_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID || '' },
+      yearly: { amount: 1499, priceId: process.env.STRIPE_PRO_SA_YEARLY_PRICE_ID || process.env.STRIPE_PRO_YEARLY_PRICE_ID || '' }
     }
   },
   TR: {
     country: 'Turkey',
     currency: 'TRY',
     plus: {
-      monthly: { amount: 99.99, priceId: process.env.STRIPE_PLUS_TURKEY_MONTHLY_PRICE_ID || '' },
-      yearly: { amount: 999.99, priceId: process.env.STRIPE_PLUS_TURKEY_YEARLY_PRICE_ID || '' }
+      monthly: { amount: 99.99, priceId: process.env.STRIPE_PLUS_TURKEY_MONTHLY_PRICE_ID || process.env.STRIPE_PLUS_PRICE_ID || '' },
+      yearly: { amount: 999.99, priceId: process.env.STRIPE_PLUS_TURKEY_YEARLY_PRICE_ID || process.env.STRIPE_PLUS_YEARLY_PRICE_ID || '' }
     },
     pro: {
-      monthly: { amount: 199.99, priceId: process.env.STRIPE_PRO_TURKEY_MONTHLY_PRICE_ID || '' },
-      yearly: { amount: 1999.99, priceId: process.env.STRIPE_PRO_TURKEY_YEARLY_PRICE_ID || '' }
+      monthly: { amount: 199.99, priceId: process.env.STRIPE_PRO_TURKEY_MONTHLY_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID || '' },
+      yearly: { amount: 1999.99, priceId: process.env.STRIPE_PRO_TURKEY_YEARLY_PRICE_ID || process.env.STRIPE_PRO_YEARLY_PRICE_ID || '' }
     }
   }
 };
