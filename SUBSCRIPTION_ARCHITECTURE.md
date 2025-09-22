@@ -549,7 +549,7 @@ SELECT
   id as user_id,
   'trial' as tier,
   'active' as status,
-  (created_at + INTERVAL '3 months') as trial_expires_at
+  (created_at + INTERVAL '1 month') as trial_expires_at
 FROM users
 WHERE NOT EXISTS (
   SELECT 1 FROM subscriptions WHERE subscriptions.user_id = users.id

@@ -241,7 +241,7 @@ curl -X POST \
 
 ### **Trial User Journey**
 
-1. **Registration** → Auto-assigned 3-month trial
+1. **Registration** → Auto-assigned 1-month trial
 2. **Dashboard** → See trial countdown
 3. **Create Single** → Allowed
 4. **Try EP/Album** → Blocked with upgrade prompt

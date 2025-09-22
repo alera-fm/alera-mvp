@@ -102,7 +102,7 @@ export function SubscriptionDetails() {
       case 'trial':
         return {
           name: 'Trial',
-          description: 'Free 3-month trial with basic features',
+          description: 'Free 1-month trial with basic features',
           icon: Zap,
           color: 'bg-blue-500',
           textColor: 'text-blue-500',
