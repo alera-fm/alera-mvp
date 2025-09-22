@@ -3,8 +3,13 @@
 import { RegionalPricingCard } from '@/components/subscription/RegionalPricingCard';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useRegionalPricing } from '@/hooks/use-regional-pricing';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
+import { useEffect, useState } from 'react';
 
-export default function SubscriptionPage() {
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
+function SubscriptionPageContent() {
   const { upgradeToTier } = useSubscription();
   const { country, isSupported } = useRegionalPricing();
 
@@ -133,5 +138,36 @@ export default function SubscriptionPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SubscriptionPage() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Choose Your Plan
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300">
+              Loading...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <SubscriptionProvider>
+      <SubscriptionPageContent />
+    </SubscriptionProvider>
   );
 }
