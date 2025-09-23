@@ -206,6 +206,17 @@ export async function POST(request: NextRequest) {
 
       await client.query('COMMIT')
 
+      // Trigger release submitted email if submitted for review
+      if (submit_for_review) {
+        try {
+          const { triggerReleaseSubmittedEmail } = await import('@/lib/email-automation')
+          await triggerReleaseSubmittedEmail(decoded.userId, release_title)
+        } catch (emailError) {
+          console.error('Error sending release submitted email:', emailError)
+          // Don't fail the release creation if email fails
+        }
+      }
+
       return NextResponse.json({
         message: submit_for_review ? 'Release submitted for review successfully' : 'Release saved as draft',
         release

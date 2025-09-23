@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { triggerWelcomeEmail } from '@/lib/email-automation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,6 +34,14 @@ export async function GET(request: NextRequest) {
       'UPDATE users SET is_verified = TRUE, verification_token = NULL WHERE id = $1',
       [userId]
     )
+
+    // Trigger welcome email automation
+    try {
+      await triggerWelcomeEmail(userId)
+    } catch (error) {
+      console.error('Error triggering welcome email:', error)
+      // Don't fail the verification if email fails
+    }
 
     return NextResponse.json({
       message: 'Email verified successfully'

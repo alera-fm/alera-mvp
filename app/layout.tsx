@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/context/AuthContext";
 import { ChatProvider } from "@/context/ChatContext";
 import { FloatingAgentButton } from "@/components/floating-agent-button";
+import "@/lib/startup"; // Initialize background services
 
 export const metadata = {
   title: "ALERA Artist Cockpit",

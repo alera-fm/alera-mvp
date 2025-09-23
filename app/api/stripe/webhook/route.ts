@@ -390,8 +390,25 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
           invoice.amount_paid / 100, // Convert cents to dollars
           `Subscription payment for ${invoice.lines.data[0]?.price?.nickname || 'plan'}`,
           invoice.id,
-          invoice.payment_intent ? 'card' : invoice.payment_method_types[0] || 'unknown'
+          invoice.payment_intent ? 'card' : 'unknown'
         ]);
+        
+        // Send subscription confirmation email
+        try {
+          const { triggerSubscriptionConfirmationEmail } = await import('@/lib/email-automation')
+          const subscriptionResult = await query(
+            'SELECT tier FROM subscriptions WHERE user_id = $1',
+            [userId]
+          )
+          if (subscriptionResult.rows.length > 0) {
+            const tier = subscriptionResult.rows[0].tier
+            const billingCycle = invoice.lines.data[0]?.price?.recurring?.interval === 'year' ? 'Annual' : 'Monthly'
+            await triggerSubscriptionConfirmationEmail(userId, tier, billingCycle)
+          }
+        } catch (emailError) {
+          console.error('Error sending subscription confirmation email:', emailError)
+          // Don't fail the payment processing if email fails
+        }
         
         console.log(`Payment succeeded for user ${userId}`)
       }
@@ -435,7 +452,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
             invoiceId: invoice.id,
             amount: invoice.amount_due,
             subscriptionId: invoice.subscription,
-            failureReason: invoice.last_payment_error?.message || 'Unknown error',
+            failureReason: 'Payment failed',
             previousTier: currentTier,
             newTier: 'trial'
           })
@@ -456,17 +473,21 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         `, [
           userId,
           invoice.amount_due / 100, // Convert cents to dollars
-          `Failed subscription payment for ${invoice.lines.data[0]?.price?.nickname || 'plan'}: ${invoice.last_payment_error?.message || 'Unknown error'}`,
+          `Failed subscription payment for ${invoice.lines.data[0]?.price?.nickname || 'plan'}: Payment failed`,
           invoice.id,
-          invoice.payment_intent ? 'card' : invoice.payment_method_types[0] || 'unknown'
+          invoice.payment_intent ? 'card' : 'unknown'
         ]);
         
-        console.log(`Payment failed for user ${userId} - downgraded from ${currentTier} to trial`)
+        // Send subscription payment failed email
+        try {
+          const { triggerSubscriptionPaymentFailedEmail } = await import('@/lib/email-automation')
+          await triggerSubscriptionPaymentFailedEmail(userId, currentTier)
+        } catch (emailError) {
+          console.error('Error sending subscription payment failed email:', emailError)
+          // Don't fail the payment processing if email fails
+        }
         
-        // TODO: In production, you should:
-        // 1. Send email notification to user about payment failure
-        // 2. Notify admin about failed payment
-        // 3. Log the payment failure for analytics
+        console.log(`Payment failed for user ${userId} - downgraded from ${currentTier} to trial`)
       }
     }
   } catch (error) {

@@ -84,6 +84,33 @@ export async function PATCH(request: NextRequest) {
 
       await client.query('COMMIT')
 
+      // Trigger appropriate emails based on status
+      if (status === 'sent_to_stores') {
+        try {
+          const { triggerReleaseApprovedEmail } = await import('@/lib/email-automation')
+          await triggerReleaseApprovedEmail(result.rows[0].artist_id, result.rows[0].release_title)
+        } catch (emailError) {
+          console.error('Error sending release approved email:', emailError)
+          // Don't fail the status update if email fails
+        }
+      } else if (status === 'live') {
+        try {
+          const { triggerReleaseLiveEmail } = await import('@/lib/email-automation')
+          await triggerReleaseLiveEmail(result.rows[0].artist_id, result.rows[0].release_title)
+        } catch (emailError) {
+          console.error('Error sending release live email:', emailError)
+          // Don't fail the status update if email fails
+        }
+      } else if (status === 'rejected') {
+        try {
+          const { triggerReleaseRejectedEmail } = await import('@/lib/email-automation')
+          await triggerReleaseRejectedEmail(result.rows[0].artist_id, result.rows[0].release_title)
+        } catch (emailError) {
+          console.error('Error sending release rejected email:', emailError)
+          // Don't fail the status update if email fails
+        }
+      }
+
       return NextResponse.json({
         message: `Release ${status} successfully`,
         release: result.rows[0]
