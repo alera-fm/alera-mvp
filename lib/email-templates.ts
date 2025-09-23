@@ -63,15 +63,15 @@ foundation is ready.</h1>
 <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Hi [Artist Name],</p> <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Welcome to ALERA. We built this platform to provide the foundation independent artists need to build a sustainable  career on their own terms. Your account is now active.</p> 
 <div class="step" style="margin-bottom: 30px;"> 
 <h2 style="font-size: 20px; font-weight: 600; color: #FFFFFF; margin: 0 0 10px 0;">1. Create Your Public Page</h2> 
-<p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Use the Landing Page Builder in the "My Page" tab to create a central hub for your fans in minutes.</p> <a href="https://app.alera.fm/my-page" class="button" style="display: inline-block; padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 15px;">Build Your Page</a> </div> 
+<p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Use the Landing Page Builder in the "My Page" tab to create a central hub for your fans in minutes.</p> <a href="https://app.alera.fm/dashboard/my-page" class="button" style="display: inline-block; padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 15px;">Build Your Page</a> </div> 
 <div class="step" style="margin-bottom: 30px;"> 
 <h2 style="font-size: 20px; font-weight: 600; color: #FFFFFF; margin: 0 0 10px 0;">2. Prepare a Release</h2> 
 <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">When you're ready to release music, head to the "New Release" tab to get everything set up. Upgrading to a paid plan  unlocks unlimited distribution.</p>
-<a href="https://app.alera.fm/releases/new" class="button" style="display: inline-block; padding:  12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none; border-radius:  8px; font-weight: 600; margin-top: 15px;">Start a Release</a> 
+<a href="https://app.alera.fm/dashboard/new-release" class="button" style="display: inline-block; padding:  12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none; border-radius:  8px; font-weight: 600; margin-top: 15px;">Start a Release</a> 
 </div> 
 <div class="step" style="margin-bottom: 30px;"> 
 <h2 style="font-size: 20px; font-weight: 600; color: #FFFFFF; margin: 0 0 10px 0;">3. Set Up  Your Wallet</h2> 
-<p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Connect your payout method in the  "Wallet" tab so you're ready to receive any future earnings from tips or subscriptions.</p> <a href="https://app.alera.fm/wallet" class="button" style="display: inline-block; padding:  12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none; border-radius: 8px;  font-weight: 600; margin-top: 15px;">Go to Wallet</a> 
+<p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Connect your payout method in the  "Wallet" tab so you're ready to receive any future earnings from tips or subscriptions.</p> <a href="https://app.alera.fm/dashboard/wallet" class="button" style="display: inline-block; padding:  12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none; border-radius: 8px;  font-weight: 600; margin-top: 15px;">Go to Wallet</a> 
 </div> 
 <div class="trial-info" style="background-color: #242424; padding: 20px; border-radius: 8px;  text-align: center; margin: 30px 0;"> 
 <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">As an early partner, your account  starts with a <strong>1-month free trial</strong>, giving you full access to all of our tools.</p> </div> 
@@ -174,7 +174,7 @@ family=Inter:wght@400;600;700&display=swap');
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">You can build and  customize yours anytime in the "My Page" tab.</p> 
   
  <div style="text-align: center;"> 
- <a href="https://app.alera.fm/my-page" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Customize Your  Page</a> 
+ <a href="https://app.alera.fm/dashboard/my-page" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Customize Your  Page</a> 
  </div> 
   
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3; margin-top: 40px;">If you  ever need ideas, just ask your AI Career Manager.</p> 
@@ -372,7 +372,7 @@ family=Inter:wght@400;600;700&display=swap');
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Ready to get your music heard? Upgrading to a paid plan unlocks unlimited distribution for your  singles, EPs, and albums.</p> 
   
  <div style="text-align: center;"> 
- <a href="https://app.alera.fm/releases/new" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Start Your Release</a> 
+ <a href="https://app.alera.fm/dashboard/new-release" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Start Your Release</a> 
  </div> 
   
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3; margin-top: 40px;">If you have any questions about preparing your audio or artwork, your AI Career Manager is  always ready to help.</p> 
@@ -894,7 +894,7 @@ family=Inter:wght@400;600;700&display=swap');
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Don't panic. If you believe this is a mistake, you can either correct any issues and resubmit the  track through the "New Release" portal, or you can contact us directly by reaching out to  contact@alera.fm.</p> 
   
  <div style="text-align: center;"> 
- <a href="https://app.alera.fm/releases/new" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Start a New Release</a> 
+ <a href="https://app.alera.fm/dashboard/new-release" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Start a New Release</a> 
  </div> 
   
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3; margin-top: 40px;">All the best,<br>The ALERA  Team</p> 
