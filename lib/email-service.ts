@@ -41,20 +41,23 @@ export async function sendEmail(emailData: EmailData): Promise<boolean> {
       return false;
     }
 
-    const html = replaceEmailPlaceholders(template.html, emailData.artistName, {
+    const placeholderData = {
       releaseTitle: emailData.releaseTitle,
       amount: emailData.amount,
       payoutMethod: emailData.payoutMethod,
       lastFour: emailData.lastFour,
       tier: emailData.tier,
       billingCycle: emailData.billingCycle
-    });
+    };
+
+    const html = replaceEmailPlaceholders(template.html, emailData.artistName, placeholderData);
+    const subject = replaceEmailPlaceholders(template.subject, emailData.artistName, placeholderData);
     
     // Send email using existing SMTP configuration
     const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || 'no-reply@alera.fm',
       to: emailData.to,
-      subject: template.subject,
+      subject: subject,
       html: html,
     });
 
