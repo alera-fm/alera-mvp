@@ -222,8 +222,7 @@ export function DistributionFlow({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [coverUploadProgress, setCoverUploadProgress] = useState(0);
-  const [audioUploadStates, setAudioUploadStates] = useState<{[key: number]: {uploading: boolean, progress: number}}>({});
+  const [audioUploadStates, setAudioUploadStates] = useState<{[key: number]: {uploading: boolean}}>({});
   const [canCreateRelease, setCanCreateRelease] = useState(true);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [formData, setFormData] = useState<Release>({
@@ -1072,22 +1071,10 @@ export function DistributionFlow({
 
                       // If validation passes, proceed with upload
                       setIsUploading(true);
-                      setCoverUploadProgress(0);
                       try {
                         const uploadData = new FormData();
                         uploadData.append("file", file);
                         uploadData.append("folder", "covers");
-
-                        // Simulate progress for better UX (since we can't track real progress with fetch)
-                        const progressInterval = setInterval(() => {
-                          setCoverUploadProgress(prev => {
-                            if (prev >= 90) {
-                              clearInterval(progressInterval);
-                              return 90;
-                            }
-                            return prev + 10;
-                          });
-                        }, 200);
 
                         const response = await fetch("/api/upload", {
                           method: "POST",
@@ -1096,9 +1083,6 @@ export function DistributionFlow({
                             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
                           },
                         });
-
-                        clearInterval(progressInterval);
-                        setCoverUploadProgress(100);
 
                         if (response.ok) {
                           const result = await response.json();
@@ -1111,17 +1095,13 @@ export function DistributionFlow({
                           throw new Error("Upload failed");
                         }
                       } catch (error) {
-                        setCoverUploadProgress(0);
                         toast({
                           variant: "destructive",
                           title: "Error",
                           description: "Failed to upload album cover",
                         });
                       } finally {
-                        setTimeout(() => {
-                          setIsUploading(false);
-                          setCoverUploadProgress(0);
-                        }, 1000);
+                        setIsUploading(false);
                       }
                     };
                     
@@ -1139,14 +1119,11 @@ export function DistributionFlow({
                 disabled={isUploading}
               />
               {isUploading && (
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 justify-center">
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                    <p className="text-sm text-blue-600">
-                      Uploading album cover... {coverUploadProgress}%
-                    </p>
-                  </div>
-                  <Progress value={coverUploadProgress} className="w-full max-w-xs mx-auto" />
+                <div className="mt-4 flex items-center gap-2 justify-center">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  <p className="text-sm text-blue-600">
+                    Uploading album cover...
+                  </p>
                 </div>
               )}
               {formData.album_cover_url && !isUploading && (
@@ -1444,7 +1421,7 @@ export function DistributionFlow({
                   {track.songwriters.map((songwriter, writerIndex) => (
                     <div
                       key={writerIndex}
-                      className="grid grid-cols-3 gap-2 items-center"
+                      className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start md:items-center"
                     >
                       <div className="grid gap-1">
                         <Label>First Name</Label>
@@ -1457,6 +1434,7 @@ export function DistributionFlow({
                             updateTrack(index, "songwriters", newSongwriters);
                           }}
                           placeholder="First Name"
+                          className="min-h-[44px] text-base"
                         />
                       </div>
                       <div className="grid gap-1">
@@ -1470,6 +1448,7 @@ export function DistributionFlow({
                             updateTrack(index, "songwriters", newSongwriters);
                           }}
                           placeholder="Middle Name"
+                          className="min-h-[44px] text-base"
                         />
                       </div>
                       <div className="grid gap-1">
@@ -1483,6 +1462,7 @@ export function DistributionFlow({
                             updateTrack(index, "songwriters", newSongwriters);
                           }}
                           placeholder="Last Name"
+                          className="min-h-[44px] text-base"
                         />
                       </div>
 
@@ -1494,7 +1474,7 @@ export function DistributionFlow({
                           updateTrack(index, "songwriters", newSongwriters);
                         }}
                       >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="w-full md:w-[140px] min-h-[44px] text-base">
                           <SelectValue placeholder="Role" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1553,7 +1533,7 @@ export function DistributionFlow({
                       (performer, performerIndex) => (
                         <div
                           key={performerIndex}
-                          className="flex gap-2 items-center"
+                          className="grid grid-cols-1 md:flex md:gap-2 md:items-center space-y-2 md:space-y-0"
                         >
                           <Select
                             value={performer.role}
@@ -1569,7 +1549,7 @@ export function DistributionFlow({
                               );
                             }}
                           >
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-full md:w-[180px] min-h-[44px] text-base">
                               <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1756,7 +1736,7 @@ export function DistributionFlow({
                               );
                             }}
                             placeholder="Name"
-                            className="flex-1"
+                            className="flex-1 min-h-[44px] text-base"
                           />
                           <Button
                             type="button"
@@ -1805,7 +1785,7 @@ export function DistributionFlow({
                     {track.producer_credits.map((producer, producerIndex) => (
                       <div
                         key={producerIndex}
-                        className="flex gap-2 items-center"
+                        className="grid grid-cols-1 md:flex md:gap-2 md:items-center space-y-2 md:space-y-0"
                       >
                         <Select
                           value={producer.role}
@@ -1819,7 +1799,7 @@ export function DistributionFlow({
                             );
                           }}
                         >
-                          <SelectTrigger className="w-[180px]">
+                          <SelectTrigger className="w-full md:w-[180px] min-h-[44px] text-base">
                             <SelectValue placeholder="Select a role" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1950,7 +1930,7 @@ export function DistributionFlow({
                             );
                           }}
                           placeholder="Name"
-                          className="flex-1"
+                          className="flex-1 min-h-[44px] text-base"
                         />
                         <Button
                           type="button"
@@ -2021,24 +2001,13 @@ export function DistributionFlow({
                       if (file) {
                         setAudioUploadStates(prev => ({
                           ...prev,
-                          [index]: { uploading: true, progress: 0 }
+                          [index]: { uploading: true }
                         }));
                         try {
                           console.log('[Audio Upload] starting', { name: file.name, size: file.size, type: file.type })
                           const uploadData = new FormData();
                           uploadData.append("file", file);
                           uploadData.append("folder", "audio");
-
-                          // Simulate progress for better UX
-                          const progressInterval = setInterval(() => {
-                            setAudioUploadStates(prev => ({
-                              ...prev,
-                              [index]: {
-                                uploading: true,
-                                progress: prev[index]?.progress >= 90 ? 90 : (prev[index]?.progress || 0) + 10
-                              }
-                            }));
-                          }, 300);
 
                           const response = await fetch("/api/upload", {
                             method: "POST",
@@ -2047,12 +2016,6 @@ export function DistributionFlow({
                               Authorization: `Bearer ${localStorage.getItem("authToken")}`,
                             },
                           });
-
-                          clearInterval(progressInterval);
-                          setAudioUploadStates(prev => ({
-                            ...prev,
-                            [index]: { uploading: true, progress: 100 }
-                          }));
 
                           if (response.ok) {
                             const result = await response.json();
@@ -2076,7 +2039,7 @@ export function DistributionFlow({
                           console.error('[Audio Upload] error', error)
                           setAudioUploadStates(prev => ({
                             ...prev,
-                            [index]: { uploading: false, progress: 0 }
+                            [index]: { uploading: false }
                           }));
                           toast({
                             variant: "destructive",
@@ -2084,26 +2047,21 @@ export function DistributionFlow({
                             description: "Failed to upload audio file",
                           });
                         } finally {
-                          setTimeout(() => {
-                            setAudioUploadStates(prev => ({
-                              ...prev,
-                              [index]: { uploading: false, progress: 0 }
-                            }));
-                          }, 1000);
+                          setAudioUploadStates(prev => ({
+                            ...prev,
+                            [index]: { uploading: false }
+                          }));
                         }
                       }
                     }}
                     disabled={audioUploadStates[index]?.uploading}
                   />
                   {audioUploadStates[index]?.uploading && (
-                    <div className="mt-4 space-y-2">
-                      <div className="flex items-center gap-2 justify-center">
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                        <p className="text-sm text-blue-600">
-                          Uploading audio file... {audioUploadStates[index]?.progress}%
-                        </p>
-                      </div>
-                      <Progress value={audioUploadStates[index]?.progress} className="w-full max-w-xs mx-auto" />
+                    <div className="mt-4 flex items-center gap-2 justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                      <p className="text-sm text-blue-600">
+                        Uploading audio file...
+                      </p>
                     </div>
                   )}
                   {track.audio_file_name && !audioUploadStates[index]?.uploading && (

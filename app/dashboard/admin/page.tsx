@@ -6,6 +6,7 @@ import { ReleaseManagement } from "@/components/admin/release-management";
 import { PayoutMethodsViewer } from "@/components/admin/payout-methods-viewer";
 import { AdminRoute } from "@/components/auth/admin-route";
 import AnalyticsUpload from "@/components/admin/analytics-upload";
+import { AdminOverview } from "@/components/admin/admin-overview";
 import { MobileNavigation } from "@/components/mobile-navigation";
 import { HeaderSection } from "@/components/header-section";
 
@@ -19,6 +20,7 @@ export default function AdminPage() {
         </h1>
 
         <div className="grid gap-4 md:gap-6">
+          <AdminOverview />
           <ReleaseManagement />
           <WithdrawalManagement />
           <PayoutMethodsViewer />

@@ -7,7 +7,30 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Save, X, FileText } from "lucide-react"
-import type { Release } from "@/lib/mock-music-data"
+interface Release {
+  id: string;
+  trackTitle: string;
+  artistName: string;
+  releaseDate: string | null;
+  genre: string;
+  secondaryGenre?: string;
+  label: string;
+  copyright: string;
+  upcEan?: string;
+  explicitContent: boolean;
+  credits: {
+    producers: string[];
+    writers: string[];
+    composers: string[];
+  };
+  lyrics?: string;
+  status: string;
+  submissionDate: string;
+  streams: number;
+  revenue: number;
+  platforms: string[];
+  artwork: string | null;
+}
 import { toast } from "sonner"
 
 interface EditLyricsModalProps {

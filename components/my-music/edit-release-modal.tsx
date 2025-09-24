@@ -28,11 +28,98 @@ import {
 import { CalendarIcon, Loader2, Save, X, Users, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { Release } from "@/lib/mock-music-data";
-import { genreOptions } from "@/lib/mock-music-data";
+// Use the same genre options as the distribution form
+const GENRES = [
+  "Afrobeat",
+  "Afropop",
+  "Alternative",
+  "Big Band",
+  "Blues",
+  "Children's Music",
+  "Christian/Gospel",
+  "Comedy",
+  "Country",
+  "Dance",
+  "Electronic",
+  "Fitness & Workout",
+  "Folk",
+  "French Pop",
+  "German Folk",
+  "German Pop",
+  "Hip Hop/Rap",
+  "Holiday",
+  "J-Pop",
+  "Jazz",
+  "K-Pop",
+  "Latin",
+  "Latin Urban",
+  "Metal",
+  "New Age",
+  "Pop",
+  "Punk",
+  "R&B/Soul",
+  "Reggae",
+  "Rock",
+  "Singer/Songwriter",
+  "Spoken Word",
+  "Vocal",
+  "World",
+];
 import { EditCreditsModal } from "./edit-credits-modal";
 import { EditLyricsModal } from "./edit-lyrics-modal";
 import { toast } from "sonner";
+
+interface Release {
+  id: string;
+  trackTitle: string;
+  artistName: string;
+  releaseDate: string | null;
+  genre: string;
+  secondaryGenre?: string;
+  label: string;
+  copyright: string;
+  upcEan?: string;
+  explicitContent: boolean;
+  credits: {
+    producers: string[];
+    writers: string[];
+    composers: string[];
+  };
+  lyrics?: string;
+  status: string;
+  submissionDate: string;
+  streams: number;
+  revenue: number;
+  platforms: string[];
+  artwork: string | null;
+  // Additional fields from database
+  distributionType?: string;
+  language?: string;
+  instrumental?: boolean;
+  versionInfo?: string;
+  versionOther?: string;
+  originalReleaseDate?: string;
+  previouslyReleased?: boolean;
+  selectedStores?: string[];
+  trackPrice?: number;
+  termsAgreed?: boolean;
+  fakeStreamingAgreement?: boolean;
+  distributionAgreement?: boolean;
+  artistNamesAgreement?: boolean;
+  snapchatTerms?: boolean;
+  youtubeMusicAgreement?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  upc?: string;
+  cLine?: string;
+  pLine?: string;
+  hasSpotifyProfile?: boolean;
+  spotifyProfileUrl?: string;
+  hasAppleProfile?: boolean;
+  appleProfileUrl?: string;
+  additionalDelivery?: string[];
+  fraudPreventionAgreement?: boolean;
+}
 
 interface EditReleaseModalProps {
   release: Release | null;
@@ -48,6 +135,8 @@ export function EditReleaseModal({
   onSave,
 }: EditReleaseModalProps) {
   const [formData, setFormData] = useState<Partial<Release>>({});
+
+
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState<Date>();
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
@@ -55,8 +144,12 @@ export function EditReleaseModal({
 
   useEffect(() => {
     if (release) {
+      // Use the release data that's already passed from the parent
       setFormData(release);
-      setDate(new Date(release.releaseDate));
+      setDate(release.releaseDate ? new Date(release.releaseDate) : new Date());
+    } else {
+      setFormData({});
+      setDate(undefined);
     }
   }, [release]);
 
@@ -68,20 +161,61 @@ export function EditReleaseModal({
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        toast.error("Authentication required");
+        return;
+      }
 
-    const updatedRelease: Release = {
-      ...release,
-      ...formData,
-      releaseDate: date.toISOString(),
-      status: "Under Review", // Automatically set status to Under Review
-    };
+      const response = await fetch(`/api/distribution/releases/${release.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          // Map frontend fields to backend field names
+          release_title: formData.trackTitle,
+          artist_name: formData.artistName,
+          release_date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+          primary_genre: formData.genre,
+          secondary_genre: formData.secondaryGenre,
+          record_label: formData.label,
+          copyright: formData.copyright,
+          upc_ean: formData.upcEan,
+          explicit_lyrics: formData.explicitContent,
+          credits: formData.credits,
+          lyrics: formData.lyrics,
+          // Keep existing values for required fields
+          distribution_type: release.distributionType || 'Single',
+          language: release.language || 'English',
+          submit_for_review: false // Don't auto-submit, just save
+        }),
+      });
 
-    onSave(updatedRelease);
-    setIsLoading(false);
-    toast.success("Your changes have been submitted and are now under review.");
-    onClose();
+      if (response.ok) {
+        const data = await response.json();
+        const updatedRelease: Release = {
+          ...release,
+          ...formData,
+          releaseDate: date.toISOString(),
+          status: "Under Review", // Automatically set status to Under Review
+        };
+        
+        onSave(updatedRelease);
+        toast.success("Your changes have been submitted and are now under review.");
+        onClose();
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to update release");
+      }
+    } catch (error) {
+      console.error('Error updating release:', error);
+      toast.error("Failed to update release");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -209,7 +343,7 @@ export function EditReleaseModal({
                         <SelectValue placeholder="Select primary genre" />
                       </SelectTrigger>
                       <SelectContent>
-                        {genreOptions.map((genre) => (
+                        {GENRES.map((genre) => (
                           <SelectItem key={genre} value={genre}>
                             {genre}
                           </SelectItem>
@@ -235,7 +369,7 @@ export function EditReleaseModal({
                         <SelectValue placeholder="Select secondary genre" />
                       </SelectTrigger>
                       <SelectContent>
-                        {genreOptions.map((genre) => (
+                        {GENRES.map((genre) => (
                           <SelectItem key={genre} value={genre}>
                             {genre}
                           </SelectItem>

@@ -18,6 +18,7 @@ interface AuthContextType {
   logout: () => void
   setUser: (user: User | null) => void
   refreshUser: () => Promise<void>
+  updateActivity: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -111,8 +112,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateActivity = async () => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      console.log('No auth token found for activity update')
+      return
+    }
+
+    try {
+      console.log('Updating user activity...')
+      const response = await fetch('/api/auth/activity', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        console.log('Activity updated successfully')
+      } else {
+        console.error('Activity update failed:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('Failed to update activity:', error)
+    }
+  }
+
+  // Set up periodic activity tracking
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    // Update activity immediately
+    updateActivity()
+
+    // Set up interval to update activity every 1 minutes
+    const interval = setInterval(updateActivity, 1 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [isAuthenticated])
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, setUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, setUser, refreshUser, updateActivity }}>
       {children}
     </AuthContext.Provider>
   )

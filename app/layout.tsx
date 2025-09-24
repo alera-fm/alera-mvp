@@ -55,6 +55,8 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@400;700&family=Roboto+Condensed:wght@400;700&family=Open+Sans:wght@400;700&family=Poppins:wght@400;600;700&family=Nunito:wght@400;700&family=Source+Sans+3:wght@400;700&family=Oswald:wght@400;700&family=Merriweather:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Work+Sans:wght@400;700&family=Urbanist:wght@400;700&family=Manrope:wght@400;700&family=Zain:wght@400;700&family=Genos:wght@400;700&family=Tomorrow:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        {/* Cryptomus */}
+        <meta name="cryptomus" content="4afa6722" />
       </head>
       <body>
         <ThemeProvider
