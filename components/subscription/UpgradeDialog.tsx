@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Check, Zap, Crown, Loader2, ArrowRight, Star, Globe } from 'lucide-react'
+import { Check, Zap, Crown, Loader2, ArrowRight, Star, Globe, Building, Mail } from 'lucide-react'
 
 export function UpgradeDialog() {
   const { 
@@ -43,18 +43,29 @@ export function UpgradeDialog() {
 
   const tierFeatures = {
     plus: [
-      'Unlimited releases (Singles, EPs, & Albums)',
-      '100,000 AI tokens per month',
+      'Unlimited Releases to 150+ Platforms Worldwide (Singles, EPs & Albums)',
+      'Keep 100% of Royalties',
+      'Spotify Verified Checkmark',
+      'Custom Landing Page Builder',
       'Fan Zone Access',
-      'Basic analytics'
+      'Multi-Platform Analytics',
+      '100,000 AI Tokens Per Month (ALERA AI Manager)'
     ],
     pro: [
-      'Everything in Plus',
-      'Direct Fan Monetisation (Tips & Subscriptions)',
+      'Everything In Plus',
+      'Direct Fan Monetisation (Landing Page Tips & Subscriptions)',
       'Unlimited AI Career Manager',
       'Advanced Fan Zone Access (Campaigns & Import)',
       'Deeper Career Analytics',
+      'Guaranteed Release Protection',
+      'Exclusive Access To New Features',
       'Priority Support'
+    ],
+    label: [
+      'Multiple Artist',
+      '"Whitelabel" Label Dashboard',
+      'Custom Enterprise Solutions',
+      'Dedicated Support Team'
     ]
   }
 
@@ -67,7 +78,7 @@ export function UpgradeDialog() {
 
   return (
     <Dialog open={upgradeDialogOpen} onOpenChange={closeUpgradeDialog}>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl md:text-2xl font-bold">Upgrade Your Plan</DialogTitle>
           <DialogDescription className="text-sm md:text-lg">
@@ -112,10 +123,15 @@ export function UpgradeDialog() {
             >
               Yearly
             </Button>
+            {billingCycle === 'yearly' && (
+              <Badge variant="secondary" className="ml-2 bg-green-500 text-white animate-pulse">
+                🎉 Save 20%
+              </Badge>
+            )}
           </div>
 
           {/* Tier comparison */}
-          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6">
             {/* Plus Tier */}
             <Card className={`relative ${selectedTier === 'plus' ? 'ring-2 ring-purple-500' : ''}`}>
               <CardHeader className="pb-3">
@@ -209,6 +225,42 @@ export function UpgradeDialog() {
                   )}
                   {subscription?.tier === 'pro' ? 'Current Plan' : 'Upgrade to Pro'}
                   {subscription?.tier !== 'pro' && <ArrowRight className="h-4 w-4 ml-2" />}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* ALERA Label Plan */}
+            <Card className="relative border-orange-200 dark:border-orange-800">
+              <CardHeader className="pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Building className="h-5 w-5 text-orange-500" />
+                    ALERA Label
+                  </CardTitle>
+                  <Badge className="bg-orange-500 text-white self-start sm:self-center">
+                    Custom
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Enterprise Solution
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-0">
+                <ul className="space-y-2">
+                  {tierFeatures.label.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <Button 
+                  onClick={() => window.open('mailto:contact@alera.fm?subject=ALERA Label Inquiry', '_blank')}
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  CONTACT US
                 </Button>
               </CardContent>
             </Card>

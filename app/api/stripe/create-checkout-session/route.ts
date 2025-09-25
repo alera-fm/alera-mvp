@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
         {
           userId: userId.toString(),
           tier,
+          billing: billing,
           upgradeFrom: subscription.tier
         }
       )

@@ -54,9 +54,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData)
           setIsAuthenticated(true)
           
-          // Check if this is a new user who hasn't seen the welcome pricing dialog
+          // Check if this is a trial user who hasn't seen the welcome pricing dialog
           if (userData && !userData.welcomePricingDialogShown && userData.isVerified) {
-            setShowWelcomePricingDialog(true)
+            // Only show dialog for trial users, not existing subscribers
+            try {
+              const subscriptionResponse = await fetch('/api/subscription/status', {
+                headers: { 'Authorization': `Bearer ${token}` }
+              })
+              if (subscriptionResponse.ok) {
+                const subscriptionData = await subscriptionResponse.json()
+                // Only show dialog if user is on trial tier
+                if (subscriptionData.subscription?.tier === 'trial') {
+                  setShowWelcomePricingDialog(true)
+                }
+              }
+            } catch (error) {
+              console.error('Failed to check subscription status:', error)
+            }
           }
         } else {
           localStorage.removeItem('authToken')
@@ -90,9 +104,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await response.json()
         setUser(userData)
         
-        // Check if this is a new user who hasn't seen the welcome pricing dialog
+        // Check if this is a trial user who hasn't seen the welcome pricing dialog
         if (userData && !userData.welcomePricingDialogShown && userData.isVerified) {
-          setShowWelcomePricingDialog(true)
+          // Only show dialog for trial users, not existing subscribers
+          try {
+            const subscriptionResponse = await fetch('/api/subscription/status', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (subscriptionResponse.ok) {
+              const subscriptionData = await subscriptionResponse.json()
+              // Only show dialog if user is on trial tier
+              if (subscriptionData.subscription?.tier === 'trial') {
+                setShowWelcomePricingDialog(true)
+              }
+            }
+          } catch (error) {
+            console.error('Failed to check subscription status:', error)
+          }
         }
       }
     } catch (error) {

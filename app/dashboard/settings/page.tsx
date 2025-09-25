@@ -72,14 +72,19 @@ interface UserProfile {
 }
 
 interface BillingTransaction {
-  id: number;
+  id: string;
   transaction_date: string;
-  amount: number;
+  amount: string;
   transaction_type: string;
   status: string;
   description: string;
   reference_id: string;
   payment_method: string;
+  invoice_url?: string;
+  pdf_url?: string;
+  currency?: string;
+  period_start?: string;
+  period_end?: string;
 }
 
 interface LoginSession {
@@ -138,7 +143,7 @@ function SettingsPageContent() {
   const fetchBillingHistory = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch("/api/profile/billing-history", {
+      const response = await fetch("/api/profile/stripe-billing-history", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -749,6 +754,7 @@ function SettingsPageContent() {
                             <TableHead>Status</TableHead>
                             <TableHead>Payment Method</TableHead>
                             <TableHead>Reference</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -788,6 +794,28 @@ function SettingsPageContent() {
                               <TableCell>{transaction.payment_method}</TableCell>
                               <TableCell className="font-mono text-sm">
                                 {transaction.reference_id}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  {transaction.invoice_url && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(transaction.invoice_url, '_blank')}
+                                    >
+                                      View Invoice
+                                    </Button>
+                                  )}
+                                  {transaction.pdf_url && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(transaction.pdf_url, '_blank')}
+                                    >
+                                      Download PDF
+                                    </Button>
+                                  )}
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -839,6 +867,31 @@ function SettingsPageContent() {
                                 Ref: {transaction.reference_id}
                               </div>
                             </div>
+                            
+                            {(transaction.invoice_url || transaction.pdf_url) && (
+                              <div className="flex gap-2 pt-2">
+                                {transaction.invoice_url && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(transaction.invoice_url, '_blank')}
+                                    className="text-xs"
+                                  >
+                                    View Invoice
+                                  </Button>
+                                )}
+                                {transaction.pdf_url && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(transaction.pdf_url, '_blank')}
+                                    className="text-xs"
+                                  >
+                                    Download PDF
+                                  </Button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

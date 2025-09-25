@@ -39,19 +39,23 @@ export function RegionalPricingCard({ tier, onSelectPlan }: RegionalPricingCardP
 
   const features = {
     plus: [
-      'Unlimited releases',
-      '100k AI tokens/month',
-      'Fan Zone access',
-      'Basic analytics',
-      'Email support'
+      'Unlimited Releases to 150+ Platforms Worldwide (Singles, EPs & Albums)',
+      'Keep 100% of Royalties',
+      'Spotify Verified Checkmark',
+      'Custom Landing Page Builder',
+      'Fan Zone Access',
+      'Multi-Platform Analytics',
+      '100,000 AI Tokens Per Month (ALERA AI Manager)'
     ],
     pro: [
-      'Everything in Plus',
-      'Unlimited AI tokens',
-      'Email campaigns',
-      'Fan import tools',
-      'Monetization features',
-      'Priority support'
+      'Everything In Plus',
+      'Direct Fan Monetisation (Landing Page Tips & Subscriptions)',
+      'Unlimited AI Career Manager',
+      'Advanced Fan Zone Access (Campaigns & Import)',
+      'Deeper Career Analytics',
+      'Guaranteed Release Protection',
+      'Exclusive Access To New Features',
+      'Priority Support'
     ]
   };
 
@@ -111,8 +115,8 @@ export function RegionalPricingCard({ tier, onSelectPlan }: RegionalPricingCardP
             Yearly
           </Button>
           {billingCycle === 'yearly' && yearlySavings > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              Save {yearlySavings}%
+            <Badge variant="secondary" className="text-xs bg-green-500 text-white animate-pulse">
+              🎉 Save {yearlySavings}%
             </Badge>
           )}
         </div>

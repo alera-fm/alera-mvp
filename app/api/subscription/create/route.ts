@@ -12,10 +12,14 @@ export async function POST(request: NextRequest) {
     // Verify authentication
     const userId = await requireAuth(request)
     
-    const { tier } = await request.json()
+    const { tier, billing = 'monthly' } = await request.json()
     
     if (!tier || (tier !== 'plus' && tier !== 'pro')) {
       return NextResponse.json({ error: 'Invalid tier specified. Must be "plus" or "pro"' }, { status: 400 })
+    }
+    
+    if (billing !== 'monthly' && billing !== 'yearly') {
+      return NextResponse.json({ error: 'Invalid billing cycle specified. Must be "monthly" or "yearly"' }, { status: 400 })
     }
     
     // Get user information
@@ -52,8 +56,8 @@ export async function POST(request: NextRequest) {
             stripe_customer_id = NULL
         WHERE user_id = $1
       `, [userId])
-      subscription.stripe_subscription_id = null
-      subscription.stripe_customer_id = null
+      subscription.stripe_subscription_id = undefined
+      subscription.stripe_customer_id = undefined
     }
     
     let customerId = subscription.stripe_customer_id
@@ -94,6 +98,7 @@ export async function POST(request: NextRequest) {
         {
           userId: userId.toString(),
           tier,
+          billing: billing,
           upgradeFrom: subscription.tier,
           email: user.email
         }

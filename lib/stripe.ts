@@ -16,7 +16,7 @@ export const STRIPE_CONFIG = {
   PRO_PRICE_ID: process.env.STRIPE_PRO_PRICE_ID || '',
   WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || '',
   PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  SUCCESS_URL: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription=success` : 'http://localhost:3000/dashboard?subscription=success',
+  SUCCESS_URL: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/subscription-success` : 'http://localhost:3000/subscription-success',
   CANCEL_URL: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription=cancelled` : 'http://localhost:3000/dashboard?subscription=cancelled',
 }
 
@@ -59,6 +59,12 @@ export async function createCheckoutSession(
   metadata?: Record<string, string>
 ): Promise<Stripe.Checkout.Session> {
   try {
+    // Build success URL with tier and billing cycle parameters
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const tier = metadata?.tier || 'Plus'
+    const billingCycle = metadata?.billing || 'Monthly'
+    const successUrl = `${baseUrl}/subscription-success?tier=${tier}&cycle=${billingCycle}`
+    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -69,7 +75,7 @@ export async function createCheckoutSession(
         },
       ],
       mode: 'subscription',
-      success_url: STRIPE_CONFIG.SUCCESS_URL,
+      success_url: successUrl,
       cancel_url: STRIPE_CONFIG.CANCEL_URL,
       metadata: metadata || {},
       subscription_data: {

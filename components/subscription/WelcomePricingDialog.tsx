@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Check, Zap, Crown, Loader2, ArrowRight, Star, Globe } from 'lucide-react'
+import { Check, Zap, Crown, Loader2, ArrowRight, Star, Globe, Building, Mail } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
 interface WelcomePricingDialogProps {
@@ -56,18 +56,29 @@ export function WelcomePricingDialog({ isOpen, onClose }: WelcomePricingDialogPr
 
   const tierFeatures = {
     plus: [
-      'Unlimited releases (Singles, EPs, & Albums)',
-      '100,000 AI tokens per month',
+      'Unlimited Releases to 150+ Platforms Worldwide (Singles, EPs & Albums)',
+      'Keep 100% of Royalties',
+      'Spotify Verified Checkmark',
+      'Custom Landing Page Builder',
       'Fan Zone Access',
-      'Basic analytics'
+      'Multi-Platform Analytics',
+      '100,000 AI Tokens Per Month (ALERA AI Manager)'
     ],
     pro: [
-      'Everything in Plus',
-      'Direct Fan Monetisation (Tips & Subscriptions)',
+      'Everything In Plus',
+      'Direct Fan Monetisation (Landing Page Tips & Subscriptions)',
       'Unlimited AI Career Manager',
       'Advanced Fan Zone Access (Campaigns & Import)',
       'Deeper Career Analytics',
+      'Guaranteed Release Protection',
+      'Exclusive Access To New Features',
       'Priority Support'
+    ],
+    label: [
+      'Multiple Artist',
+      '"Whitelabel" Label Dashboard',
+      'Custom Enterprise Solutions',
+      'Dedicated Support Team'
     ]
   }
 
@@ -116,14 +127,14 @@ export function WelcomePricingDialog({ isOpen, onClose }: WelcomePricingDialogPr
               Yearly
             </span>
             {billingCycle === 'yearly' && (
-              <Badge variant="secondary" className="ml-2">
-                Save 20%
+              <Badge variant="secondary" className="ml-2 bg-green-500 text-white animate-pulse">
+                🎉 Save 20%
               </Badge>
             )}
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Plus Plan */}
             <Card className={`relative transition-all duration-200 ${selectedTier === 'plus' ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}>
               <CardHeader className="text-center pb-4">
@@ -226,6 +237,41 @@ export function WelcomePricingDialog({ isOpen, onClose }: WelcomePricingDialogPr
                       <Crown className="h-4 w-4 ml-2" />
                     </>
                   )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* ALERA Label Plan */}
+            <Card className="relative transition-all duration-200 hover:shadow-md border-orange-200 dark:border-orange-800">
+              <CardHeader className="text-center pb-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Building className="h-6 w-6 text-orange-600" />
+                  <CardTitle className="text-xl">ALERA Label</CardTitle>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-orange-600">
+                    Custom
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Enterprise Solution
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-3">
+                  {tierFeatures.label.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  onClick={() => window.open('mailto:contact@alera.fm?subject=ALERA Label Inquiry', '_blank')}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  CONTACT US
                 </Button>
               </CardContent>
             </Card>
