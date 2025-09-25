@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send verification email
-    await sendVerificationEmail(email, verificationToken)
+    await sendVerificationEmail(email, verificationToken, artistName || email.split('@')[0])
 
     // Send Slack notification for new artist sign-up (non-blocking)
     notifyNewArtistSignUp(artistName || email.split('@')[0], email)

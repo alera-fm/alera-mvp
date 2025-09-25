@@ -22,6 +22,7 @@ export interface EmailData {
   lastFour?: string;
   tier?: string;
   billingCycle?: string;
+  verificationUrl?: string;
 }
 
 export interface EmailQueueItem {
@@ -47,7 +48,8 @@ export async function sendEmail(emailData: EmailData): Promise<boolean> {
       payoutMethod: emailData.payoutMethod,
       lastFour: emailData.lastFour,
       tier: emailData.tier,
-      billingCycle: emailData.billingCycle
+      billingCycle: emailData.billingCycle,
+      verificationUrl: emailData.verificationUrl
     };
 
     const html = replaceEmailPlaceholders(template.html, emailData.artistName, placeholderData);

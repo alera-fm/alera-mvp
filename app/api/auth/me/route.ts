@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Get user data
     const result = await query(
-      'SELECT id, email, artist_name, created_at, is_admin FROM users WHERE id = $1',
+      'SELECT id, email, artist_name, created_at, is_admin, is_verified, welcome_pricing_dialog_shown FROM users WHERE id = $1',
       [decoded.userId]
     )
 
@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
       email: user.email,
       artistName: user.artist_name,
       createdAt: user.created_at,
-      isAdmin: user.is_admin
+      isAdmin: user.is_admin,
+      isVerified: user.is_verified,
+      welcomePricingDialogShown: user.welcome_pricing_dialog_shown
     })
 
   } catch (error) {

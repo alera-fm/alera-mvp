@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     )
 
     // Send verification email
-    await sendVerificationEmail(email, verificationToken)
+    await sendVerificationEmail(email, verificationToken, user.artist_name || email.split('@')[0])
 
     return NextResponse.json({
       message: 'Verification email sent'

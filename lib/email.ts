@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export const sendVerificationEmail = async (email: string, token: string) => {
+export const sendVerificationEmail = async (email: string, token: string, artistName?: string) => {
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
     const verificationUrl = `${appUrl}/auth/verify-email?token=${token}`
@@ -18,19 +18,27 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     console.log('Sending verification email to:', email)
     console.log('Verification URL:', verificationUrl)
 
-    const result = await transporter.sendMail({
-      from: process.env.SMTP_FROM,
+    // Import the email service to use the new template
+    const { sendEmail } = await import('./email-service')
+    const { getEmailTemplate } = await import('./email-templates')
+
+    const template = getEmailTemplate('emailVerification')
+    if (!template) {
+      throw new Error('Email verification template not found')
+    }
+
+    const success = await sendEmail({
       to: email,
-      subject: 'Verify your ALERA account',
-      html: `
-        <h1>Welcome to ALERA!</h1>
-        <p>Please click the link below to verify your email address:</p>
-        <a href="${verificationUrl}">Verify Email</a>
-        <p>If you didn't create an account, please ignore this email.</p>
-      `,
+      templateName: 'emailVerification',
+      artistName: artistName || 'Artist',
+      verificationUrl: verificationUrl
     })
 
-    console.log('Email sent successfully:', result.messageId)
+    if (success) {
+      console.log('Verification email sent successfully')
+    } else {
+      throw new Error('Failed to send verification email')
+    }
   } catch (error) {
     console.error('Failed to send verification email:', error)
     throw new Error('Failed to send verification email')

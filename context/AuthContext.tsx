@@ -9,6 +9,7 @@ interface User {
   artistName?: string
   isVerified: boolean
   isAdmin: boolean
+  welcomePricingDialogShown?: boolean
 }
 
 interface AuthContextType {
@@ -19,6 +20,9 @@ interface AuthContextType {
   setUser: (user: User | null) => void
   refreshUser: () => Promise<void>
   updateActivity: () => Promise<void>
+  showWelcomePricingDialog: boolean
+  setShowWelcomePricingDialog: (show: boolean) => void
+  markWelcomeDialogShown: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -26,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [showWelcomePricingDialog, setShowWelcomePricingDialog] = useState<boolean>(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -48,6 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const userData = await response.json()
           setUser(userData)
           setIsAuthenticated(true)
+          
+          // Check if this is a new user who hasn't seen the welcome pricing dialog
+          if (userData && !userData.welcomePricingDialogShown && userData.isVerified) {
+            setShowWelcomePricingDialog(true)
+          }
         } else {
           localStorage.removeItem('authToken')
           setIsAuthenticated(false)
@@ -79,6 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
+        
+        // Check if this is a new user who hasn't seen the welcome pricing dialog
+        if (userData && !userData.welcomePricingDialogShown && userData.isVerified) {
+          setShowWelcomePricingDialog(true)
+        }
       }
     } catch (error) {
       console.error('Failed to fetch user data after login:', error)
@@ -89,7 +104,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('authToken')
     setIsAuthenticated(false)
     setUser(null)
+    setShowWelcomePricingDialog(false)
     router.push('/auth/login')
+  }
+
+  const markWelcomeDialogShown = async () => {
+    const token = localStorage.getItem('authToken')
+    if (!token) return
+
+    try {
+      const response = await fetch('/api/auth/mark-welcome-dialog-shown', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        // Update user state to reflect that dialog has been shown
+        setUser(prev => prev ? { ...prev, welcomePricingDialogShown: true } : null)
+        setShowWelcomePricingDialog(false)
+      } else {
+        console.error('Failed to mark welcome dialog as shown')
+      }
+    } catch (error) {
+      console.error('Error marking welcome dialog as shown:', error)
+    }
   }
 
   const refreshUser = async () => {
@@ -153,7 +194,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated])
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, setUser, refreshUser, updateActivity }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      login, 
+      logout, 
+      setUser, 
+      refreshUser, 
+      updateActivity,
+      showWelcomePricingDialog,
+      setShowWelcomePricingDialog,
+      markWelcomeDialogShown
+    }}>
       {children}
     </AuthContext.Provider>
   )
