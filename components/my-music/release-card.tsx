@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Edit, Calendar, Clock, Hash, Building, Copyright, TrendingUp, Users, Play } from "lucide-react"
+import { Edit, Calendar, Clock, Hash, Building, Copyright, TrendingUp, Users, Play, FileText, CheckCircle, XCircle, AlertTriangle, Eye } from "lucide-react"
 import Image from "next/image"
 
 interface Release {
@@ -14,6 +14,7 @@ interface Release {
   releaseDate: string | null
   submissionDate: string
   status: string
+  updateStatus?: string
   streams: number
   revenue: number
   platforms: string[]
@@ -42,7 +43,9 @@ interface Release {
 
 interface ReleaseCardProps {
   release: Release
+  onView: (release: Release) => void
   onEdit: (release: Release) => void
+  onTakedown: (release: Release) => void
 }
 
 const getStatusColor = (status: Release["status"]) => {
@@ -54,17 +57,32 @@ const getStatusColor = (status: Release["status"]) => {
     case "Under Review":
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
     case "Pending":
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+    case "Draft":
+      return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
     case "Rejected":
       return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-    case "Takedown":
+    case "Takedown Requested":
       return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+    case "Takedown":
+      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
     default:
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
   }
 }
 
-export function ReleaseCard({ release, onEdit }: ReleaseCardProps) {
+const getUpdateStatusColor = (updateStatus?: string) => {
+  switch (updateStatus) {
+    case 'Changes Submitted':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+    case 'Up-to-Date':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  }
+}
+
+export function ReleaseCard({ release, onView, onEdit, onTakedown }: ReleaseCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -80,8 +98,23 @@ export function ReleaseCard({ release, onEdit }: ReleaseCardProps) {
           fill
           className="object-cover"
         />
-        <div className="absolute top-3 right-3">
-          <Badge className={`text-xs font-medium ${getStatusColor(release.status)}`}>{release.status}</Badge>
+        <div className="absolute top-3 right-3 flex flex-col gap-1">
+          <Badge className={`text-xs font-medium ${getStatusColor(release.status)} flex items-center gap-1`}>
+            {release.status === 'Draft' && <FileText className="h-3 w-3" />}
+            {release.status === 'Pending' && <Clock className="h-3 w-3" />}
+            {release.status === 'Under Review' && <Clock className="h-3 w-3" />}
+            {release.status === 'Sent to Stores' && <CheckCircle className="h-3 w-3" />}
+            {release.status === 'Live' && <Play className="h-3 w-3" />}
+            {release.status === 'Rejected' && <XCircle className="h-3 w-3" />}
+            {release.status === 'Takedown Requested' && <AlertTriangle className="h-3 w-3" />}
+            {release.status === 'Takedown' && <XCircle className="h-3 w-3" />}
+            {release.status}
+          </Badge>
+          {release.updateStatus && release.updateStatus !== 'Up-to-Date' && (
+            <Badge className={`text-xs font-medium ${getUpdateStatusColor(release.updateStatus)}`}>
+              Update Status: {release.updateStatus}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -94,7 +127,12 @@ export function ReleaseCard({ release, onEdit }: ReleaseCardProps) {
       {/* Release Date - Prominent */}
       <div className="flex items-center gap-2 mb-4 text-sm text-[#666] dark:text-gray-400">
         <Calendar className="h-4 w-4" />
-        <span>Released {new Date(release.releaseDate).toLocaleDateString()}</span>
+        <span>
+          {release.releaseDate 
+            ? `Released ${new Date(release.releaseDate).toLocaleDateString()}`
+            : 'Release date not set'
+          }
+        </span>
       </div>
 
       {/* Metadata Stack */}
@@ -163,16 +201,38 @@ export function ReleaseCard({ release, onEdit }: ReleaseCardProps) {
                   </div>
       </div>
 
-      {/* Edit Button */}
-      <Button
-        onClick={() => onEdit(release)}
-        variant="outline"
-        size="sm"
-        className="w-full rounded-full h-9 text-sm font-medium"
-      >
-        <Edit className="h-4 w-4 mr-2" />
-        Edit Release
-      </Button>
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <Button
+          onClick={() => onView(release)}
+          variant="outline"
+          size="sm"
+          className="flex-1 rounded-full h-9 text-sm font-medium"
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          View
+        </Button>
+        <Button
+          onClick={() => onEdit(release)}
+          variant="outline"
+          size="sm"
+          className="flex-1 rounded-full h-9 text-sm font-medium"
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
+        </Button>
+        {(release.status === 'Live' || release.status === 'Sent to Stores' || release.status === 'Under Review') && (
+          <Button
+            onClick={() => onTakedown(release)}
+            variant="outline"
+            size="sm"
+            className="flex-1 rounded-full h-9 text-sm font-medium text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/20"
+          >
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Takedown
+          </Button>
+        )}
+      </div>
     </motion.div>
   )
 }

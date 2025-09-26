@@ -4,7 +4,7 @@ import { pool } from "@/lib/db"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
@@ -12,7 +12,7 @@ export async function GET(
     const decoded = verifyToken(token)
     if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const releaseId = params.id
+    const { id: releaseId } = await params
 
     // Get release details
     const releaseResult = await pool.query(
@@ -45,7 +45,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
@@ -55,7 +55,7 @@ export async function PUT(
 
     const data = await request.json()
     console.log('[Update Release] received payload keys:', Object.keys(data || {}))
-    const releaseId = params.id
+    const { id: releaseId } = await params
 
     const {
       distribution_type,
@@ -89,7 +89,8 @@ export async function PUT(
       youtube_music_agreement,
       tracks,
       submit_for_review,
-      release_date
+      release_date,
+      current_step
     } = data
 
     // Validate required fields
@@ -167,8 +168,8 @@ export async function PUT(
           previously_released = $21, album_cover_url = $22, selected_stores = $23, track_price = $24,
           status = $25, terms_agreed = $26, fake_streaming_agreement = $27, distribution_agreement = $28,
           artist_names_agreement = $29, snapchat_terms = $30, youtube_music_agreement = $31,
-          submitted_at = $32, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $33 AND artist_id = $34
+          submitted_at = $32, current_step = $33, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $34 AND artist_id = $35
         RETURNING *
       `, [
         distribution_type,
@@ -203,6 +204,7 @@ export async function PUT(
         snapchat_terms,
         youtube_music_agreement,
         submit_for_review ? new Date() : existingRelease.rows[0].submitted_at,
+        current_step || existingRelease.rows[0].current_step,
         releaseId,
         decoded.userId
       ])

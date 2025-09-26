@@ -23,6 +23,8 @@ interface Release {
   track_count: number
   status: string
   submitted_at: string
+  created_at: string
+  update_status?: string
   tracks?: any[]
   selected_stores?: string[]
   updated_at?: string
@@ -51,6 +53,16 @@ interface Release {
   snapchat_terms?: boolean
   youtube_music_agreement?: boolean
   upc?: string
+  credits?: {
+    producers: string[]
+    writers: string[]
+    composers: string[]
+    engineers?: string[]
+    mixedBy?: string[]
+    masteredBy?: string[]
+    featuredArtists?: string[]
+  }
+  lyrics?: string
 }
 
 interface Artist {
@@ -63,7 +75,7 @@ export function ReleaseManagement() {
   const [releases, setReleases] = useState<Release[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRelease, setSelectedRelease] = useState<Release | null>(null)
-  const [statusFilter, setStatusFilter] = useState("under_review")
+  const [statusFilter, setStatusFilter] = useState("pending")
   const [filterArtistId, setFilterArtistId] = useState<string>("all")
   const [artists, setArtists] = useState<Artist[]>([])
   const [adminNotes, setAdminNotes] = useState("")
@@ -182,6 +194,38 @@ export function ReleaseManagement() {
     }
   }
 
+  const updateReleaseUpdateStatus = async (releaseId: string, newUpdateStatus: string) => {
+    setProcessing(releaseId)
+    try {
+      const token = localStorage.getItem("authToken")
+      const response = await fetch(`/api/admin/releases/${releaseId}/update-status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          update_status: newUpdateStatus,
+        }),
+      })
+
+      if (response.ok) {
+        const displayStatus = newUpdateStatus === "" ? "none" : newUpdateStatus
+        toast.success(`Release update status updated to ${displayStatus}`)
+        fetchReleases()
+        setSelectedRelease(null)
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || "Failed to update release update status")
+      }
+    } catch (error) {
+      console.error("Error updating release update status:", error)
+      toast.error("Failed to update release update status")
+    } finally {
+      setProcessing(null)
+    }
+  }
+
   const updateCodes = async (releaseId: string) => {
     setProcessing(releaseId)
     try {
@@ -240,11 +284,13 @@ export function ReleaseManagement() {
   const getStatusBadge = (status: string) => {
     const variants = {
       draft: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
+      pending: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
       under_review: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
       sent_to_stores: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
       live: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
       rejected: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-      takedown: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+      takedown_requested: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+      takedown: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
       // Legacy statuses for backwards compatibility
       approved: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
       published: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -252,6 +298,8 @@ export function ReleaseManagement() {
 
     const formatStatus = (status: string) => {
       switch (status) {
+        case 'pending':
+          return 'Pending'
         case 'under_review':
           return 'Under Review'
         case 'sent_to_stores':
@@ -260,6 +308,8 @@ export function ReleaseManagement() {
           return 'Live'
         case 'rejected':
           return 'Rejected'
+        case 'takedown_requested':
+          return 'Takedown Requested'
         case 'takedown':
           return 'Takedown'
         case 'approved':
@@ -276,6 +326,23 @@ export function ReleaseManagement() {
         className={`px-2 py-1 rounded-full text-xs font-medium ${variants[status as keyof typeof variants] || "bg-gray-100 text-gray-800"}`}
       >
         {formatStatus(status)}
+      </span>
+    )
+  }
+
+  const getUpdateStatusBadge = (updateStatus?: string) => {
+    if (!updateStatus) return null
+
+    const variants = {
+      'Changes Submitted': "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+      'Up-to-Date': "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    }
+
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${variants[updateStatus as keyof typeof variants] || "bg-gray-100 text-gray-800"}`}
+      >
+        {updateStatus}
       </span>
     )
   }
@@ -389,10 +456,12 @@ export function ReleaseManagement() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="under_review">Under Review</SelectItem>
                 <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                 <SelectItem value="live">Live</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="takedown_requested">Takedown Requested</SelectItem>
                 <SelectItem value="takedown">Takedown</SelectItem>
               </SelectContent>
             </Select>
@@ -418,7 +487,10 @@ export function ReleaseManagement() {
                         <div className="font-medium text-sm truncate">{release.artist_display_name}</div>
                         <div className="text-xs text-gray-500 truncate">{release.artist_email}</div>
                       </div>
-                      {getStatusBadge(release.status)}
+                      <div className="flex flex-col gap-1 items-end">
+                        {getStatusBadge(release.status)}
+                        {getUpdateStatusBadge(release.update_status)}
+                      </div>
                     </div>
 
                     <div>
@@ -444,7 +516,7 @@ export function ReleaseManagement() {
                     </div>
 
                     <div className="text-xs text-gray-600">
-                      {formatDistanceToNow(new Date(release.submitted_at), {
+                      {formatDistanceToNow(new Date(release.submitted_at || release.created_at), {
                         addSuffix: true,
                       })}
                     </div>
@@ -468,7 +540,7 @@ export function ReleaseManagement() {
                               Release Details
                               <div className="flex gap-2">
                                 <Button
-                                  onClick={() => downloadCompleteReleaseData(selectedRelease)}
+                                  onClick={() => selectedRelease && downloadCompleteReleaseData(selectedRelease)}
                                   variant="default"
                                   size="sm"
                                   disabled={downloading === selectedRelease?.id}
@@ -484,7 +556,7 @@ export function ReleaseManagement() {
                                   )}
                                 </Button>
                                 <Button
-                                  onClick={() => downloadReleaseData(selectedRelease)}
+                                  onClick={() => selectedRelease && downloadReleaseData(selectedRelease)}
                                   variant="outline"
                                   size="sm"
                                 >
@@ -510,7 +582,10 @@ export function ReleaseManagement() {
                                   <h3 className="font-medium text-lg border-b pb-2">Release Status</h3>
                                   <div className="space-y-2 text-sm">
                                     <div><strong>Status:</strong> {getStatusBadge(selectedRelease.status)}</div>
-                                    <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at), { addSuffix: true })}</div>
+                                    {selectedRelease.update_status && (
+                                      <div><strong>Update Status:</strong> {getUpdateStatusBadge(selectedRelease.update_status)}</div>
+                                    )}
+                                    <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at || selectedRelease.created_at), { addSuffix: true })}</div>
                                     <div><strong>Last Updated:</strong> {formatDistanceToNow(new Date(selectedRelease.updated_at || selectedRelease.submitted_at), { addSuffix: true })}</div>
                                   </div>
                                 </div>
@@ -544,6 +619,75 @@ export function ReleaseManagement() {
                                     <div><strong>Track Price:</strong> ${selectedRelease.track_price || '0.99'}</div>
                                     <div><strong>Album Cover:</strong> {selectedRelease.album_cover_url ? 'Uploaded' : 'Not uploaded'}</div>
                                     <div><strong>Total Tracks:</strong> {selectedRelease.tracks?.length || 0}</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Credits and Lyrics Section */}
+                              <div className="space-y-4">
+                                <h3 className="font-medium text-lg border-b pb-2">Credits & Lyrics</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div>
+                                      <h4 className="font-medium text-sm mb-2">Credits</h4>
+                                      <div className="space-y-2 text-sm">
+                                        {selectedRelease.credits && typeof selectedRelease.credits === 'object' ? (
+                                          <>
+                                            {selectedRelease.credits.producers && selectedRelease.credits.producers.length > 0 && (
+                                              <div>
+                                                <strong>Producers:</strong> {selectedRelease.credits.producers.join(', ')}
+                                              </div>
+                                            )}
+                                            {selectedRelease.credits.writers && selectedRelease.credits.writers.length > 0 && (
+                                              <div>
+                                                <strong>Writers:</strong> {selectedRelease.credits.writers.join(', ')}
+                                              </div>
+                                            )}
+                                            {selectedRelease.credits.composers && selectedRelease.credits.composers.length > 0 && (
+                                              <div>
+                                                <strong>Composers:</strong> {selectedRelease.credits.composers.join(', ')}
+                                              </div>
+                                            )}
+                                            {selectedRelease.credits.engineers && selectedRelease.credits.engineers.length > 0 && (
+                                              <div>
+                                                <strong>Engineers:</strong> {selectedRelease.credits.engineers.join(', ')}
+                                              </div>
+                                            )}
+                                            {selectedRelease.credits.mixedBy && selectedRelease.credits.mixedBy.length > 0 && (
+                                              <div>
+                                                <strong>Mixed By:</strong> {selectedRelease.credits.mixedBy.join(', ')}
+                                              </div>
+                                            )}
+                                            {selectedRelease.credits.masteredBy && selectedRelease.credits.masteredBy.length > 0 && (
+                                              <div>
+                                                <strong>Mastered By:</strong> {selectedRelease.credits.masteredBy.join(', ')}
+                                              </div>
+                                            )}
+                                            {selectedRelease.credits.featuredArtists && selectedRelease.credits.featuredArtists.length > 0 && (
+                                              <div>
+                                                <strong>Featured Artists:</strong> {selectedRelease.credits.featuredArtists.join(', ')}
+                                              </div>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <div className="text-gray-500">No credits available</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <h4 className="font-medium text-sm mb-2">Lyrics</h4>
+                                      <div className="text-sm">
+                                        {selectedRelease.lyrics ? (
+                                          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md max-h-40 overflow-y-auto">
+                                            {selectedRelease.lyrics}
+                                          </div>
+                                        ) : (
+                                          <div className="text-gray-500">No lyrics available</div>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -608,7 +752,7 @@ export function ReleaseManagement() {
                                                 <strong>Songwriters:</strong>
                                                 {track.songwriters && track.songwriters.length > 0 ? (
                                                   <div className="mt-1 space-y-1">
-                                                    {track.songwriters.map((songwriter, idx) => (
+                                                    {track.songwriters.map((songwriter: string, idx: number) => (
                                                       <div key={idx} className="text-xs bg-blue-50 dark:bg-blue-900/30 p-2 rounded">
                                                         {songwriter.first_name} {songwriter.middle_name} {songwriter.last_name} - {songwriter.role}
                                                       </div>
@@ -624,7 +768,7 @@ export function ReleaseManagement() {
                                                 <strong>Producers:</strong>
                                                 {track.producer_credits && track.producer_credits.length > 0 ? (
                                                   <div className="mt-1 space-y-1">
-                                                    {track.producer_credits.map((producer, idx) => (
+                                                    {track.producer_credits.map((producer: string, idx: number) => (
                                                       <div key={idx} className="text-xs bg-green-50 dark:bg-green-900/30 p-2 rounded">
                                                         {producer.name} - {producer.role}
                                                       </div>
@@ -640,7 +784,7 @@ export function ReleaseManagement() {
                                                 <strong>Performers:</strong>
                                                 {track.performer_credits && track.performer_credits.length > 0 ? (
                                                   <div className="mt-1 space-y-1">
-                                                    {track.performer_credits.map((performer, idx) => (
+                                                    {track.performer_credits.map((performer: string, idx: number) => (
                                                       <div key={idx} className="text-xs bg-orange-50 dark:bg-orange-900/30 p-2 rounded">
                                                         {performer.name} - {performer.role}
                                                       </div>
@@ -715,10 +859,12 @@ export function ReleaseManagement() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
                             <SelectItem value="under_review">Under Review</SelectItem>
                             <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                             <SelectItem value="live">Live</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="takedown_requested">Takedown Requested</SelectItem>
                             <SelectItem value="takedown">Takedown</SelectItem>
                           </SelectContent>
                         </Select>
@@ -741,6 +887,7 @@ export function ReleaseManagement() {
                     <TableHead>Tracks</TableHead>
                     <TableHead>Codes</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Update Status</TableHead>
                     <TableHead>Submitted</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -778,8 +925,9 @@ export function ReleaseManagement() {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(release.status)}</TableCell>
+                      <TableCell>{getUpdateStatusBadge(release.update_status)}</TableCell>
                       <TableCell className="text-sm text-gray-600">
-                        {formatDistanceToNow(new Date(release.submitted_at), {
+                        {formatDistanceToNow(new Date(release.submitted_at || release.created_at), {
                           addSuffix: true,
                         })}
                       </TableCell>
@@ -798,7 +946,7 @@ export function ReleaseManagement() {
                                   Release Details
                                   <div className="flex gap-2">
                                     <Button
-                                      onClick={() => downloadCompleteReleaseData(selectedRelease)}
+                                      onClick={() => selectedRelease && downloadCompleteReleaseData(selectedRelease)}
                                       variant="default"
                                       size="sm"
                                       disabled={downloading === selectedRelease?.id}
@@ -814,7 +962,7 @@ export function ReleaseManagement() {
                                       )}
                                     </Button>
                                     <Button
-                                      onClick={() => downloadReleaseData(selectedRelease)}
+                                      onClick={() => selectedRelease && downloadReleaseData(selectedRelease)}
                                       variant="outline"
                                       size="sm"
                                     >
@@ -840,7 +988,10 @@ export function ReleaseManagement() {
                                       <h3 className="font-medium text-lg border-b pb-2">Release Status</h3>
                                       <div className="space-y-2 text-sm">
                                         <div><strong>Status:</strong> {getStatusBadge(selectedRelease.status)}</div>
-                                        <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at), { addSuffix: true })}</div>
+                                        {selectedRelease.update_status && (
+                                          <div><strong>Update Status:</strong> {getUpdateStatusBadge(selectedRelease.update_status)}</div>
+                                        )}
+                                        <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at || selectedRelease.created_at), { addSuffix: true })}</div>
                                         <div><strong>Last Updated:</strong> {formatDistanceToNow(new Date(selectedRelease.updated_at || selectedRelease.submitted_at), { addSuffix: true })}</div>
                                       </div>
                                     </div>
@@ -876,6 +1027,75 @@ export function ReleaseManagement() {
                                         <div><strong>Track Price:</strong> ${selectedRelease.track_price || '0.99'}</div>
                                         <div><strong>Album Cover:</strong> {selectedRelease.album_cover_url ? 'Uploaded' : 'Not uploaded'}</div>
                                         <div><strong>Total Tracks:</strong> {selectedRelease.tracks?.length || 0}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Credits and Lyrics Section */}
+                                  <div className="space-y-4">
+                                    <h3 className="font-medium text-lg border-b pb-2">Credits & Lyrics</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                      <div className="space-y-4">
+                                        <div>
+                                          <h4 className="font-medium text-sm mb-2">Credits</h4>
+                                          <div className="space-y-2 text-sm">
+                                            {selectedRelease.credits && typeof selectedRelease.credits === 'object' ? (
+                                              <>
+                                                {selectedRelease.credits.producers && selectedRelease.credits.producers.length > 0 && (
+                                                  <div>
+                                                    <strong>Producers:</strong> {selectedRelease.credits.producers.join(', ')}
+                                                  </div>
+                                                )}
+                                                {selectedRelease.credits.writers && selectedRelease.credits.writers.length > 0 && (
+                                                  <div>
+                                                    <strong>Writers:</strong> {selectedRelease.credits.writers.join(', ')}
+                                                  </div>
+                                                )}
+                                                {selectedRelease.credits.composers && selectedRelease.credits.composers.length > 0 && (
+                                                  <div>
+                                                    <strong>Composers:</strong> {selectedRelease.credits.composers.join(', ')}
+                                                  </div>
+                                                )}
+                                                {selectedRelease.credits.engineers && selectedRelease.credits.engineers.length > 0 && (
+                                                  <div>
+                                                    <strong>Engineers:</strong> {selectedRelease.credits.engineers.join(', ')}
+                                                  </div>
+                                                )}
+                                                {selectedRelease.credits.mixedBy && selectedRelease.credits.mixedBy.length > 0 && (
+                                                  <div>
+                                                    <strong>Mixed By:</strong> {selectedRelease.credits.mixedBy.join(', ')}
+                                                  </div>
+                                                )}
+                                                {selectedRelease.credits.masteredBy && selectedRelease.credits.masteredBy.length > 0 && (
+                                                  <div>
+                                                    <strong>Mastered By:</strong> {selectedRelease.credits.masteredBy.join(', ')}
+                                                  </div>
+                                                )}
+                                                {selectedRelease.credits.featuredArtists && selectedRelease.credits.featuredArtists.length > 0 && (
+                                                  <div>
+                                                    <strong>Featured Artists:</strong> {selectedRelease.credits.featuredArtists.join(', ')}
+                                                  </div>
+                                                )}
+                                              </>
+                                            ) : (
+                                              <div className="text-gray-500">No credits available</div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-4">
+                                        <div>
+                                          <h4 className="font-medium text-sm mb-2">Lyrics</h4>
+                                          <div className="text-sm">
+                                            {selectedRelease.lyrics ? (
+                                              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md max-h-40 overflow-y-auto">
+                                                {selectedRelease.lyrics}
+                                              </div>
+                                            ) : (
+                                              <div className="text-gray-500">No lyrics available</div>
+                                            )}
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -993,7 +1213,7 @@ export function ReleaseManagement() {
                                                     <strong>Songwriters:</strong>
                                                     {track.songwriters && track.songwriters.length > 0 ? (
                                                       <div className="mt-1 space-y-1">
-                                                        {track.songwriters.map((songwriter, idx) => (
+                                                        {track.songwriters.map((songwriter: string, idx: number) => (
                                                           <div key={idx} className="text-xs bg-blue-50 dark:bg-blue-900/30 p-2 rounded">
                                                             {songwriter.first_name} {songwriter.middle_name} {songwriter.last_name} - {songwriter.role}
                                                           </div>
@@ -1009,7 +1229,7 @@ export function ReleaseManagement() {
                                                     <strong>Producers:</strong>
                                                     {track.producer_credits && track.producer_credits.length > 0 ? (
                                                       <div className="mt-1 space-y-1">
-                                                        {track.producer_credits.map((producer, idx) => (
+                                                        {track.producer_credits.map((producer: string, idx: number) => (
                                                           <div key={idx} className="text-xs bg-green-50 dark:bg-green-900/30 p-2 rounded">
                                                             {producer.name} - {producer.role}
                                                           </div>
@@ -1025,7 +1245,7 @@ export function ReleaseManagement() {
                                                     <strong>Performers:</strong>
                                                     {track.performer_credits && track.performer_credits.length > 0 ? (
                                                       <div className="mt-1 space-y-1">
-                                                        {track.performer_credits.map((performer, idx) => (
+                                                        {track.performer_credits.map((performer: string, idx: number) => (
                                                           <div key={idx} className="text-xs bg-orange-50 dark:bg-orange-900/30 p-2 rounded">
                                                             {performer.name} - {performer.role}
                                                           </div>
@@ -1183,11 +1403,30 @@ export function ReleaseManagement() {
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent>
+                                            <SelectItem value="pending">Pending</SelectItem>
                                             <SelectItem value="under_review">Under Review</SelectItem>
                                             <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                                             <SelectItem value="live">Live</SelectItem>
                                             <SelectItem value="rejected">Rejected</SelectItem>
+                                            <SelectItem value="takedown_requested">Takedown Requested</SelectItem>
                                             <SelectItem value="takedown">Takedown</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <label className="text-sm font-medium">Update Status (Changes)</label>
+                                        <Select 
+                                          value={selectedRelease.update_status || "none"} 
+                                          onValueChange={(newUpdateStatus) => updateReleaseUpdateStatus(selectedRelease.id, newUpdateStatus === "none" ? "" : newUpdateStatus)}
+                                          disabled={processing === selectedRelease.id}
+                                        >
+                                          <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="No changes submitted" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="none">No changes</SelectItem>
+                                            <SelectItem value="Changes Submitted">Changes Submitted</SelectItem>
+                                            <SelectItem value="Up-to-Date">Up-to-Date</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
@@ -1207,10 +1446,12 @@ export function ReleaseManagement() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
                               <SelectItem value="under_review">Under Review</SelectItem>
                               <SelectItem value="sent_to_stores">Sent to Stores</SelectItem>
                               <SelectItem value="live">Live</SelectItem>
                               <SelectItem value="rejected">Rejected</SelectItem>
+                              <SelectItem value="takedown_requested">Takedown Requested</SelectItem>
                               <SelectItem value="takedown">Takedown</SelectItem>
                             </SelectContent>
                           </Select>

@@ -7,7 +7,9 @@ import { MobileNavigation } from "@/components/mobile-navigation";
 import { MyMusicHeader } from "@/components/my-music/my-music-header";
 import { ReleasesGrid } from "@/components/my-music/releases-grid";
 import { ReleasesTable } from "@/components/my-music/releases-table";
-import { EditReleaseModal } from "@/components/my-music/edit-release-modal";
+import { ViewReleaseModal } from "@/components/my-music/view-release-modal";
+import { PostSubmissionEditModal } from "@/components/my-music/post-submission-edit-modal";
+import { TakedownConfirmationModal } from "@/components/my-music/takedown-confirmation-modal";
 import { useToast } from "@/hooks/use-toast";
 import { Music, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,42 +22,60 @@ interface Release {
   releaseDate: string | null;
   submissionDate: string;
   status: string;
+  updateStatus?: string;
   streams: number;
   revenue: number;
   platforms: string[];
   artwork: string | null;
   genre: string;
-  secondaryGenre: string | null;
-  label: string | null;
+  secondaryGenre?: string;
+  label: string;
   copyright: string;
-  upcEan: string | null;
+  upcEan?: string;
   upc?: string; // UPC code from distributor
   explicitContent: boolean;
   credits: {
     producers: string[];
     writers: string[];
     composers: string[];
-    engineers: string[];
-    mixedBy: string[];
-    masteredBy: string[];
-    featuredArtists: string[];
+    engineers?: string[];
+    mixedBy?: string[];
+    masteredBy?: string[];
+    featuredArtists?: string[];
   };
-  lyrics: string | null;
-  isrcCode: string | null;
+  lyrics?: string;
+  isrcCode?: string;
   tracks?: Array<{
     id: string;
     track_number: number;
     track_title: string;
     isrc: string;
   }>;
-  trackCount: number;
-  distributionType: string;
+  trackCount?: number;
+  distributionType?: string;
+  language?: string;
+  instrumental?: boolean;
+  versionInfo?: string;
+  versionOther?: string;
+  originalReleaseDate?: string;
+  previouslyReleased?: boolean;
+  albumCoverUrl?: string;
+  selectedStores?: string[];
+  trackPrice?: number;
+  termsAgreed?: boolean;
+  fakeStreamingAgreement?: boolean;
+  distributionAgreement?: boolean;
+  artistNamesAgreement?: boolean;
+  snapchatTerms?: boolean;
+  youtubeMusicAgreement?: boolean;
 }
 
 export default function MyMusicPage() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [selectedRelease, setSelectedRelease] = useState<Release | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isPostSubmissionEditModalOpen, setIsPostSubmissionEditModalOpen] = useState(false);
+  const [isTakedownModalOpen, setIsTakedownModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -101,7 +121,7 @@ export default function MyMusicPage() {
           upcEan: null, // This would be generated after approval
           upc: release.upc, // UPC code from distributor
           explicitContent: release.explicit_lyrics || false,
-          credits: {
+          credits: release.credits || {
             producers: [],
             writers: [],
             composers: [],
@@ -110,7 +130,8 @@ export default function MyMusicPage() {
             masteredBy: [],
             featuredArtists: [],
           },
-          lyrics: null,
+          lyrics: release.lyrics || "",
+          updateStatus: release.update_status,
           isrcCode: release.tracks && release.tracks.length > 0 ? release.tracks[0].isrc : null, // ISRC from first track
           tracks: release.tracks, // Track details including ISRC codes
           trackCount: release.track_count || 0,
@@ -139,6 +160,8 @@ export default function MyMusicPage() {
   const mapStatus = (status: string) => {
     switch (status) {
       case "draft":
+        return "Draft";
+      case "pending":
         return "Pending";
       case "under_review":
         return "Under Review";
@@ -148,6 +171,8 @@ export default function MyMusicPage() {
         return "Live";
       case "rejected":
         return "Rejected";
+      case "takedown_requested":
+        return "Takedown Requested";
       case "takedown":
         return "Takedown";
       // Legacy status mappings (for backwards compatibility)
@@ -156,13 +181,66 @@ export default function MyMusicPage() {
       case "distributed":
         return "Live";
       default:
-        return "Pending";
+        return "Draft";
     }
   };
 
-  const handleEditRelease = (release: Release) => {
+  const handleViewRelease = (release: Release) => {
     setSelectedRelease(release);
-    setIsEditModalOpen(true);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEditRelease = (release: Release) => {
+    // If it's a draft, redirect to edit page
+    if (release.status === 'Draft') {
+      window.location.href = `/dashboard/new-release/edit/${release.id}`;
+      return;
+    }
+    
+    // For other statuses, open the view modal first
+    setSelectedRelease(release);
+    setIsViewModalOpen(true);
+  };
+
+  const handlePostSubmissionEdit = (release: Release) => {
+    setSelectedRelease(release);
+    setIsPostSubmissionEditModalOpen(true);
+  };
+
+  const handleRequestTakedown = (release: Release) => {
+    setSelectedRelease(release);
+    setIsTakedownModalOpen(true);
+  };
+
+  const handleConfirmTakedown = async (releaseId: string) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(`/api/distribution/releases/${releaseId}/request-takedown`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the release status in the local state
+        setReleases((prev) =>
+          prev.map((release) =>
+            release.id === releaseId 
+              ? { ...release, status: "Takedown Requested" }
+              : release
+          )
+        );
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to request takedown");
+      }
+    } catch (error) {
+      console.error("Error requesting takedown:", error);
+      throw error;
+    }
   };
 
   const handleSaveRelease = (updatedRelease: Release) => {
@@ -174,7 +252,9 @@ export default function MyMusicPage() {
   };
 
   const handleCloseModal = () => {
-    setIsEditModalOpen(false);
+    setIsViewModalOpen(false);
+    setIsPostSubmissionEditModalOpen(false);
+    setIsTakedownModalOpen(false);
     setSelectedRelease(null);
   };
 
@@ -241,12 +321,22 @@ export default function MyMusicPage() {
           <>
             {/* Desktop Table View */}
             <div className="hidden xl:block">
-              <ReleasesTable releases={releases} onEdit={handleEditRelease} />
+              <ReleasesTable 
+                releases={releases} 
+                onView={handleViewRelease}
+                onEdit={handleEditRelease}
+                onTakedown={handleRequestTakedown}
+              />
             </div>
 
             {/* Mobile/Tablet Grid View */}
             <div className="xl:hidden">
-              <ReleasesGrid releases={releases} onEdit={handleEditRelease} />
+              <ReleasesGrid 
+                releases={releases} 
+                onView={handleViewRelease}
+                onEdit={handleEditRelease}
+                onTakedown={handleRequestTakedown}
+              />
             </div>
           </>
         )}
@@ -255,12 +345,28 @@ export default function MyMusicPage() {
       {/* Mobile Navigation */}
       <MobileNavigation />
 
-      {/* Edit Release Modal */}
-      <EditReleaseModal
+      {/* View Release Modal */}
+      <ViewReleaseModal
         release={selectedRelease}
-        isOpen={isEditModalOpen}
+        isOpen={isViewModalOpen}
+        onClose={handleCloseModal}
+        onEdit={handlePostSubmissionEdit}
+      />
+
+      {/* Post-Submission Edit Modal */}
+      <PostSubmissionEditModal
+        release={selectedRelease}
+        isOpen={isPostSubmissionEditModalOpen}
         onClose={handleCloseModal}
         onSave={handleSaveRelease}
+      />
+
+      {/* Takedown Confirmation Modal */}
+      <TakedownConfirmationModal
+        release={selectedRelease}
+        isOpen={isTakedownModalOpen}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmTakedown}
       />
     </div>
   );

@@ -59,8 +59,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    if (!['under_review', 'sent_to_stores', 'live', 'rejected', 'takedown'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status. Must be one of: under_review, sent_to_stores, live, rejected, takedown' }, { status: 400 })
+    if (!['pending', 'under_review', 'sent_to_stores', 'live', 'rejected', 'takedown_requested', 'takedown'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status. Must be one of: pending, under_review, sent_to_stores, live, rejected, takedown_requested, takedown' }, { status: 400 })
     }
 
     const client = await pool.connect()

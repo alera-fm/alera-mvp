@@ -44,7 +44,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="hidden overflow-y-auto md:flex md:w-72 md:flex-col fixed top-0 left-0 h-screen">
+    <div className="hidden overflow-y-auto md:flex md:w-72 md:flex-col fixed top-0 left-0 h-screen z-50">
       <div className="flex flex-col flex-grow border-r border-gray-200 dark:border-gray-800/40 bg-white dark:bg-[#0a0a13] pt-6 shadow-lg transition-colors duration-300">
         <div className="flex items-center justify-between flex-shrink-0 px-5 mb-4">
           <Link href="/dashboard" className="flex items-center gap-3">

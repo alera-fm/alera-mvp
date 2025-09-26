@@ -191,8 +191,8 @@ interface Release {
   instrumental: boolean;
   version_info: string;
   version_other?: string;
-  release_date: string;
-  original_release_date?: string;
+  release_date: string | null;
+  original_release_date?: string | null;
   previously_released: boolean;
   album_cover_url?: string;
   selected_stores: string[];
@@ -210,11 +210,13 @@ interface Release {
 
 interface DistributionFlowProps {
   existingRelease?: Release;
+  editId?: string;
   onSave?: (release: Release) => void;
 }
 
 export function DistributionFlow({
   existingRelease,
+  editId,
   onSave,
 }: DistributionFlowProps) {
   const { toast } = useToast();
@@ -244,8 +246,8 @@ export function DistributionFlow({
     instrumental: false,
     version_info: "Normal",
     version_other: "",
-    release_date: "",
-    original_release_date: "",
+    release_date: null,
+    original_release_date: null,
     previously_released: false,
     album_cover_url: "",
     selected_stores: [...STORES],
@@ -262,9 +264,124 @@ export function DistributionFlow({
 
   useEffect(() => {
     if (existingRelease) {
-      setFormData(existingRelease);
+      // Sanitize the data to ensure no null/undefined values for controlled inputs
+      const sanitizedData = {
+        ...existingRelease,
+        distribution_type: existingRelease.distribution_type || "",
+        artist_name: existingRelease.artist_name || "",
+        release_title: existingRelease.release_title || "",
+        record_label: existingRelease.record_label || "",
+        c_line: existingRelease.c_line || "",
+        p_line: existingRelease.p_line || "",
+        spotify_profile_url: existingRelease.spotify_profile_url || "",
+        apple_profile_url: existingRelease.apple_profile_url || "",
+        primary_genre: existingRelease.primary_genre || "",
+        secondary_genre: existingRelease.secondary_genre || "",
+        language: existingRelease.language || "English",
+        version_info: existingRelease.version_info || "Normal",
+        version_other: existingRelease.version_other || "",
+        release_date: existingRelease.release_date || null,
+        original_release_date: existingRelease.original_release_date || null,
+        album_cover_url: existingRelease.album_cover_url || "",
+        track_price: existingRelease.track_price || 0.99,
+        additional_delivery: existingRelease.additional_delivery || [],
+        selected_stores: existingRelease.selected_stores || [...STORES],
+        tracks: existingRelease.tracks || [],
+        // Ensure boolean fields are properly set
+        has_spotify_profile: Boolean(existingRelease.has_spotify_profile),
+        has_apple_profile: Boolean(existingRelease.has_apple_profile),
+        explicit_lyrics: Boolean(existingRelease.explicit_lyrics),
+        instrumental: Boolean(existingRelease.instrumental),
+        previously_released: Boolean(existingRelease.previously_released),
+        terms_agreed: Boolean(existingRelease.terms_agreed),
+        fake_streaming_agreement: Boolean(existingRelease.fake_streaming_agreement),
+        distribution_agreement: Boolean(existingRelease.distribution_agreement),
+        artist_names_agreement: Boolean(existingRelease.artist_names_agreement),
+        snapchat_terms: Boolean(existingRelease.snapchat_terms),
+        youtube_music_agreement: Boolean(existingRelease.youtube_music_agreement),
+        fraud_prevention_agreement: Boolean(existingRelease.fraud_prevention_agreement)
+      };
+      setFormData(sanitizedData);
     }
   }, [existingRelease]);
+
+  // Load release data when editId is provided
+  useEffect(() => {
+    if (editId) {
+      const loadReleaseData = async () => {
+        try {
+          const response = await fetch(`/api/distribution/releases/${editId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.release) {
+              // Sanitize the data to ensure no null/undefined values for controlled inputs
+              const sanitizedData = {
+                ...data.release,
+                distribution_type: data.release.distribution_type || "",
+                artist_name: data.release.artist_name || "",
+                release_title: data.release.release_title || "",
+                record_label: data.release.record_label || "",
+                c_line: data.release.c_line || "",
+                p_line: data.release.p_line || "",
+                spotify_profile_url: data.release.spotify_profile_url || "",
+                apple_profile_url: data.release.apple_profile_url || "",
+                primary_genre: data.release.primary_genre || "",
+                secondary_genre: data.release.secondary_genre || "",
+                language: data.release.language || "English",
+                version_info: data.release.version_info || "Normal",
+                version_other: data.release.version_other || "",
+                release_date: data.release.release_date || null,
+                original_release_date: data.release.original_release_date || null,
+                album_cover_url: data.release.album_cover_url || "",
+                track_price: data.release.track_price || 0.99,
+                additional_delivery: data.release.additional_delivery || [],
+                selected_stores: data.release.selected_stores || [...STORES],
+                tracks: data.release.tracks || [],
+                // Ensure boolean fields are properly set
+                has_spotify_profile: Boolean(data.release.has_spotify_profile),
+                has_apple_profile: Boolean(data.release.has_apple_profile),
+                explicit_lyrics: Boolean(data.release.explicit_lyrics),
+                instrumental: Boolean(data.release.instrumental),
+                previously_released: Boolean(data.release.previously_released),
+                terms_agreed: Boolean(data.release.terms_agreed),
+                fake_streaming_agreement: Boolean(data.release.fake_streaming_agreement),
+                distribution_agreement: Boolean(data.release.distribution_agreement),
+                artist_names_agreement: Boolean(data.release.artist_names_agreement),
+                snapchat_terms: Boolean(data.release.snapchat_terms),
+                youtube_music_agreement: Boolean(data.release.youtube_music_agreement),
+                fraud_prevention_agreement: Boolean(data.release.fraud_prevention_agreement)
+              };
+              
+              setFormData(sanitizedData);
+              // Set current step based on release data
+              if (data.release.current_step) {
+                const stepMap: {[key: string]: number} = {
+                  'basic_info': 1,
+                  'tracks': 2,
+                  'terms': 3
+                };
+                setCurrentStep(stepMap[data.release.current_step] || 1);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error loading release data:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load release data. Please try again.",
+            variant: "destructive",
+          });
+        }
+      };
+      
+      loadReleaseData();
+    }
+  }, [editId, toast]);
 
   // Check if user can create releases on component mount
   useEffect(() => {
@@ -456,6 +573,66 @@ export function DistributionFlow({
     }
   };
 
+
+  const handleNextStep = async () => {
+    if (!editId && !existingRelease?.id) {
+      toast({
+        title: "Error",
+        description: "No release ID found. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/distribution/releases/update-step', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          releaseId: editId || existingRelease?.id,
+          step: currentStep,
+          formData: formData,
+          submitForReview: false
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Move to next step only if validation passes
+        setCurrentStep(currentStep + 1);
+        toast({
+          title: "Step Saved",
+          description: "Your progress has been saved.",
+        });
+      } else {
+        // Handle validation errors
+        if (data.errors && data.errors.length > 0) {
+          toast({
+            title: "Validation Error",
+            description: data.errors.join(', '),
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.error || 'Failed to save step');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving step:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save step. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSaveDraft = async () => {
     // Check subscription limits for draft saves too
     const canCreate = await canAccessFeature('release_creation', { 
@@ -471,74 +648,45 @@ export function DistributionFlow({
     }
 
     setIsSubmitting(true);
+    if (!editId && !existingRelease?.id) {
+      toast({
+        title: "Error",
+        description: "No release ID found. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Guard: ensure audio URLs captured for all tracks that have a file name
-      const missingAudio = (formData.tracks || []).some((t: any) => (t.audio_file_name || t.audioFileName) && !(t.audio_file_url || t.audioFileUrl))
-      if (missingAudio) {
-        toast({ variant: "destructive", title: "Missing audio URL", description: "Please wait a moment after upload or reselect the file, then try again." })
-        setIsSubmitting(false);
-        return
-      }
-
-      const endpoint = existingRelease?.id
-        ? `/api/distribution/releases/${existingRelease.id}`
-        : "/api/distribution/releases";
-
-      const method = existingRelease?.id ? "PUT" : "POST";
-
-      // Normalize audio fields before submit
-      const normalizedTracks = (formData.tracks || []).map((t: any) => ({
-        ...t,
-        audio_file_url: t.audio_file_url || t.audioFileUrl || '',
-        audio_file_name: t.audio_file_name || t.audioFileName || '',
-      }))
-
-      try {
-        console.log('[Submit Draft] tracks snapshot (normalized)', normalizedTracks.map((t:any) => ({
-          title: t.track_title,
-          audio_file_url: t.audio_file_url,
-          audio_file_name: t.audio_file_name,
-        })))
-      } catch {}
-
-      const response = await fetch(endpoint, {
-        method,
+      const response = await fetch('/api/distribution/releases/save-draft', {
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
-        body: JSON.stringify({ ...formData, tracks: normalizedTracks, submit_for_review: false }),
+        body: JSON.stringify({
+          releaseId: editId || existingRelease?.id,
+          formData: formData,
+          currentStep: `step_${currentStep}` // This will be mapped to descriptive name in the API
+        })
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+
+      if (data.success) {
         toast({
-          title: "Success",
-          description: "Draft saved successfully!",
+          title: "Draft Saved",
+          description: "Your release has been saved as a draft.",
         });
-        if (onSave) onSave(data.release);
-        // Redirect to music page after saving draft
-        window.location.href = "/dashboard/my-music";
       } else {
-        const errorData = await response.json();
-        
-        // Handle subscription-related errors with upgrade dialog
-        if (response.status === 403 && errorData.subscriptionLimited) {
-          const message = formData.distribution_type === 'Single' 
-            ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
-            : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
-          showUpgradeDialog(message, 'plus');
-          return;
-        }
-        
-        throw new Error(errorData.error || "Failed to save draft");
+        throw new Error(data.error || 'Failed to save draft');
       }
     } catch (error) {
+      console.error('Error saving draft:', error);
       toast({
-        variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to save draft",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -559,83 +707,50 @@ export function DistributionFlow({
       return;
     }
 
-    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please complete all required fields and agreements",
-      });
-      return;
-    }
-
-    // Guard: ensure audio URLs captured for all tracks
-    const missingAudio = (formData.tracks || []).some((t: any) => !(t.audio_file_url || t.audioFileUrl))
-    if (missingAudio) {
-      toast({ variant: "destructive", title: "Audio missing", description: "Please upload/select an audio file for each track before submitting." })
-      return
-    }
-
     setIsSubmitting(true);
     try {
-      const endpoint = existingRelease?.id
-        ? `/api/distribution/releases/${existingRelease.id}`
-        : "/api/distribution/releases";
-
-      const method = existingRelease?.id ? "PUT" : "POST";
-
-      // Normalize audio fields before submit
-      const normalizedTracks2 = (formData.tracks || []).map((t: any) => ({
-        ...t,
-        audio_file_url: t.audio_file_url || t.audioFileUrl || '',
-        audio_file_name: t.audio_file_name || t.audioFileName || '',
-      }))
-
-      try {
-        console.log('[Submit Review] tracks snapshot (normalized)', normalizedTracks2.map((t:any) => ({
-          title: t.track_title,
-          audio_file_url: t.audio_file_url,
-          audio_file_name: t.audio_file_name,
-        })))
-      } catch {}
-
-      const response = await fetch(endpoint, {
-        method,
+      const response = await fetch('/api/distribution/releases/update-step', {
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
-        body: JSON.stringify({ ...formData, tracks: normalizedTracks2, submit_for_review: true }),
+        body: JSON.stringify({
+          releaseId: editId || existingRelease?.id,
+          step: currentStep,
+          formData: formData,
+          submitForReview: true
+        })
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+
+      if (data.success) {
         toast({
           title: "Success",
-          description: "Release submitted for review!",
+          description: "Release submitted for review successfully!",
         });
         if (onSave) onSave(data.release);
+        // Redirect to music page after submission
+        window.location.href = "/dashboard/my-music";
       } else {
-        const errorData = await response.json();
-        
-        // Handle subscription-related errors with upgrade dialog
-        if (response.status === 403 && errorData.subscriptionLimited) {
-          const message = formData.distribution_type === 'Single' 
-            ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
-            : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
-          showUpgradeDialog(message, 'plus');
-          return;
+        // Handle validation errors
+        if (data.errors && data.errors.length > 0) {
+          toast({
+            title: "Validation Error",
+            description: data.errors.join(', '),
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.error || 'Failed to submit for review');
         }
-        
-        throw new Error(errorData.error || "Failed to submit for review");
       }
     } catch (error) {
+      console.error('Error submitting for review:', error);
       toast({
-        variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to submit for review",
+        description: "Failed to submit for review. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -967,7 +1082,7 @@ export function DistributionFlow({
               <Input
                 id="release_date"
                 type="date"
-                value={formData.release_date}
+                value={formData.release_date || ""}
                 min={getMinReleaseDate()}
                 onChange={(e) => updateFormData("release_date", e.target.value)}
               />
@@ -992,7 +1107,7 @@ export function DistributionFlow({
                   updateFormData("previously_released", checked);
                   // Clear original_release_date if unchecked
                   if (!checked) {
-                    updateFormData("original_release_date", "");
+                    updateFormData("original_release_date", null);
                   }
                 }}
               />
@@ -1007,7 +1122,7 @@ export function DistributionFlow({
                 <Input
                   id="original_release_date"
                   type="date"
-                  value={formData.original_release_date}
+                  value={formData.original_release_date || ""}
                   onChange={(e) =>
                     updateFormData("original_release_date", e.target.value)
                   }
@@ -2281,7 +2396,7 @@ export function DistributionFlow({
   return (
     <div className="max-w-full mx-auto mt-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">Create Your Release</h1>
+        <h1 className="text-2xl font-bold mb-2">Edit Your Release</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Submit your music for distribution across all major platforms
         </p>
@@ -2423,7 +2538,9 @@ export function DistributionFlow({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setCurrentStep(currentStep - 1)}
+                    onClick={() => {
+                      setCurrentStep(currentStep - 1);
+                    }}
                   >
                     Previous
                   </Button>
@@ -2445,10 +2562,10 @@ export function DistributionFlow({
                 {currentStep < 3 ? (
                   <Button
                     type="button"
-                    onClick={() => setCurrentStep(currentStep + 1)}
-                    disabled={!validateStep(currentStep) || isUploading || Object.values(audioUploadStates).some(state => state.uploading)}
+                    onClick={handleNextStep}
+                    disabled={!validateStep(currentStep) || isUploading || Object.values(audioUploadStates).some(state => state.uploading) || isSubmitting}
                     className={`${
-                      !validateStep(currentStep) || isUploading || Object.values(audioUploadStates).some(state => state.uploading)
+                      !validateStep(currentStep) || isUploading || Object.values(audioUploadStates).some(state => state.uploading) || isSubmitting
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300" 
                         : "bg-[#BFFF00] text-black hover:bg-[#BFFF00]/90"
                     }`}
@@ -2457,6 +2574,11 @@ export function DistributionFlow({
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Uploading...
+                      </div>
+                    ) : isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving...
                       </div>
                     ) : (
                       "Next"

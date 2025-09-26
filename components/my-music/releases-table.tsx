@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Edit, Calendar } from "lucide-react"
+import { Edit, Calendar, FileText, Clock, CheckCircle, XCircle, AlertTriangle, Play, Eye } from "lucide-react"
 import Image from "next/image"
 
 interface Release {
@@ -14,35 +14,53 @@ interface Release {
   releaseDate: string | null
   submissionDate: string
   status: string
+  updateStatus?: string
   streams: number
   revenue: number
   platforms: string[]
   artwork: string | null
   genre: string
-  secondaryGenre: string | null
-  label: string | null
+  secondaryGenre?: string
+  label: string
   copyright: string
-  upcEan: string | null
+  upcEan?: string
   upc?: string
   explicitContent: boolean
   credits: {
     producers: string[]
     writers: string[]
     composers: string[]
-    engineers: string[]
-    mixedBy: string[]
-    masteredBy: string[]
-    featuredArtists: string[]
+    engineers?: string[]
+    mixedBy?: string[]
+    masteredBy?: string[]
+    featuredArtists?: string[]
   }
-  lyrics: string | null
-  isrcCode: string | null
-  trackCount: number
-  distributionType: string
+  lyrics?: string
+  isrcCode?: string
+  trackCount?: number
+  distributionType?: string
+  language?: string
+  instrumental?: boolean
+  versionInfo?: string
+  versionOther?: string
+  originalReleaseDate?: string
+  previouslyReleased?: boolean
+  albumCoverUrl?: string
+  selectedStores?: string[]
+  trackPrice?: number
+  termsAgreed?: boolean
+  fakeStreamingAgreement?: boolean
+  distributionAgreement?: boolean
+  artistNamesAgreement?: boolean
+  snapchatTerms?: boolean
+  youtubeMusicAgreement?: boolean
 }
 
 interface ReleasesTableProps {
   releases: Release[]
+  onView: (release: Release) => void
   onEdit: (release: Release) => void
+  onTakedown: (release: Release) => void
 }
 
 const getStatusColor = (status: Release["status"]) => {
@@ -54,17 +72,32 @@ const getStatusColor = (status: Release["status"]) => {
     case "Under Review":
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
     case "Pending":
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+    case "Draft":
+      return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
     case "Rejected":
       return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-    case "Takedown":
+    case "Takedown Requested":
       return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+    case "Takedown":
+      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
     default:
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
   }
 }
 
-export function ReleasesTable({ releases, onEdit }: ReleasesTableProps) {
+const getUpdateStatusColor = (updateStatus?: string) => {
+  switch (updateStatus) {
+    case 'Changes Submitted':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+    case 'Up-to-Date':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  }
+}
+
+export function ReleasesTable({ releases, onView, onEdit, onTakedown }: ReleasesTableProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -162,14 +195,48 @@ export function ReleasesTable({ releases, onEdit }: ReleasesTableProps) {
                 </TableCell>
 
                 <TableCell>
-                  <Badge className={`text-xs font-medium ${getStatusColor(release.status)}`}>{release.status}</Badge>
+                  <div className="flex flex-col gap-1">
+                    <Badge className={`text-xs font-medium ${getStatusColor(release.status)} flex items-center gap-1`}>
+                      {release.status === 'Draft' && <FileText className="h-3 w-3" />}
+                      {release.status === 'Pending' && <Clock className="h-3 w-3" />}
+                      {release.status === 'Under Review' && <Clock className="h-3 w-3" />}
+                      {release.status === 'Sent to Stores' && <CheckCircle className="h-3 w-3" />}
+                    {release.status === 'Live' && <Play className="h-3 w-3" />}
+                    {release.status === 'Rejected' && <XCircle className="h-3 w-3" />}
+                    {release.status === 'Takedown Requested' && <AlertTriangle className="h-3 w-3" />}
+                    {release.status === 'Takedown' && <XCircle className="h-3 w-3" />}
+                      {release.status}
+                    </Badge>
+                    {release.updateStatus && release.updateStatus !== 'Up-to-Date' && (
+                      <Badge className={`text-xs font-medium ${getUpdateStatusColor(release.updateStatus)}`}>
+                        Update Status: {release.updateStatus}
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
 
                 <TableCell className="text-right pr-6">
-                  <Button onClick={() => onEdit(release)} variant="outline" size="sm" className="rounded-full h-8 px-3">
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
+                  <div className="flex gap-2 justify-end">
+                    <Button onClick={() => onView(release)} variant="outline" size="sm" className="rounded-full h-8 px-3">
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button onClick={() => onEdit(release)} variant="outline" size="sm" className="rounded-full h-8 px-3">
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    {(release.status === 'Live' || release.status === 'Sent to Stores' || release.status === 'Under Review') && (
+                      <Button 
+                        onClick={() => onTakedown(release)} 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-full h-8 px-3 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/20"
+                      >
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Takedown
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </motion.tr>
             ))}
