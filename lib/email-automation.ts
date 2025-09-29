@@ -632,6 +632,42 @@ export async function processScheduledEmails(): Promise<void> {
   }
 }
 
+// Email 11: Takedown Request - triggered when user requests a takedown
+export async function triggerTakedownRequestEmail(userId: number, releaseTitle: string): Promise<boolean> {
+  try {
+    // Get user details
+    const userResult = await pool.query(
+      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      console.error(`User not found: ${userId}`);
+      return false;
+    }
+
+    const user = userResult.rows[0];
+    const artistName = user.artist_name || 'Artist';
+
+    // Send takedown request email
+    const success = await sendEmail({
+      to: user.email,
+      templateName: 'takedownRequest',
+      artistName,
+      releaseTitle
+    });
+
+    if (success) {
+      console.log(`Takedown request email sent to user ${userId} for release: ${releaseTitle}`);
+    }
+
+    return success;
+  } catch (error) {
+    console.error('Error triggering takedown request email:', error);
+    return false;
+  }
+}
+
 // Start automatic email processing (runs every 5 minutes)
 export function startEmailProcessor(): void {
   if (emailProcessor) {

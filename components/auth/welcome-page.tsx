@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CheckCircle, Mail, ArrowRight, Music, Sparkles } from "lucide-react"
@@ -9,10 +9,8 @@ import { motion } from "framer-motion"
 
 export function WelcomePage() {
   const router = useRouter()
-
-  const handleContinueToLogin = () => {
-    router.push('/auth/login')
-  }
+  const searchParams = useSearchParams()
+  const userEmail = searchParams.get('email') || 'your email address'
 
   return (
     <motion.div 
@@ -51,16 +49,8 @@ export function WelcomePage() {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="text-3xl font-bold text-[#333] dark:text-white mb-2"
           >
-            Welcome to ALERA! 🎉
+            Welcome to ALERA! Your account has been created successfully.
           </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-lg text-[#666] dark:text-gray-400"
-          >
-            Your account has been created successfully
-          </motion.p>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -79,7 +69,7 @@ export function WelcomePage() {
                 Check Your Email
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                We've sent you a verification email. Please click the link in the email to activate your account and start your music journey.
+                We've sent a verification email to <strong>{userEmail}</strong>. Please click the link in the email to activate your account and start your music journey.
               </p>
             </div>
           </motion.div>
@@ -100,7 +90,7 @@ export function WelcomePage() {
                 <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-purple-600 dark:text-purple-400">1</span>
                 </div>
-                <span className="text-[#666] dark:text-gray-400">Verify your email address</span>
+                <span className="text-[#666] dark:text-gray-400">Click the link we sent to verify your email</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
@@ -117,30 +107,15 @@ export function WelcomePage() {
             </div>
           </motion.div>
 
-          {/* Continue Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-          >
-            <Button
-              onClick={handleContinueToLogin}
-              className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            >
-              Continue to Login
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
-
-          {/* Additional Info */}
+          {/* Spam Folder Notice */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
             className="text-center"
           >
-            <p className="text-xs text-[#666] dark:text-gray-400">
-              Your 1-month free trial starts as soon as you verify your email
+            <p className="text-sm text-[#666] dark:text-gray-400">
+              Didn't receive it? Be sure to check your spam or junk folder.
             </p>
           </motion.div>
         </CardContent>

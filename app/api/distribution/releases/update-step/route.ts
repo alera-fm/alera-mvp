@@ -232,6 +232,17 @@ export async function PUT(request: NextRequest) {
 
       await client.query('COMMIT')
 
+      // Trigger release submitted email if submitted for review
+      if (submitForReview) {
+        try {
+          const { triggerReleaseSubmittedEmail } = await import('@/lib/email-automation')
+          await triggerReleaseSubmittedEmail(tokenData.userId, formData.release_title)
+        } catch (emailError) {
+          console.error('Error sending release submitted email:', emailError)
+          // Don't fail the release submission if email fails
+        }
+      }
+
       return NextResponse.json({
         success: true,
         message: submitForReview ? 'Release submitted for review' : 'Release updated successfully',

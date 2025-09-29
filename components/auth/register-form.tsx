@@ -48,7 +48,7 @@ export function RegisterForm() {
           title: "Success",
           description: "Registration successful! Please check your email to verify your account.",
         })
-        router.push('/auth/welcome')
+        router.push(`/auth/welcome?email=${encodeURIComponent(formData.email)}`)
       } else {
         toast({
           title: "Registration Failed",

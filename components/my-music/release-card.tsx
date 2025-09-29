@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Edit, Calendar, Clock, Hash, Building, Copyright, TrendingUp, Users, Play, FileText, CheckCircle, XCircle, AlertTriangle, Eye } from "lucide-react"
+import { Edit, Calendar, Clock, Hash, Building, Copyright, TrendingUp, Users, Play, FileText, CheckCircle, XCircle, AlertTriangle, Eye, Trash2 } from "lucide-react"
 import Image from "next/image"
 
 interface Release {
@@ -46,6 +46,7 @@ interface ReleaseCardProps {
   onView: (release: Release) => void
   onEdit: (release: Release) => void
   onTakedown: (release: Release) => void
+  onDelete: (release: Release) => void
 }
 
 const getStatusColor = (status: Release["status"]) => {
@@ -82,7 +83,7 @@ const getUpdateStatusColor = (updateStatus?: string) => {
   }
 }
 
-export function ReleaseCard({ release, onView, onEdit, onTakedown }: ReleaseCardProps) {
+export function ReleaseCard({ release, onView, onEdit, onTakedown, onDelete }: ReleaseCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -140,7 +141,7 @@ export function ReleaseCard({ release, onView, onEdit, onTakedown }: ReleaseCard
         <div className="flex items-center justify-between text-xs text-[#666] dark:text-gray-400">
           <div className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            <span>Submitted {new Date(release.submissionDate).toLocaleDateString()}</span>
+            <span>{release.status === 'Draft' ? 'Created' : 'Submitted'} {new Date(release.submissionDate).toLocaleDateString()}</span>
           </div>
         </div>
 
@@ -202,15 +203,15 @@ export function ReleaseCard({ release, onView, onEdit, onTakedown }: ReleaseCard
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <Button
           onClick={() => onView(release)}
           variant="outline"
           size="sm"
           className="flex-1 rounded-full h-9 text-sm font-medium"
         >
-          <Eye className="h-4 w-4 mr-2" />
-          View
+          <Eye className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">View</span>
         </Button>
         <Button
           onClick={() => onEdit(release)}
@@ -218,8 +219,8 @@ export function ReleaseCard({ release, onView, onEdit, onTakedown }: ReleaseCard
           size="sm"
           className="flex-1 rounded-full h-9 text-sm font-medium"
         >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
+          <Edit className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Edit</span>
         </Button>
         {(release.status === 'Live' || release.status === 'Sent to Stores' || release.status === 'Under Review') && (
           <Button
@@ -228,8 +229,19 @@ export function ReleaseCard({ release, onView, onEdit, onTakedown }: ReleaseCard
             size="sm"
             className="flex-1 rounded-full h-9 text-sm font-medium text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/20"
           >
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Takedown
+            <AlertTriangle className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Takedown</span>
+          </Button>
+        )}
+        {release.status === 'Draft' && (
+          <Button
+            onClick={() => onDelete(release)}
+            variant="outline"
+            size="sm"
+            className="flex-1 rounded-full h-9 text-sm font-medium text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20"
+          >
+            <Trash2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         )}
       </div>

@@ -56,11 +56,11 @@ export async function GET(request: NextRequest) {
       AND tier IN ('plus', 'pro')
     `
 
-    // Query for new releases today
+    // Query for new releases submitted today (not just created)
     const newReleasesQuery = `
       SELECT COUNT(*) as count 
       FROM releases 
-      WHERE created_at >= $1 AND created_at < $2
+      WHERE submitted_at >= $1 AND submitted_at < $2
     `
 
     // Execute all queries in parallel

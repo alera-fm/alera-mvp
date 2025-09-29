@@ -2,15 +2,58 @@ import { getEmailTemplate, replaceEmailPlaceholders } from './email-templates';
 import { pool } from './db';
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '465'),
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// Enhanced SMTP configuration with better error handling
+const createTransporter = () => {
+  const config = {
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    // Add connection timeout and retry settings
+    connectionTimeout: 60000, // 60 seconds
+    greetingTimeout: 30000, // 30 seconds
+    socketTimeout: 60000, // 60 seconds
+    // Enable debug for troubleshooting
+    debug: process.env.NODE_ENV === 'development',
+    logger: process.env.NODE_ENV === 'development',
+  };
+
+  // Log SMTP configuration in development only
+  if (process.env.NODE_ENV === 'development') {
+    console.log('SMTP Configuration:', {
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      user: config.auth.user,
+      hasPassword: !!config.auth.pass
+    });
+  }
+
+  return nodemailer.createTransport(config);
+};
+
+const transporter = createTransporter();
+
+// Email delivery logging function
+async function logEmailDelivery(
+  to: string, 
+  templateName: string, 
+  messageId: string | null, 
+  status: 'sent' | 'failed', 
+  errorMessage?: string
+): Promise<void> {
+  try {
+    await pool.query(`
+      INSERT INTO email_delivery_logs (to_email, template_name, message_id, status, error_message, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [to, templateName, messageId, status, errorMessage || null, new Date()]);
+  } catch (error) {
+    console.error('Failed to log email delivery:', error);
+  }
+}
 
 export interface EmailData {
   to: string;
@@ -34,8 +77,13 @@ export interface EmailQueueItem {
   createdAt: Date;
 }
 
-export async function sendEmail(emailData: EmailData): Promise<boolean> {
+export async function sendEmail(emailData: EmailData, retryCount = 0): Promise<boolean> {
+  const maxRetries = 3;
+  
   try {
+    // Verify SMTP connection
+    await transporter.verify();
+
     const template = getEmailTemplate(emailData.templateName);
     if (!template) {
       console.error(`Email template not found: ${emailData.templateName}`);
@@ -55,18 +103,39 @@ export async function sendEmail(emailData: EmailData): Promise<boolean> {
     const html = replaceEmailPlaceholders(template.html, emailData.artistName, placeholderData);
     const subject = replaceEmailPlaceholders(template.subject, emailData.artistName, placeholderData);
     
-    // Send email using existing SMTP configuration
-    const result = await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'no-reply@alera.fm',
+    const mailOptions = {
+      from: process.env.SMTP_FROM || 'ALERA <noreply@alera.fm>',
       to: emailData.to,
       subject: subject,
       html: html,
-    });
+      // Add headers for better deliverability
+      headers: {
+        'X-Mailer': 'ALERA Email System',
+        'X-Priority': '3',
+        'X-MSMail-Priority': 'Normal',
+      },
+      // Add message ID for tracking
+      messageId: `<${Date.now()}.${Math.random().toString(36).substr(2, 9)}@alera.fm>`,
+    };
 
-    console.log('Email sent successfully:', result.messageId);
+    const result = await transporter.sendMail(mailOptions);
+    
+    // Log successful delivery
+    await logEmailDelivery(emailData.to, emailData.templateName, result.messageId, 'sent');
+    
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error(`Error sending email (attempt ${retryCount + 1}):`, error);
+    
+    // Log failed delivery
+    await logEmailDelivery(emailData.to, emailData.templateName, null, 'failed', error instanceof Error ? error.message : String(error));
+    
+    // Retry logic
+    if (retryCount < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+      return sendEmail(emailData, retryCount + 1);
+    }
+    
     return false;
   }
 }

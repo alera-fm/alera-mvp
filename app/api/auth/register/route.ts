@@ -27,22 +27,18 @@ export async function POST(request: NextRequest) {
     // Hash password and generate verification token
     const passwordHash = await hashPassword(password)
     const verificationToken = generateRandomToken()
+    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
 
     // Create user
     const result = await query(
-      `INSERT INTO users (email, password_hash, artist_name, verification_token)
-       VALUES ($1, $2, $3, $4) RETURNING id, verification_token`,
-      [email, passwordHash, artistName || null, verificationToken],
+      `INSERT INTO users (email, password_hash, artist_name, verification_token, verification_token_expires)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, verification_token`,
+      [email, passwordHash, artistName || null, verificationToken, tokenExpires],
     )
 
     const userId = result.rows[0].id
-    console.log("User created with verification token:", result.rows[0].verification_token)
 
     // Note: AI onboarding will be triggered when user first opens the chat
-
-    // Verify the token was saved by querying it back
-    const verifyTokenSaved = await query("SELECT verification_token FROM users WHERE id = $1", [userId])
-    console.log("Token in database:", verifyTokenSaved.rows[0]?.verification_token)
 
     // Create subscription record for new user
     const subscription = await createSubscription(userId)

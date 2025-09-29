@@ -55,11 +55,12 @@ interface ReleasesGridProps {
   onView: (release: Release) => void
   onEdit: (release: Release) => void
   onTakedown: (release: Release) => void
+  onDelete: (release: Release) => void
 }
 
-export function ReleasesGrid({ releases, onView, onEdit, onTakedown }: ReleasesGridProps) {
+export function ReleasesGrid({ releases, onView, onEdit, onTakedown, onDelete }: ReleasesGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {releases.map((release, index) => (
         <motion.div
           key={release.id}
@@ -67,7 +68,7 @@ export function ReleasesGrid({ releases, onView, onEdit, onTakedown }: ReleasesG
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
         >
-          <ReleaseCard release={release} onView={onView} onEdit={onEdit} onTakedown={onTakedown} />
+          <ReleaseCard release={release} onView={onView} onEdit={onEdit} onTakedown={onTakedown} onDelete={onDelete} />
         </motion.div>
       ))}
     </div>

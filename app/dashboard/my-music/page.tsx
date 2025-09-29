@@ -10,6 +10,7 @@ import { ReleasesTable } from "@/components/my-music/releases-table";
 import { ViewReleaseModal } from "@/components/my-music/view-release-modal";
 import { PostSubmissionEditModal } from "@/components/my-music/post-submission-edit-modal";
 import { TakedownConfirmationModal } from "@/components/my-music/takedown-confirmation-modal";
+import { DeleteDraftModal } from "@/components/my-music/delete-draft-modal";
 import { useToast } from "@/hooks/use-toast";
 import { Music, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ export default function MyMusicPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isPostSubmissionEditModalOpen, setIsPostSubmissionEditModalOpen] = useState(false);
   const [isTakedownModalOpen, setIsTakedownModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -108,7 +110,7 @@ export default function MyMusicPage() {
           trackTitle: release.release_title,
           artistName: release.artist_name,
           releaseDate: release.release_date,
-          submissionDate: release.created_at,
+          submissionDate: release.submitted_at || release.created_at,
           status: mapStatus(release.status),
           streams: 0, // This would come from analytics API
           revenue: 0, // This would come from analytics API
@@ -212,6 +214,11 @@ export default function MyMusicPage() {
     setIsTakedownModalOpen(true);
   };
 
+  const handleDeleteDraft = (release: Release) => {
+    setSelectedRelease(release);
+    setIsDeleteModalOpen(true);
+  };
+
   const handleConfirmTakedown = async (releaseId: string) => {
     try {
       const token = localStorage.getItem("authToken");
@@ -243,6 +250,32 @@ export default function MyMusicPage() {
     }
   };
 
+  const handleConfirmDelete = async (releaseId: string) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(`/api/distribution/releases/${releaseId}/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        // Remove the release from the local state
+        setReleases((prev) =>
+          prev.filter((release) => release.id !== releaseId)
+        );
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete draft");
+      }
+    } catch (error) {
+      console.error("Error deleting draft:", error);
+      throw error;
+    }
+  };
+
   const handleSaveRelease = (updatedRelease: Release) => {
     setReleases((prev) =>
       prev.map((release) =>
@@ -255,6 +288,7 @@ export default function MyMusicPage() {
     setIsViewModalOpen(false);
     setIsPostSubmissionEditModalOpen(false);
     setIsTakedownModalOpen(false);
+    setIsDeleteModalOpen(false);
     setSelectedRelease(null);
   };
 
@@ -326,6 +360,7 @@ export default function MyMusicPage() {
                 onView={handleViewRelease}
                 onEdit={handleEditRelease}
                 onTakedown={handleRequestTakedown}
+                onDelete={handleDeleteDraft}
               />
             </div>
 
@@ -336,6 +371,7 @@ export default function MyMusicPage() {
                 onView={handleViewRelease}
                 onEdit={handleEditRelease}
                 onTakedown={handleRequestTakedown}
+                onDelete={handleDeleteDraft}
               />
             </div>
           </>
@@ -367,6 +403,14 @@ export default function MyMusicPage() {
         isOpen={isTakedownModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirmTakedown}
+      />
+
+      {/* Delete Draft Modal */}
+      <DeleteDraftModal
+        release={selectedRelease}
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

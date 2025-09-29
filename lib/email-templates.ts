@@ -1362,6 +1362,80 @@ family=Inter:wght@400;600;700&display=swap');
  </div> 
 </body> 
 </html>`
+  },
+
+  takedownRequest: {
+    subject: "Takedown Request Received for [Release Title]",
+    preHeader: "We've received your takedown request and will process it shortly.",
+    html: `<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+ <meta charset="UTF-8"> 
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">  <meta http-equiv="X-UA-Compatible" content="ie=edge"> 
+ <title>Takedown Request Received</title> 
+ <style> 
+ @import url('https://fonts.googleapis.com/css2? 
+family=Inter:wght@400;600;700&display=swap'); 
+ body { 
+ margin: 0; 
+ padding: 0; 
+ background-color: #121212; 
+ font-family: 'Inter', Arial, sans-serif; 
+ } 
+ .container { 
+ width: 100%; 
+ max-width: 600px; 
+ margin: 0 auto; 
+ padding: 40px 20px; 
+ background-color: #1A1A1A; 
+ color: #E0E0E0; 
+ } 
+ .header { 
+ text-align: center; 
+ padding-bottom: 30px; 
+ } 
+ .header img { 
+ max-width: 100px; 
+ } 
+ .content h1 { 
+ font-size: 28px; 
+ font-weight: 700; 
+ color: #FFFFFF;
+ margin-top: 0; 
+ } 
+ .content p { 
+ font-size: 16px; 
+ line-height: 1.6; 
+ color: #A3A3A3; 
+ } 
+ .footer { 
+ text-align: center; 
+ padding-top: 30px; 
+ border-top: 1px solid #333333; 
+ font-size: 12px; 
+ color: #757575; 
+ } 
+ </style> 
+</head> 
+<body style="margin: 0; padding: 0; background-color: #121212; font-family: 'Inter', Arial, sans serif;"> 
+ <div class="container" style="width: 100%; max-width: 600px; margin: 0 auto; padding: 40px  20px; background-color: #1A1A1A; color: #E0E0E0;"> 
+ <div class="header" style="text-align: center; padding-bottom: 30px;">  <img src="https://i.imgur.com/87B9DNn.jpeg" alt="ALERA Logo" style="max-width:  600px;"> 
+ </div>
+ <div class="content"> 
+ <h1 style="font-size: 28px; font-weight: 700; text-align: center;color: #FFFFFF; margin-top: 0;">Takedown Request Received</h1> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Hi [Artist Name],</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">We've received your takedown request for "[Release Title]". Our team will process this request and coordinate with the distribution partners to remove your release from all platforms.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Please note that takedown requests can take 7-14 business days to be fully processed across all platforms. You'll receive a confirmation email once the takedown is complete.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">You can track the status of your takedown request in the "My Music" tab of your ALERA cockpit.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">If you have any questions about this process, please don't hesitate to contact us.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Thanks,<br>The ALERA  Team</p> 
+ </div> 
+ <div class="footer" style="text-align: center; padding-top: 30px; border-top: 1px solid  #333333; font-size: 12px; color: #757575;"> 
+ <p>&copy; 2025 ALERA. All Rights Reserved.<br> 
+ You received this email because you signed up for an account on alera.fm.</p>  </div> 
+ </div> 
+</body> 
+</html>`
   }
 };
 

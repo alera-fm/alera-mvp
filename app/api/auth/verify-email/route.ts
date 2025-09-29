@@ -14,15 +14,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Find user with verification token
+    // Find user with verification token and check expiration
     const result = await query(
-      'SELECT id FROM users WHERE verification_token = $1',
+      'SELECT id, verification_token_expires FROM users WHERE verification_token = $1',
       [token]
     )
 
     if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'Invalid verification token' },
+        { status: 400 }
+      )
+    }
+
+    const user = result.rows[0]
+    
+    // Check if token has expired
+    if (user.verification_token_expires && new Date() > new Date(user.verification_token_expires)) {
+      return NextResponse.json(
+        { error: 'Verification token has expired. Please request a new verification email.' },
         { status: 400 }
       )
     }

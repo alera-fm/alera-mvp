@@ -36,13 +36,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate new verification token
+    // Generate new verification token with expiration
     const verificationToken = generateRandomToken()
+    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
 
-    // Update verification token
+    // Update verification token and expiration
     await query(
-      'UPDATE users SET verification_token = $1 WHERE email = $2',
-      [verificationToken, email]
+      'UPDATE users SET verification_token = $1, verification_token_expires = $2 WHERE email = $3',
+      [verificationToken, tokenExpires, email]
     )
 
     // Send verification email

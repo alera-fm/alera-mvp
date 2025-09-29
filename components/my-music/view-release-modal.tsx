@@ -96,8 +96,29 @@ const getStatusIcon = (status: string) => {
       return <Clock className="h-4 w-4" />
     case "Draft":
       return <FileText className="h-4 w-4" />
+    case "Takedown":
+      return <Clock className="h-4 w-4" />
     default:
       return <Clock className="h-4 w-4" />
+  }
+}
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case "Live":
+      return "Live"
+    case "Sent to Stores":
+      return "Sent to Stores"
+    case "Under Review":
+      return "Under Review"
+    case "Pending":
+      return "Pending"
+    case "Draft":
+      return "Draft"
+    case "Takedown":
+      return "Takendown"
+    default:
+      return status
   }
 }
 
@@ -273,7 +294,7 @@ export function ViewReleaseModal({ release, isOpen, onClose, onEdit }: ViewRelea
                               ? "text-green-600 dark:text-green-400 font-medium"
                               : "text-gray-600 dark:text-gray-400"
                           }`}>
-                            Sent to Stores
+                            {getStatusText(release.status)}
                           </span>
                         </div>
                       </div>

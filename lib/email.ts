@@ -15,17 +15,14 @@ export const sendVerificationEmail = async (email: string, token: string, artist
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
     const verificationUrl = `${appUrl}/auth/verify-email?token=${token}`
 
-    console.log('Sending verification email to:', email)
-    console.log('Verification URL:', verificationUrl)
+    // Log in development only
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Sending verification email to:', email)
+      console.log('Verification URL:', verificationUrl)
+    }
 
     // Import the email service to use the new template
     const { sendEmail } = await import('./email-service')
-    const { getEmailTemplate } = await import('./email-templates')
-
-    const template = getEmailTemplate('emailVerification')
-    if (!template) {
-      throw new Error('Email verification template not found')
-    }
 
     const success = await sendEmail({
       to: email,
@@ -35,13 +32,13 @@ export const sendVerificationEmail = async (email: string, token: string, artist
     })
 
     if (success) {
-      console.log('Verification email sent successfully')
+      return true
     } else {
       throw new Error('Failed to send verification email')
     }
   } catch (error) {
     console.error('Failed to send verification email:', error)
-    throw new Error('Failed to send verification email')
+    throw new Error(`Failed to send verification email: ${error.message}`)
   }
 }
 

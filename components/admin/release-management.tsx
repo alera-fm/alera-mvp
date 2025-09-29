@@ -515,10 +515,11 @@ export function ReleaseManagement() {
                       )}
                     </div>
 
-                    <div className="text-xs text-gray-600">
-                      {formatDistanceToNow(new Date(release.submitted_at || release.created_at), {
-                        addSuffix: true,
-                      })}
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div>Created: {formatDistanceToNow(new Date(release.created_at), { addSuffix: true })}</div>
+                      {release.submitted_at && (
+                        <div>Submitted: {formatDistanceToNow(new Date(release.submitted_at), { addSuffix: true })}</div>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -585,7 +586,10 @@ export function ReleaseManagement() {
                                     {selectedRelease.update_status && (
                                       <div><strong>Update Status:</strong> {getUpdateStatusBadge(selectedRelease.update_status)}</div>
                                     )}
-                                    <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at || selectedRelease.created_at), { addSuffix: true })}</div>
+                                    <div><strong>Created:</strong> {formatDistanceToNow(new Date(selectedRelease.created_at), { addSuffix: true })}</div>
+                                    {selectedRelease.submitted_at && (
+                                      <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at), { addSuffix: true })}</div>
+                                    )}
                                     <div><strong>Last Updated:</strong> {formatDistanceToNow(new Date(selectedRelease.updated_at || selectedRelease.submitted_at), { addSuffix: true })}</div>
                                   </div>
                                 </div>
@@ -927,9 +931,12 @@ export function ReleaseManagement() {
                       <TableCell>{getStatusBadge(release.status)}</TableCell>
                       <TableCell>{getUpdateStatusBadge(release.update_status)}</TableCell>
                       <TableCell className="text-sm text-gray-600">
-                        {formatDistanceToNow(new Date(release.submitted_at || release.created_at), {
-                          addSuffix: true,
-                        })}
+                        <div className="space-y-1">
+                          <div>Created: {formatDistanceToNow(new Date(release.created_at), { addSuffix: true })}</div>
+                          {release.submitted_at && (
+                            <div>Submitted: {formatDistanceToNow(new Date(release.submitted_at), { addSuffix: true })}</div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -991,7 +998,10 @@ export function ReleaseManagement() {
                                         {selectedRelease.update_status && (
                                           <div><strong>Update Status:</strong> {getUpdateStatusBadge(selectedRelease.update_status)}</div>
                                         )}
-                                        <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at || selectedRelease.created_at), { addSuffix: true })}</div>
+                                        <div><strong>Created:</strong> {formatDistanceToNow(new Date(selectedRelease.created_at), { addSuffix: true })}</div>
+                                    {selectedRelease.submitted_at && (
+                                      <div><strong>Submitted:</strong> {formatDistanceToNow(new Date(selectedRelease.submitted_at), { addSuffix: true })}</div>
+                                    )}
                                         <div><strong>Last Updated:</strong> {formatDistanceToNow(new Date(selectedRelease.updated_at || selectedRelease.submitted_at), { addSuffix: true })}</div>
                                       </div>
                                     </div>

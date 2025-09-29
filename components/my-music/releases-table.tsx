@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Edit, Calendar, FileText, Clock, CheckCircle, XCircle, AlertTriangle, Play, Eye } from "lucide-react"
+import { Edit, Calendar, FileText, Clock, CheckCircle, XCircle, AlertTriangle, Play, Eye, Trash2 } from "lucide-react"
 import Image from "next/image"
 
 interface Release {
@@ -61,6 +61,7 @@ interface ReleasesTableProps {
   onView: (release: Release) => void
   onEdit: (release: Release) => void
   onTakedown: (release: Release) => void
+  onDelete: (release: Release) => void
 }
 
 const getStatusColor = (status: Release["status"]) => {
@@ -97,7 +98,7 @@ const getUpdateStatusColor = (updateStatus?: string) => {
   }
 }
 
-export function ReleasesTable({ releases, onView, onEdit, onTakedown }: ReleasesTableProps) {
+export function ReleasesTable({ releases, onView, onEdit, onTakedown, onDelete }: ReleasesTableProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -162,7 +163,7 @@ export function ReleasesTable({ releases, onView, onEdit, onTakedown }: Releases
                     {release.releaseDate ? new Date(release.releaseDate).toLocaleDateString() : 'Date not set'}
                   </div>
                   <div className="text-xs text-[#666] dark:text-gray-400 mt-1">
-                    Submitted: {new Date(release.submissionDate).toLocaleDateString()}
+                    {release.status === 'Draft' ? 'Created' : 'Submitted'}: {new Date(release.submissionDate).toLocaleDateString()}
                   </div>
                   <div className="text-xs text-[#666] dark:text-gray-400 mt-1 capitalize">
                     {release.distributionType} • {release.trackCount || 0} {release.trackCount === 1 ? 'track' : 'tracks'}
@@ -216,24 +217,35 @@ export function ReleasesTable({ releases, onView, onEdit, onTakedown }: Releases
                 </TableCell>
 
                 <TableCell className="text-right pr-6">
-                  <div className="flex gap-2 justify-end">
-                    <Button onClick={() => onView(release)} variant="outline" size="sm" className="rounded-full h-8 px-3">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    <Button onClick={() => onView(release)} variant="outline" size="sm" className="rounded-full h-8 px-2 sm:px-3">
+                      <Eye className="h-3 w-3 sm:mr-1" />
+                      <span className="hidden sm:inline">View</span>
                     </Button>
-                    <Button onClick={() => onEdit(release)} variant="outline" size="sm" className="rounded-full h-8 px-3">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
+                    <Button onClick={() => onEdit(release)} variant="outline" size="sm" className="rounded-full h-8 px-2 sm:px-3">
+                      <Edit className="h-3 w-3 sm:mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                     {(release.status === 'Live' || release.status === 'Sent to Stores' || release.status === 'Under Review') && (
                       <Button 
                         onClick={() => onTakedown(release)} 
                         variant="outline" 
                         size="sm" 
-                        className="rounded-full h-8 px-3 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/20"
+                        className="rounded-full h-8 px-2 sm:px-3 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/20"
                       >
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Takedown
+                        <AlertTriangle className="h-3 w-3 sm:mr-1" />
+                        <span className="hidden sm:inline">Takedown</span>
+                      </Button>
+                    )}
+                    {release.status === 'Draft' && (
+                      <Button 
+                        onClick={() => onDelete(release)} 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-full h-8 px-2 sm:px-3 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="h-3 w-3 sm:mr-1" />
+                        <span className="hidden sm:inline">Delete</span>
                       </Button>
                     )}
                   </div>

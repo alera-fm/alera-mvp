@@ -56,6 +56,15 @@ export async function POST(
 
     console.log('Successfully updated release status to takedown_requested:', result.rows[0].id)
 
+    // Trigger takedown request email
+    try {
+      const { triggerTakedownRequestEmail } = await import('@/lib/email-automation')
+      await triggerTakedownRequestEmail(tokenData.userId, release.release_title)
+    } catch (emailError) {
+      console.error('Error sending takedown request email:', emailError)
+      // Don't fail the takedown request if email fails
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Takedown request submitted successfully',
