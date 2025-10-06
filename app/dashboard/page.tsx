@@ -1,14 +1,17 @@
 import { HeaderSection } from "@/components/header-section";
 import { SummarySection } from "@/components/summary-section";
-
 import { DistributeCard } from "@/components/distribute-card";
 import { MobileNavigation } from "@/components/mobile-navigation";
+import { OnboardingDashboard } from "@/components/onboarding-dashboard";
 
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#f8f8f8] dark:bg-[#0a0a13] pb-32 md:pb-6 overflow-x-hidden">
       <div className="max-w-4xl mx-auto p-5 space-y-6">
         <HeaderSection />
+
+        {/* Onboarding Dashboard with conditional rendering */}
+        <OnboardingDashboard />
 
         {/* DistributeCard is now at the top */}
         <DistributeCard />
@@ -19,8 +22,6 @@ export default function DashboardPage() {
           </h2>
           <SummarySection />
         </div>
-
-     
       </div>
 
       <MobileNavigation />

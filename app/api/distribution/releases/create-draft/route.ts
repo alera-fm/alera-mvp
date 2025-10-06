@@ -1,23 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
-import { pool } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
+import { pool } from "@/lib/db";
+import { getSubscription, checkReleaseLimit } from "@/lib/subscription-utils";
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = request.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
-      return NextResponse.json({ error: 'No token provided' }, { status: 401 })
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
 
-    const tokenData = verifyToken(token)
+    const tokenData = verifyToken(token);
     if (!tokenData) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { title } = await request.json()
-    
+    const { title } = await request.json();
+
     if (!title || title.trim().length === 0) {
-      return NextResponse.json({ error: 'Release title is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: "Release title is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user can create a new release based on subscription
+    const releaseCheck = await checkReleaseLimit(tokenData.userId);
+    if (!releaseCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: releaseCheck.reason || "Release limit reached",
+          requiresUpgrade: true,
+          upgradeRequired: releaseCheck.upgradeRequired,
+        },
+        { status: 403 }
+      );
     }
 
     // Create new release with draft status
@@ -31,10 +48,10 @@ export async function POST(request: NextRequest) {
         updated_at
       ) VALUES ($1, $2, $3, $4, NOW(), NOW()) 
       RETURNING id, release_title, status, current_step, created_at`,
-      [tokenData.userId, title.trim(), 'draft', 'basic_info']
-    )
+      [tokenData.userId, title.trim(), "draft", "basic_info"]
+    );
 
-    const release = result.rows[0]
+    const release = result.rows[0];
 
     return NextResponse.json({
       success: true,
@@ -43,15 +60,14 @@ export async function POST(request: NextRequest) {
         title: release.release_title,
         status: release.status,
         currentStep: release.current_step,
-        createdAt: release.created_at
-      }
-    })
-
+        createdAt: release.created_at,
+      },
+    });
   } catch (error) {
-    console.error('Error creating draft release:', error)
+    console.error("Error creating draft release:", error);
     return NextResponse.json(
-      { error: 'Failed to create draft release' },
+      { error: "Failed to create draft release" },
       { status: 500 }
-    )
+    );
   }
 }

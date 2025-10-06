@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { uploadFile } from '@/lib/file-upload';
-import { verifyToken } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { uploadFile } from "@/lib/file-upload";
+import { verifyToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,28 +16,49 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const folder = (formData.get('folder') as string) || 'uploads';
+    const file = formData.get("file") as File;
+    const folder = (formData.get("folder") as string) || "uploads";
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Validate file type and size
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 100MB' }, { status: 400 });
+      return NextResponse.json(
+        { error: "File too large. Maximum size is 100MB" },
+        { status: 400 }
+      );
     }
 
     // Validate file types
-    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    const allowedAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/flac', 'audio/aiff', 'audio/x-ms-wma'];
+    const allowedImageTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    const allowedAudioTypes = [
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/wav",
+      "audio/m4a",
+      "audio/flac",
+      "audio/aiff",
+      "audio/x-ms-wma",
+    ];
     const allowedTypes = [...allowedImageTypes, ...allowedAudioTypes];
 
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: 'Invalid file type. Only images (JPG, PNG, GIF, WebP) and audio files (MP3, WAV, M4A, FLAC, AIFF, WMA) are allowed' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error:
+            "Invalid file type. Only images (JPG, PNG, GIF, WebP) and audio files (MP3, WAV, M4A, FLAC, AIFF, WMA) are allowed",
+        },
+        { status: 400 }
+      );
     }
 
     // Upload file
@@ -52,11 +73,10 @@ export async function POST(request: NextRequest) {
       url: result.url,
       filename: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
     });
-
   } catch (error) {
-    console.error('Upload API error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    console.error("Upload API error:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

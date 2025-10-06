@@ -39,6 +39,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Shield,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MobileNavigation } from "@/components/mobile-navigation";
@@ -46,6 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { HeaderSection } from "@/components/header-section";
 import { useAuth } from "@/context/AuthContext";
 import { SubscriptionDetails } from "@/components/subscription/SubscriptionDetails";
+import { IdentityVerificationSection } from "@/components/settings/identity-verification-section";
 
 interface UserProfile {
   id: number;
@@ -101,11 +103,11 @@ function SettingsPageContent() {
   const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState(
-    searchParams?.get("tab") || "profile",
+    searchParams?.get("tab") || "profile"
   );
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [billingHistory, setBillingHistory] = useState<BillingTransaction[]>(
-    [],
+    []
   );
   const [loginHistory, setLoginHistory] = useState<LoginSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,7 +150,6 @@ function SettingsPageContent() {
           Authorization: `Bearer ${token}`,
         },
       });
-      
 
       if (response.ok) {
         const data = await response.json();
@@ -265,7 +266,7 @@ function SettingsPageContent() {
               <div className="space-y-2">
                 <p>{data.message}</p>
                 <div className="mt-2">
-                  <a 
+                  <a
                     href={data.verification_url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -354,7 +355,10 @@ function SettingsPageContent() {
   useEffect(() => {
     // Update active tab when URL search params change
     const tab = searchParams?.get("tab");
-    if (tab && ["profile", "billing", "login"].includes(tab)) {
+    if (
+      tab &&
+      ["profile", "billing", "login", "identity-check"].includes(tab)
+    ) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -388,7 +392,7 @@ function SettingsPageContent() {
             onValueChange={setActiveTab}
             className="space-y-6"
           >
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Profile</span>
@@ -396,6 +400,13 @@ function SettingsPageContent() {
               <TabsTrigger value="billing" className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
                 <span className="hidden sm:inline">Billing</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="identity-check"
+                className="flex items-center gap-2"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Identity Check</span>
               </TabsTrigger>
               <TabsTrigger value="login" className="flex items-center gap-2">
                 <Monitor className="h-4 w-4" />
@@ -507,10 +518,14 @@ function SettingsPageContent() {
                       </div>
 
                       <div className="space-y-4">
-                        <h3 className="text-md font-medium">Address Information</h3>
+                        <h3 className="text-md font-medium">
+                          Address Information
+                        </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="address_line_1">Address Line 1</Label>
+                            <Label htmlFor="address_line_1">
+                              Address Line 1
+                            </Label>
                             <Input
                               id="address_line_1"
                               placeholder="Street address"
@@ -521,7 +536,9 @@ function SettingsPageContent() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="address_line_2">Address Line 2</Label>
+                            <Label htmlFor="address_line_2">
+                              Address Line 2
+                            </Label>
                             <Input
                               id="address_line_2"
                               placeholder="Apartment, suite, etc. (optional)"
@@ -543,7 +560,9 @@ function SettingsPageContent() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="state_province">State/Province</Label>
+                            <Label htmlFor="state_province">
+                              State/Province
+                            </Label>
                             <Input
                               id="state_province"
                               placeholder="State or Province"
@@ -601,7 +620,9 @@ function SettingsPageContent() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor="business_email">Business Email</Label>
+                              <Label htmlFor="business_email">
+                                Business Email
+                              </Label>
                               <div className="relative">
                                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                 <Input
@@ -610,7 +631,10 @@ function SettingsPageContent() {
                                   placeholder="Enter business email"
                                   value={profile.business_email || ""}
                                   onChange={(e) =>
-                                    updateProfile("business_email", e.target.value)
+                                    updateProfile(
+                                      "business_email",
+                                      e.target.value
+                                    )
                                   }
                                   className="pl-10"
                                 />
@@ -618,7 +642,9 @@ function SettingsPageContent() {
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor="business_phone">Business Phone</Label>
+                              <Label htmlFor="business_phone">
+                                Business Phone
+                              </Label>
                               <div className="relative">
                                 <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                 <Input
@@ -626,7 +652,10 @@ function SettingsPageContent() {
                                   placeholder="Enter business phone"
                                   value={profile.business_phone || ""}
                                   onChange={(e) =>
-                                    updateProfile("business_phone", e.target.value)
+                                    updateProfile(
+                                      "business_phone",
+                                      e.target.value
+                                    )
                                   }
                                   className="pl-10"
                                 />
@@ -635,65 +664,94 @@ function SettingsPageContent() {
                           </div>
 
                           <div className="space-y-4">
-                            <h4 className="text-md font-medium">Business Address</h4>
+                            <h4 className="text-md font-medium">
+                              Business Address
+                            </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
-                                <Label htmlFor="business_address_line_1">Business Address Line 1</Label>
+                                <Label htmlFor="business_address_line_1">
+                                  Business Address Line 1
+                                </Label>
                                 <Input
                                   id="business_address_line_1"
                                   placeholder="Business street address"
                                   value={profile.business_address_line_1 || ""}
                                   onChange={(e) =>
-                                    updateProfile("business_address_line_1", e.target.value)
+                                    updateProfile(
+                                      "business_address_line_1",
+                                      e.target.value
+                                    )
                                   }
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label htmlFor="business_address_line_2">Business Address Line 2</Label>
+                                <Label htmlFor="business_address_line_2">
+                                  Business Address Line 2
+                                </Label>
                                 <Input
                                   id="business_address_line_2"
                                   placeholder="Suite, floor, etc. (optional)"
                                   value={profile.business_address_line_2 || ""}
                                   onChange={(e) =>
-                                    updateProfile("business_address_line_2", e.target.value)
+                                    updateProfile(
+                                      "business_address_line_2",
+                                      e.target.value
+                                    )
                                   }
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label htmlFor="business_city">Business City</Label>
+                                <Label htmlFor="business_city">
+                                  Business City
+                                </Label>
                                 <Input
                                   id="business_city"
                                   placeholder="Business city"
                                   value={profile.business_city || ""}
                                   onChange={(e) =>
-                                    updateProfile("business_city", e.target.value)
+                                    updateProfile(
+                                      "business_city",
+                                      e.target.value
+                                    )
                                   }
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label htmlFor="business_state_province">Business State/Province</Label>
+                                <Label htmlFor="business_state_province">
+                                  Business State/Province
+                                </Label>
                                 <Input
                                   id="business_state_province"
                                   placeholder="Business state or province"
                                   value={profile.business_state_province || ""}
                                   onChange={(e) =>
-                                    updateProfile("business_state_province", e.target.value)
+                                    updateProfile(
+                                      "business_state_province",
+                                      e.target.value
+                                    )
                                   }
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label htmlFor="business_postal_code">Business Postal Code</Label>
+                                <Label htmlFor="business_postal_code">
+                                  Business Postal Code
+                                </Label>
                                 <Input
                                   id="business_postal_code"
                                   placeholder="Business ZIP/Postal Code"
                                   value={profile.business_postal_code || ""}
                                   onChange={(e) =>
-                                    updateProfile("business_postal_code", e.target.value)
+                                    updateProfile(
+                                      "business_postal_code",
+                                      e.target.value
+                                    )
                                   }
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label htmlFor="business_country">Business Country</Label>
+                                <Label htmlFor="business_country">
+                                  Business Country
+                                </Label>
                                 <div className="relative">
                                   <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                   <Input
@@ -701,7 +759,10 @@ function SettingsPageContent() {
                                     placeholder="Business country"
                                     value={profile.business_country || ""}
                                     onChange={(e) =>
-                                      updateProfile("business_country", e.target.value)
+                                      updateProfile(
+                                        "business_country",
+                                        e.target.value
+                                      )
                                     }
                                     className="pl-10"
                                   />
@@ -762,7 +823,7 @@ function SettingsPageContent() {
                             <TableRow key={transaction.id}>
                               <TableCell className="font-medium">
                                 {new Date(
-                                  transaction.transaction_date,
+                                  transaction.transaction_date
                                 ).toLocaleDateString()}
                               </TableCell>
                               <TableCell className="max-w-xs truncate">
@@ -771,7 +832,7 @@ function SettingsPageContent() {
                               <TableCell>
                                 <Badge variant="outline">
                                   {formatTransactionType(
-                                    transaction.transaction_type,
+                                    transaction.transaction_type
                                   )}
                                 </Badge>
                               </TableCell>
@@ -785,13 +846,17 @@ function SettingsPageContent() {
                                 <div className="flex items-center gap-2">
                                   {getStatusIcon(transaction.status)}
                                   <Badge
-                                    className={getStatusColor(transaction.status)}
+                                    className={getStatusColor(
+                                      transaction.status
+                                    )}
                                   >
                                     {transaction.status}
                                   </Badge>
                                 </div>
                               </TableCell>
-                              <TableCell>{transaction.payment_method}</TableCell>
+                              <TableCell>
+                                {transaction.payment_method}
+                              </TableCell>
                               <TableCell className="font-mono text-sm">
                                 {transaction.reference_id}
                               </TableCell>
@@ -801,7 +866,12 @@ function SettingsPageContent() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => window.open(transaction.invoice_url, '_blank')}
+                                      onClick={() =>
+                                        window.open(
+                                          transaction.invoice_url,
+                                          "_blank"
+                                        )
+                                      }
                                     >
                                       View Invoice
                                     </Button>
@@ -810,7 +880,12 @@ function SettingsPageContent() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => window.open(transaction.pdf_url, '_blank')}
+                                      onClick={() =>
+                                        window.open(
+                                          transaction.pdf_url,
+                                          "_blank"
+                                        )
+                                      }
                                     >
                                       Download PDF
                                     </Button>
@@ -833,7 +908,7 @@ function SettingsPageContent() {
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium">
                               {new Date(
-                                transaction.transaction_date,
+                                transaction.transaction_date
                               ).toLocaleDateString()}
                             </div>
                             <div className="flex items-center gap-2">
@@ -853,7 +928,7 @@ function SettingsPageContent() {
                             <div className="flex items-center justify-between">
                               <Badge variant="outline">
                                 {formatTransactionType(
-                                  transaction.transaction_type,
+                                  transaction.transaction_type
                                 )}
                               </Badge>
                               <div className="font-medium flex items-center gap-1">
@@ -867,14 +942,20 @@ function SettingsPageContent() {
                                 Ref: {transaction.reference_id}
                               </div>
                             </div>
-                            
-                            {(transaction.invoice_url || transaction.pdf_url) && (
+
+                            {(transaction.invoice_url ||
+                              transaction.pdf_url) && (
                               <div className="flex gap-2 pt-2">
                                 {transaction.invoice_url && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => window.open(transaction.invoice_url, '_blank')}
+                                    onClick={() =>
+                                      window.open(
+                                        transaction.invoice_url,
+                                        "_blank"
+                                      )
+                                    }
                                     className="text-xs"
                                   >
                                     View Invoice
@@ -884,7 +965,9 @@ function SettingsPageContent() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => window.open(transaction.pdf_url, '_blank')}
+                                    onClick={() =>
+                                      window.open(transaction.pdf_url, "_blank")
+                                    }
                                     className="text-xs"
                                   >
                                     Download PDF
@@ -905,6 +988,10 @@ function SettingsPageContent() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="identity-check">
+              <IdentityVerificationSection />
             </TabsContent>
 
             <TabsContent value="login">
@@ -938,12 +1025,12 @@ function SettingsPageContent() {
                                 <div>
                                   <div>
                                     {new Date(
-                                      session.login_time,
+                                      session.login_time
                                     ).toLocaleDateString()}
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     {new Date(
-                                      session.login_time,
+                                      session.login_time
                                     ).toLocaleTimeString()}
                                   </div>
                                 </div>
@@ -988,12 +1075,12 @@ function SettingsPageContent() {
                             <div className="text-sm font-medium">
                               <div>
                                 {new Date(
-                                  session.login_time,
+                                  session.login_time
                                 ).toLocaleDateString()}
                               </div>
                               <div className="text-xs text-gray-500">
                                 {new Date(
-                                  session.login_time,
+                                  session.login_time
                                 ).toLocaleTimeString()}
                               </div>
                             </div>
@@ -1039,7 +1126,10 @@ function SettingsPageContent() {
         <MobileNavigation />
 
         {/* Email Change Dialog */}
-        <Dialog open={showEmailChangeDialog} onOpenChange={setShowEmailChangeDialog}>
+        <Dialog
+          open={showEmailChangeDialog}
+          onOpenChange={setShowEmailChangeDialog}
+        >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Change Email Address</DialogTitle>
@@ -1066,8 +1156,9 @@ function SettingsPageContent() {
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  📧 A verification email will be sent to your new email address. 
-                  You'll need to click the verification link to complete the change.
+                  📧 A verification email will be sent to your new email
+                  address. You'll need to click the verification link to
+                  complete the change.
                 </p>
               </div>
             </div>
@@ -1086,7 +1177,9 @@ function SettingsPageContent() {
                 onClick={handleEmailChangeRequest}
                 disabled={isRequestingEmailChange || !newEmail.trim()}
               >
-                {isRequestingEmailChange ? "Sending..." : "Send Verification Email"}
+                {isRequestingEmailChange
+                  ? "Sending..."
+                  : "Send Verification Email"}
               </Button>
             </div>
           </DialogContent>
@@ -1098,16 +1191,18 @@ function SettingsPageContent() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={
-      <ProtectedRoute>
-        <div className="min-h-screen bg-[#f8f8f8] dark:bg-[#0a0a13] p-4 md:p-6">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-            <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
+    <Suspense
+      fallback={
+        <ProtectedRoute>
+          <div className="min-h-screen bg-[#f8f8f8] dark:bg-[#0a0a13] p-4 md:p-6">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+              <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
           </div>
-        </div>
-      </ProtectedRoute>
-    }>
+        </ProtectedRoute>
+      }
+    >
       <SettingsPageContent />
     </Suspense>
   );

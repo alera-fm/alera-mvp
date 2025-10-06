@@ -220,11 +220,14 @@ export function DistributionFlow({
   onSave,
 }: DistributionFlowProps) {
   const { toast } = useToast();
-  const { canAccessFeature, showUpgradeDialog, subscription } = useSubscription();
+  const { canAccessFeature, showUpgradeDialog, subscription } =
+    useSubscription();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [audioUploadStates, setAudioUploadStates] = useState<{[key: number]: {uploading: boolean}}>({});
+  const [audioUploadStates, setAudioUploadStates] = useState<{
+    [key: number]: { uploading: boolean };
+  }>({});
   const [canCreateRelease, setCanCreateRelease] = useState(true);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [formData, setFormData] = useState<Release>({
@@ -294,12 +297,18 @@ export function DistributionFlow({
         instrumental: Boolean(existingRelease.instrumental),
         previously_released: Boolean(existingRelease.previously_released),
         terms_agreed: Boolean(existingRelease.terms_agreed),
-        fake_streaming_agreement: Boolean(existingRelease.fake_streaming_agreement),
+        fake_streaming_agreement: Boolean(
+          existingRelease.fake_streaming_agreement
+        ),
         distribution_agreement: Boolean(existingRelease.distribution_agreement),
         artist_names_agreement: Boolean(existingRelease.artist_names_agreement),
         snapchat_terms: Boolean(existingRelease.snapchat_terms),
-        youtube_music_agreement: Boolean(existingRelease.youtube_music_agreement),
-        fraud_prevention_agreement: Boolean(existingRelease.fraud_prevention_agreement)
+        youtube_music_agreement: Boolean(
+          existingRelease.youtube_music_agreement
+        ),
+        fraud_prevention_agreement: Boolean(
+          existingRelease.fraud_prevention_agreement
+        ),
       };
       setFormData(sanitizedData);
     }
@@ -312,10 +321,10 @@ export function DistributionFlow({
         try {
           const response = await fetch(`/api/distribution/releases/${editId}`, {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
           });
-          
+
           if (response.ok) {
             const data = await response.json();
             if (data.release) {
@@ -336,7 +345,8 @@ export function DistributionFlow({
                 version_info: data.release.version_info || "Normal",
                 version_other: data.release.version_other || "",
                 release_date: data.release.release_date || null,
-                original_release_date: data.release.original_release_date || null,
+                original_release_date:
+                  data.release.original_release_date || null,
                 album_cover_url: data.release.album_cover_url || "",
                 track_price: data.release.track_price || 0.99,
                 additional_delivery: data.release.additional_delivery || [],
@@ -349,28 +359,38 @@ export function DistributionFlow({
                 instrumental: Boolean(data.release.instrumental),
                 previously_released: Boolean(data.release.previously_released),
                 terms_agreed: Boolean(data.release.terms_agreed),
-                fake_streaming_agreement: Boolean(data.release.fake_streaming_agreement),
-                distribution_agreement: Boolean(data.release.distribution_agreement),
-                artist_names_agreement: Boolean(data.release.artist_names_agreement),
+                fake_streaming_agreement: Boolean(
+                  data.release.fake_streaming_agreement
+                ),
+                distribution_agreement: Boolean(
+                  data.release.distribution_agreement
+                ),
+                artist_names_agreement: Boolean(
+                  data.release.artist_names_agreement
+                ),
                 snapchat_terms: Boolean(data.release.snapchat_terms),
-                youtube_music_agreement: Boolean(data.release.youtube_music_agreement),
-                fraud_prevention_agreement: Boolean(data.release.fraud_prevention_agreement)
+                youtube_music_agreement: Boolean(
+                  data.release.youtube_music_agreement
+                ),
+                fraud_prevention_agreement: Boolean(
+                  data.release.fraud_prevention_agreement
+                ),
               };
-              
+
               setFormData(sanitizedData);
               // Set current step based on release data
               if (data.release.current_step) {
-                const stepMap: {[key: string]: number} = {
-                  'basic_info': 1,
-                  'tracks': 2,
-                  'terms': 3
+                const stepMap: { [key: string]: number } = {
+                  basic_info: 1,
+                  tracks: 2,
+                  terms: 3,
                 };
                 setCurrentStep(stepMap[data.release.current_step] || 1);
               }
             }
           }
         } catch (error) {
-          console.error('Error loading release data:', error);
+          console.error("Error loading release data:", error);
           toast({
             title: "Error",
             description: "Failed to load release data. Please try again.",
@@ -378,7 +398,7 @@ export function DistributionFlow({
           });
         }
       };
-      
+
       loadReleaseData();
     }
   }, [editId, toast]);
@@ -392,18 +412,18 @@ export function DistributionFlow({
       }
 
       try {
-        // If editing existing release, always allow access
-        if (existingRelease) {
+        // If editing existing release (either via existingRelease prop or editId), always allow access
+        if (existingRelease || editId) {
           setCanCreateRelease(true);
           setCheckingAccess(false);
           return;
         }
 
         // Check if user can create new releases
-        const canCreate = await canAccessFeature('release_creation');
+        const canCreate = await canAccessFeature("release_creation");
         setCanCreateRelease(canCreate);
       } catch (error) {
-        console.error('Error checking release access:', error);
+        console.error("Error checking release access:", error);
         setCanCreateRelease(false);
       } finally {
         setCheckingAccess(false);
@@ -540,16 +560,17 @@ export function DistributionFlow({
       case 2:
         return formData.tracks.every(
           (track) =>
-            track.track_title && 
-            track.artist_names.length > 0 && 
+            track.track_title &&
+            track.artist_names.length > 0 &&
             track.artist_names[0].trim() !== "" &&
             track.genre &&
             track.audio_file_url &&
             track.songwriters.length > 0 &&
-            track.songwriters.every(songwriter => 
-              songwriter.firstName.trim() !== "" && 
-              songwriter.lastName.trim() !== "" && 
-              songwriter.role.trim() !== ""
+            track.songwriters.every(
+              (songwriter) =>
+                songwriter.firstName.trim() !== "" &&
+                songwriter.lastName.trim() !== "" &&
+                songwriter.role.trim() !== ""
             )
         );
       case 3:
@@ -559,20 +580,19 @@ export function DistributionFlow({
           formData.distribution_agreement,
           formData.artist_names_agreement,
           formData.youtube_music_agreement,
-          formData.fraud_prevention_agreement
+          formData.fraud_prevention_agreement,
         ];
-        
+
         // Add snapchat terms if snapchat is selected
         if (formData.selected_stores.includes("Snapchat")) {
           requiredAgreements.push(formData.snapchat_terms);
         }
-        
-        return requiredAgreements.every(agreement => agreement === true);
+
+        return requiredAgreements.every((agreement) => agreement === true);
       default:
         return true;
     }
   };
-
 
   const handleNextStep = async () => {
     if (!editId && !existingRelease?.id) {
@@ -586,18 +606,18 @@ export function DistributionFlow({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/distribution/releases/update-step', {
-        method: 'PUT',
+      const response = await fetch("/api/distribution/releases/update-step", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           releaseId: editId || existingRelease?.id,
           step: currentStep,
           formData: formData,
-          submitForReview: false
-        })
+          submitForReview: false,
+        }),
       });
 
       const data = await response.json();
@@ -614,15 +634,15 @@ export function DistributionFlow({
         if (data.errors && data.errors.length > 0) {
           toast({
             title: "Validation Error",
-            description: data.errors.join(', '),
+            description: data.errors.join(", "),
             variant: "destructive",
           });
         } else {
-          throw new Error(data.error || 'Failed to save step');
+          throw new Error(data.error || "Failed to save step");
         }
       }
     } catch (error) {
-      console.error('Error saving step:', error);
+      console.error("Error saving step:", error);
       toast({
         title: "Error",
         description: "Failed to save step. Please try again.",
@@ -634,17 +654,20 @@ export function DistributionFlow({
   };
 
   const handleSaveDraft = async () => {
-    // Check subscription limits for draft saves too
-    const canCreate = await canAccessFeature('release_creation', { 
-      releaseType: formData.distribution_type 
-    });
-    
-    if (!canCreate) {
-      const message = formData.distribution_type === 'Single' 
-        ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
-        : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
-      showUpgradeDialog(message, 'plus');
-      return;
+    // Check subscription limits for draft saves too (but allow editing existing releases)
+    if (!editId && !existingRelease) {
+      const canCreate = await canAccessFeature("release_creation", {
+        releaseType: formData.distribution_type,
+      });
+
+      if (!canCreate) {
+        const message =
+          formData.distribution_type === "Single"
+            ? "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music."
+            : "Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.";
+        showUpgradeDialog(message, "plus");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -658,17 +681,17 @@ export function DistributionFlow({
     }
 
     try {
-      const response = await fetch('/api/distribution/releases/save-draft', {
-        method: 'PUT',
+      const response = await fetch("/api/distribution/releases/save-draft", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           releaseId: editId || existingRelease?.id,
           formData: formData,
-          currentStep: `step_${currentStep}` // This will be mapped to descriptive name in the API
-        })
+          currentStep: `step_${currentStep}`, // This will be mapped to descriptive name in the API
+        }),
       });
 
       const data = await response.json();
@@ -679,10 +702,10 @@ export function DistributionFlow({
           description: "Your release has been saved as a draft.",
         });
       } else {
-        throw new Error(data.error || 'Failed to save draft');
+        throw new Error(data.error || "Failed to save draft");
       }
     } catch (error) {
-      console.error('Error saving draft:', error);
+      console.error("Error saving draft:", error);
       toast({
         title: "Error",
         description: "Failed to save draft. Please try again.",
@@ -694,36 +717,76 @@ export function DistributionFlow({
   };
 
   const handleSubmitForReview = async () => {
-    // Check subscription limits first
-    const canCreate = await canAccessFeature('release_creation', { 
-      releaseType: formData.distribution_type 
-    });
-    
-    if (!canCreate) {
-      const message = formData.distribution_type === 'Single' 
-        ? 'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.'
-        : 'Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.';
-      showUpgradeDialog(message, 'plus');
-      return;
+    // Check subscription limits first (but allow editing existing releases)
+    if (!editId && !existingRelease) {
+      const canCreate = await canAccessFeature("release_creation", {
+        releaseType: formData.distribution_type,
+      });
+
+      if (!canCreate) {
+        const message =
+          formData.distribution_type === "Single"
+            ? "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music."
+            : "Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.";
+        showUpgradeDialog(message, "plus");
+        return;
+      }
     }
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/distribution/releases/update-step', {
-        method: 'PUT',
+      const response = await fetch("/api/distribution/releases/update-step", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           releaseId: editId || existingRelease?.id,
           step: currentStep,
           formData: formData,
-          submitForReview: true
-        })
+          submitForReview: true,
+        }),
       });
 
       const data = await response.json();
+
+      // Handle non-200 responses
+      if (!response.ok) {
+        if (data.requiresVerification) {
+          toast({
+            title: "Identity Verification Required",
+            description:
+              data.message ||
+              "You must complete identity verification before submitting your release.",
+            variant: "destructive",
+            action: (
+              <Button
+                variant="default"
+                className="text-white"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    "/dashboard/settings?tab=identity-check",
+                    "_blank"
+                  )
+                }
+              >
+                Verify Identity
+              </Button>
+            ),
+          });
+          return;
+        } else {
+          toast({
+            title: "Error",
+            description:
+              data.message || data.error || "Failed to submit for review",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
 
       if (data.success) {
         toast({
@@ -734,19 +797,46 @@ export function DistributionFlow({
         // Redirect to music page after submission
         window.location.href = "/dashboard/my-music";
       } else {
-        // Handle validation errors
-        if (data.errors && data.errors.length > 0) {
+        // Handle specific error cases
+        if (data.requiresVerification) {
+          toast({
+            title: "Identity Verification Required",
+            description:
+              data.message ||
+              "You must complete identity verification before submitting your release.",
+            variant: "destructive",
+            action: (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    "/dashboard/settings?tab=identity-check",
+                    "_blank"
+                  )
+                }
+              >
+                Verify Identity
+              </Button>
+            ),
+          });
+        } else if (data.errors && data.errors.length > 0) {
           toast({
             title: "Validation Error",
-            description: data.errors.join(', '),
+            description: data.errors.join(", "),
             variant: "destructive",
           });
         } else {
-          throw new Error(data.error || 'Failed to submit for review');
+          toast({
+            title: "Error",
+            description:
+              data.message || data.error || "Failed to submit for review",
+            variant: "destructive",
+          });
         }
       }
     } catch (error) {
-      console.error('Error submitting for review:', error);
+      console.error("Error submitting for review:", error);
       toast({
         title: "Error",
         description: "Failed to submit for review. Please try again.",
@@ -997,17 +1087,21 @@ export function DistributionFlow({
           {/* Existing Profile Links Section */}
           <div className="space-y-4">
             <h4 className="text-md font-medium">Existing Artist Profiles</h4>
-            
+
             <div className="grid gap-4">
               <div className="space-y-3">
-                <Label>Do you already have a Spotify for Artists Profile?</Label>
+                <Label>
+                  Do you already have a Spotify for Artists Profile?
+                </Label>
                 <div className="flex gap-4">
                   <label className="flex items-center space-x-2">
                     <input
                       type="radio"
                       name="has_spotify_profile"
                       checked={formData.has_spotify_profile === true}
-                      onChange={() => updateFormData("has_spotify_profile", true)}
+                      onChange={() =>
+                        updateFormData("has_spotify_profile", true)
+                      }
                       className="rounded border-gray-300"
                     />
                     <span>Yes</span>
@@ -1017,7 +1111,9 @@ export function DistributionFlow({
                       type="radio"
                       name="has_spotify_profile"
                       checked={formData.has_spotify_profile === false}
-                      onChange={() => updateFormData("has_spotify_profile", false)}
+                      onChange={() =>
+                        updateFormData("has_spotify_profile", false)
+                      }
                       className="rounded border-gray-300"
                     />
                     <span>No</span>
@@ -1025,11 +1121,15 @@ export function DistributionFlow({
                 </div>
                 {formData.has_spotify_profile && (
                   <div className="grid gap-2">
-                    <Label htmlFor="spotify_profile_url">Spotify for Artists Profile URL</Label>
+                    <Label htmlFor="spotify_profile_url">
+                      Spotify for Artists Profile URL
+                    </Label>
                     <Input
                       id="spotify_profile_url"
                       value={formData.spotify_profile_url}
-                      onChange={(e) => updateFormData("spotify_profile_url", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("spotify_profile_url", e.target.value)
+                      }
                       placeholder="https://artists.spotify.com/c/artist/..."
                     />
                   </div>
@@ -1037,7 +1137,9 @@ export function DistributionFlow({
               </div>
 
               <div className="space-y-3">
-                <Label>Do you already have an Apple Music for Artists Profile?</Label>
+                <Label>
+                  Do you already have an Apple Music for Artists Profile?
+                </Label>
                 <div className="flex gap-4">
                   <label className="flex items-center space-x-2">
                     <input
@@ -1054,7 +1156,9 @@ export function DistributionFlow({
                       type="radio"
                       name="has_apple_profile"
                       checked={formData.has_apple_profile === false}
-                      onChange={() => updateFormData("has_apple_profile", false)}
+                      onChange={() =>
+                        updateFormData("has_apple_profile", false)
+                      }
                       className="rounded border-gray-300"
                     />
                     <span>No</span>
@@ -1062,11 +1166,15 @@ export function DistributionFlow({
                 </div>
                 {formData.has_apple_profile && (
                   <div className="grid gap-2">
-                    <Label htmlFor="apple_profile_url">Apple Music for Artists Profile URL</Label>
+                    <Label htmlFor="apple_profile_url">
+                      Apple Music for Artists Profile URL
+                    </Label>
                     <Input
                       id="apple_profile_url"
                       value={formData.apple_profile_url}
-                      onChange={(e) => updateFormData("apple_profile_url", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("apple_profile_url", e.target.value)
+                      }
                       placeholder="https://artists.apple.com/artist/..."
                     />
                   </div>
@@ -1074,7 +1182,6 @@ export function DistributionFlow({
               </div>
             </div>
           </div>
-
 
           <div className="grid gap-4">
             <div className="grid gap-2">
@@ -1149,7 +1256,7 @@ export function DistributionFlow({
                   const file = e.target.files?.[0];
                   if (file) {
                     // Validate file type
-                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    const validTypes = ["image/jpeg", "image/jpg", "image/png"];
                     if (!validTypes.includes(file.type)) {
                       toast({
                         variant: "destructive",
@@ -1163,23 +1270,25 @@ export function DistributionFlow({
                     const img = new Image();
                     img.onload = async () => {
                       const { width, height } = img;
-                      
+
                       // Check if image is square
                       if (width !== height) {
                         toast({
                           variant: "destructive",
                           title: "Invalid image dimensions",
-                          description: "Album cover must be square (equal width and height)",
+                          description:
+                            "Album cover must be square (equal width and height)",
                         });
                         return;
                       }
-                      
+
                       // Check minimum dimensions
                       if (width < 1500 || height < 1500) {
                         toast({
                           variant: "destructive",
                           title: "Image too small",
-                          description: "Album cover must be at least 1500x1500 pixels",
+                          description:
+                            "Album cover must be at least 1500x1500 pixels",
                         });
                         return;
                       }
@@ -1195,7 +1304,9 @@ export function DistributionFlow({
                           method: "POST",
                           body: uploadData,
                           headers: {
-                            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                            Authorization: `Bearer ${localStorage.getItem(
+                              "authToken"
+                            )}`,
                           },
                         });
 
@@ -1219,7 +1330,7 @@ export function DistributionFlow({
                         setIsUploading(false);
                       }
                     };
-                    
+
                     img.onerror = () => {
                       toast({
                         variant: "destructive",
@@ -1227,7 +1338,7 @@ export function DistributionFlow({
                         description: "Please upload a valid image file",
                       });
                     };
-                    
+
                     img.src = URL.createObjectURL(file);
                   }
                 }}
@@ -1309,7 +1420,9 @@ export function DistributionFlow({
                 <label key={option} className="flex items-start space-x-3">
                   <input
                     type="checkbox"
-                    checked={formData.additional_delivery?.includes(option) || false}
+                    checked={
+                      formData.additional_delivery?.includes(option) || false
+                    }
                     onChange={(e) => {
                       const currentOptions = formData.additional_delivery || [];
                       const newOptions = e.target.checked
@@ -1420,7 +1533,7 @@ export function DistributionFlow({
                         size="sm"
                         onClick={() => {
                           const newArtistNames = track.artist_names.filter(
-                            (_, i) => i !== artistIndex,
+                            (_, i) => i !== artistIndex
                           );
                           updateTrack(index, "artist_names", newArtistNames);
                         }}
@@ -1465,7 +1578,7 @@ export function DistributionFlow({
                             updateTrack(
                               index,
                               "featured_artists",
-                              newFeaturedArtists,
+                              newFeaturedArtists
                             );
                           }}
                           placeholder="Featured artist name"
@@ -1478,12 +1591,12 @@ export function DistributionFlow({
                           onClick={() => {
                             const newFeaturedArtists =
                               track.featured_artists.filter(
-                                (_, i) => i !== featuredIndex,
+                                (_, i) => i !== featuredIndex
                               );
                             updateTrack(
                               index,
                               "featured_artists",
-                              newFeaturedArtists,
+                              newFeaturedArtists
                             );
                           }}
                           className="text-red-600 hover:text-red-700"
@@ -1491,7 +1604,7 @@ export function DistributionFlow({
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    ),
+                    )
                   )}
                   <Button
                     type="button"
@@ -1505,7 +1618,7 @@ export function DistributionFlow({
                       updateTrack(
                         index,
                         "featured_artists",
-                        newFeaturedArtists,
+                        newFeaturedArtists
                       );
                     }}
                     className="flex items-center gap-2 w-fit"
@@ -1606,7 +1719,7 @@ export function DistributionFlow({
                         size="sm"
                         onClick={() => {
                           const newSongwriters = track.songwriters.filter(
-                            (_, i) => i !== writerIndex,
+                            (_, i) => i !== writerIndex
                           );
                           updateTrack(index, "songwriters", newSongwriters);
                         }}
@@ -1660,7 +1773,7 @@ export function DistributionFlow({
                               updateTrack(
                                 index,
                                 "performer_credits",
-                                newPerformers,
+                                newPerformers
                               );
                             }}
                           >
@@ -1847,7 +1960,7 @@ export function DistributionFlow({
                               updateTrack(
                                 index,
                                 "performer_credits",
-                                newPerformers,
+                                newPerformers
                               );
                             }}
                             placeholder="Name"
@@ -1860,12 +1973,12 @@ export function DistributionFlow({
                             onClick={() => {
                               const newPerformers =
                                 track.performer_credits.filter(
-                                  (_, i) => i !== performerIndex,
+                                  (_, i) => i !== performerIndex
                                 );
                               updateTrack(
                                 index,
                                 "performer_credits",
-                                newPerformers,
+                                newPerformers
                               );
                             }}
                             className="text-red-600 hover:text-red-700"
@@ -1873,7 +1986,7 @@ export function DistributionFlow({
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      ),
+                      )
                     )}
                     <Button
                       type="button"
@@ -1910,7 +2023,7 @@ export function DistributionFlow({
                             updateTrack(
                               index,
                               "producer_credits",
-                              newProducers,
+                              newProducers
                             );
                           }}
                         >
@@ -2041,7 +2154,7 @@ export function DistributionFlow({
                             updateTrack(
                               index,
                               "producer_credits",
-                              newProducers,
+                              newProducers
                             );
                           }}
                           placeholder="Name"
@@ -2053,12 +2166,12 @@ export function DistributionFlow({
                           size="sm"
                           onClick={() => {
                             const newProducers = track.producer_credits.filter(
-                              (_, i) => i !== producerIndex,
+                              (_, i) => i !== producerIndex
                             );
                             updateTrack(
                               index,
                               "producer_credits",
-                              newProducers,
+                              newProducers
                             );
                           }}
                           className="text-red-600 hover:text-red-700"
@@ -2114,12 +2227,16 @@ export function DistributionFlow({
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        setAudioUploadStates(prev => ({
+                        setAudioUploadStates((prev) => ({
                           ...prev,
-                          [index]: { uploading: true }
+                          [index]: { uploading: true },
                         }));
                         try {
-                          console.log('[Audio Upload] starting', { name: file.name, size: file.size, type: file.type })
+                          console.log("[Audio Upload] starting", {
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                          });
                           const uploadData = new FormData();
                           uploadData.append("file", file);
                           uploadData.append("folder", "audio");
@@ -2128,33 +2245,46 @@ export function DistributionFlow({
                             method: "POST",
                             body: uploadData,
                             headers: {
-                              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                              Authorization: `Bearer ${localStorage.getItem(
+                                "authToken"
+                              )}`,
                             },
                           });
 
                           if (response.ok) {
                             const result = await response.json();
-                            console.log('[Audio Upload] success', result)
+                            console.log("[Audio Upload] success", result);
                             // Store in both snake_case and camelCase to be robust
                             updateTrack(index, "audio_file_url", result.url);
                             updateTrack(index, "audio_file_name", file.name);
                             // @ts-ignore
-                            updateTrack(index as any, "audioFileUrl" as any, result.url);
+                            updateTrack(
+                              index as any,
+                              "audioFileUrl" as any,
+                              result.url
+                            );
                             // @ts-ignore
-                            updateTrack(index as any, "audioFileName" as any, file.name);
+                            updateTrack(
+                              index as any,
+                              "audioFileName" as any,
+                              file.name
+                            );
                             toast({
                               title: "Success",
                               description: "Audio file uploaded successfully",
                             });
                           } else {
-                            console.error('[Audio Upload] failed status', response.status)
+                            console.error(
+                              "[Audio Upload] failed status",
+                              response.status
+                            );
                             throw new Error("Upload failed");
                           }
                         } catch (error) {
-                          console.error('[Audio Upload] error', error)
-                          setAudioUploadStates(prev => ({
+                          console.error("[Audio Upload] error", error);
+                          setAudioUploadStates((prev) => ({
                             ...prev,
-                            [index]: { uploading: false }
+                            [index]: { uploading: false },
                           }));
                           toast({
                             variant: "destructive",
@@ -2162,9 +2292,9 @@ export function DistributionFlow({
                             description: "Failed to upload audio file",
                           });
                         } finally {
-                          setAudioUploadStates(prev => ({
+                          setAudioUploadStates((prev) => ({
                             ...prev,
-                            [index]: { uploading: false }
+                            [index]: { uploading: false },
                           }));
                         }
                       }
@@ -2179,11 +2309,12 @@ export function DistributionFlow({
                       </p>
                     </div>
                   )}
-                  {track.audio_file_name && !audioUploadStates[index]?.uploading && (
-                    <p className="text-sm text-green-600 mt-2">
-                      Uploaded: {track.audio_file_name}
-                    </p>
-                  )}
+                  {track.audio_file_name &&
+                    !audioUploadStates[index]?.uploading && (
+                      <p className="text-sm text-green-600 mt-2">
+                        Uploaded: {track.audio_file_name}
+                      </p>
+                    )}
                 </div>
               </div>
 
@@ -2310,8 +2441,12 @@ export function DistributionFlow({
               updateFormData("fraud_prevention_agreement", checked)
             }
           />
-          <Label htmlFor="fraud_prevention_agreement" className="text-sm font-medium text-red-600 dark:text-red-400">
-            I understand that submitting fraudulent content will result in immediate account termination.
+          <Label
+            htmlFor="fraud_prevention_agreement"
+            className="text-sm font-medium text-red-600 dark:text-red-400"
+          >
+            I understand that submitting fraudulent content will result in
+            immediate account termination.
           </Label>
         </div>
       </div>
@@ -2364,25 +2499,31 @@ export function DistributionFlow({
     );
   }
 
-  // Show upgrade prompt if user cannot create releases
-  if (!canCreateRelease && !existingRelease) {
+  // Show upgrade prompt if user cannot create releases (but allow editing existing releases)
+  if (!canCreateRelease && !existingRelease && !editId) {
     return (
       <div className="max-w-full mx-auto mt-6">
         <div className="text-center p-8">
           <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
             <Music className="h-12 w-12 text-gray-400" />
           </div>
-          
-          <h1 className="text-3xl font-bold mb-4">Release Creation Limit Reached</h1>
+
+          <h1 className="text-3xl font-bold mb-4">
+            Release Creation Limit Reached
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-            Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music and unlock the full power of your music career.
+            Trial users cannot create releases. Upgrade to Plus or Pro to start
+            distributing your music and unlock the full power of your music
+            career.
           </p>
-          
-          <Button 
-            onClick={() => showUpgradeDialog(
-              'Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.',
-              'plus'
-            )}
+
+          <Button
+            onClick={() =>
+              showUpgradeDialog(
+                "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.",
+                "plus"
+              )
+            }
             className="bg-gradient-to-r from-[#BFFF00] to-[#9AFF00] hover:from-[#BFFF00]/90 hover:to-[#9AFF00]/90 text-black font-semibold px-8 py-3 text-lg"
           >
             <Zap className="h-5 w-5 mr-2" />
@@ -2489,41 +2630,98 @@ export function DistributionFlow({
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                    <p className="font-medium mb-1">Complete all required fields to continue:</p>
+                    <p className="font-medium mb-1">
+                      Complete all required fields to continue:
+                    </p>
                     <ul className="list-disc list-inside space-y-1">
                       {currentStep === 1 && (
                         <>
-                          {!formData.distribution_type && <li>Select distribution type</li>}
-                          {!formData.artist_name && <li>Enter artist/band name</li>}
-                          {!formData.release_title && <li>Enter release title</li>}
-                          {!formData.record_label && <li>Enter record label</li>}
+                          {!formData.distribution_type && (
+                            <li>Select distribution type</li>
+                          )}
+                          {!formData.artist_name && (
+                            <li>Enter artist/band name</li>
+                          )}
+                          {!formData.release_title && (
+                            <li>Enter release title</li>
+                          )}
+                          {!formData.record_label && (
+                            <li>Enter record label</li>
+                          )}
                           {!formData.c_line && <li>Enter C-Line copyright</li>}
                           {!formData.p_line && <li>Enter P-Line copyright</li>}
-                          {!formData.primary_genre && <li>Select primary genre</li>}
+                          {!formData.primary_genre && (
+                            <li>Select primary genre</li>
+                          )}
                           {!formData.language && <li>Select language</li>}
-                          {!formData.release_date && <li>Choose release date</li>}
-                          {!formData.album_cover_url && <li>Upload album cover</li>}
-                          {formData.selected_stores.length === 0 && <li>Select at least one store</li>}
+                          {!formData.release_date && (
+                            <li>Choose release date</li>
+                          )}
+                          {!formData.album_cover_url && (
+                            <li>Upload album cover</li>
+                          )}
+                          {formData.selected_stores.length === 0 && (
+                            <li>Select at least one store</li>
+                          )}
                         </>
                       )}
                       {currentStep === 2 && (
                         <>
-                          {formData.tracks.some(track => !track.track_title) && <li>Enter title for all tracks</li>}
-                          {formData.tracks.some(track => !track.artist_names.length || !track.artist_names[0].trim()) && <li>Enter artist name for all tracks</li>}
-                          {formData.tracks.some(track => !track.genre) && <li>Select genre for all tracks</li>}
-                          {formData.tracks.some(track => !track.audio_file_url) && <li>Upload audio file for all tracks</li>}
-                          {formData.tracks.some(track => !track.songwriters.length || track.songwriters.some(s => !s.firstName.trim() || !s.lastName.trim() || !s.role.trim())) && <li>Complete songwriter information for all tracks (first name, last name, and role required)</li>}
+                          {formData.tracks.some(
+                            (track) => !track.track_title
+                          ) && <li>Enter title for all tracks</li>}
+                          {formData.tracks.some(
+                            (track) =>
+                              !track.artist_names.length ||
+                              !track.artist_names[0].trim()
+                          ) && <li>Enter artist name for all tracks</li>}
+                          {formData.tracks.some((track) => !track.genre) && (
+                            <li>Select genre for all tracks</li>
+                          )}
+                          {formData.tracks.some(
+                            (track) => !track.audio_file_url
+                          ) && <li>Upload audio file for all tracks</li>}
+                          {formData.tracks.some(
+                            (track) =>
+                              !track.songwriters.length ||
+                              track.songwriters.some(
+                                (s) =>
+                                  !s.firstName.trim() ||
+                                  !s.lastName.trim() ||
+                                  !s.role.trim()
+                              )
+                          ) && (
+                            <li>
+                              Complete songwriter information for all tracks
+                              (first name, last name, and role required)
+                            </li>
+                          )}
                         </>
                       )}
                       {currentStep === 3 && (
                         <>
-                          {!formData.terms_agreed && <li>Confirm original music rights</li>}
-                          {!formData.fake_streaming_agreement && <li>Agree to no fake streaming</li>}
-                          {!formData.distribution_agreement && <li>Accept distribution agreement</li>}
-                          {!formData.artist_names_agreement && <li>Confirm artist names approval</li>}
-                          {!formData.youtube_music_agreement && <li>Accept YouTube Music terms</li>}
-                          {formData.selected_stores.includes("Snapchat") && !formData.snapchat_terms && <li>Accept Snapchat terms</li>}
-                          {!formData.fraud_prevention_agreement && <li>Confirm fraud prevention agreement</li>}
+                          {!formData.terms_agreed && (
+                            <li>Confirm original music rights</li>
+                          )}
+                          {!formData.fake_streaming_agreement && (
+                            <li>Agree to no fake streaming</li>
+                          )}
+                          {!formData.distribution_agreement && (
+                            <li>Accept distribution agreement</li>
+                          )}
+                          {!formData.artist_names_agreement && (
+                            <li>Confirm artist names approval</li>
+                          )}
+                          {!formData.youtube_music_agreement && (
+                            <li>Accept YouTube Music terms</li>
+                          )}
+                          {formData.selected_stores.includes("Snapchat") &&
+                            !formData.snapchat_terms && (
+                              <li>Accept Snapchat terms</li>
+                            )}
+                          {!formData.fraud_prevention_agreement && (
+                            <li>Confirm fraud prevention agreement</li>
+                          )}
                         </>
                       )}
                     </ul>
@@ -2531,7 +2729,7 @@ export function DistributionFlow({
                 </div>
               </div>
             )}
-            
+
             <div className="flex justify-between">
               <div className="flex gap-2">
                 {currentStep > 1 && (
@@ -2563,14 +2761,29 @@ export function DistributionFlow({
                   <Button
                     type="button"
                     onClick={handleNextStep}
-                    disabled={!validateStep(currentStep) || isUploading || Object.values(audioUploadStates).some(state => state.uploading) || isSubmitting}
+                    disabled={
+                      !validateStep(currentStep) ||
+                      isUploading ||
+                      Object.values(audioUploadStates).some(
+                        (state) => state.uploading
+                      ) ||
+                      isSubmitting
+                    }
                     className={`${
-                      !validateStep(currentStep) || isUploading || Object.values(audioUploadStates).some(state => state.uploading) || isSubmitting
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300" 
+                      !validateStep(currentStep) ||
+                      isUploading ||
+                      Object.values(audioUploadStates).some(
+                        (state) => state.uploading
+                      ) ||
+                      isSubmitting
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300"
                         : "bg-[#BFFF00] text-black hover:bg-[#BFFF00]/90"
                     }`}
                   >
-                    {isUploading || Object.values(audioUploadStates).some(state => state.uploading) ? (
+                    {isUploading ||
+                    Object.values(audioUploadStates).some(
+                      (state) => state.uploading
+                    ) ? (
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Uploading...
@@ -2588,9 +2801,21 @@ export function DistributionFlow({
                   <Button
                     type="button"
                     onClick={handleSubmitForReview}
-                    disabled={!validateStep(3) || isSubmitting || isUploading || Object.values(audioUploadStates).some(state => state.uploading)}
+                    disabled={
+                      !validateStep(3) ||
+                      isSubmitting ||
+                      isUploading ||
+                      Object.values(audioUploadStates).some(
+                        (state) => state.uploading
+                      )
+                    }
                     className={`flex items-center gap-2 ${
-                      !validateStep(3) || isSubmitting || isUploading || Object.values(audioUploadStates).some(state => state.uploading)
+                      !validateStep(3) ||
+                      isSubmitting ||
+                      isUploading ||
+                      Object.values(audioUploadStates).some(
+                        (state) => state.uploading
+                      )
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300"
                         : "bg-[#BFFF00] text-black hover:bg-[#BFFF00]/90"
                     }`}
@@ -2600,7 +2825,10 @@ export function DistributionFlow({
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Submitting...
                       </>
-                    ) : isUploading || Object.values(audioUploadStates).some(state => state.uploading) ? (
+                    ) : isUploading ||
+                      Object.values(audioUploadStates).some(
+                        (state) => state.uploading
+                      ) ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Uploading...
