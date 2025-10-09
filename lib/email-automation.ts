@@ -3,6 +3,7 @@ import { pool } from './db';
 
 // Background email processing - runs automatically
 let emailProcessor: NodeJS.Timeout | null = null;
+let isEmailProcessing = false; // Prevent overlapping runs
 
 export interface EmailTrigger {
   userId: number;
@@ -593,6 +594,14 @@ export async function checkExpiredTrials(): Promise<void> {
 
 // Process scheduled emails (runs automatically in background)
 export async function processScheduledEmails(): Promise<void> {
+  // Prevent overlapping runs
+  if (isEmailProcessing) {
+    console.log('[Email Processor] Already processing, skipping this run...');
+    return;
+  }
+
+  isEmailProcessing = true;
+  
   try {
     const { getScheduledEmails, markEmailAsSent } = await import('./email-service');
     const scheduledEmails = await getScheduledEmails();
@@ -629,6 +638,8 @@ export async function processScheduledEmails(): Promise<void> {
     await checkExpiredTrials();
   } catch (error) {
     console.error('Error processing scheduled emails:', error);
+  } finally {
+    isEmailProcessing = false;
   }
 }
 
@@ -677,14 +688,14 @@ export function startEmailProcessor(): void {
 
   console.log('Starting automatic email processor...');
   
-  // Process emails immediately on startup
-  processScheduledEmails();
+  // Don't process emails immediately on startup - wait for first interval
+  // This prevents overwhelming the system on startup
   
-  // Then process every 5 minutes
+  // Process every 5 minutes (not 1 minute!)
   emailProcessor = setInterval(async () => {
     console.log('Processing scheduled emails...');
     await processScheduledEmails();
-  }, 1* 60 * 1000); // 5 minutes
+  }, 5 * 60 * 1000); // 5 minutes (was incorrectly 1 minute)
 
   console.log('Email processor started - checking every 5 minutes');
 }

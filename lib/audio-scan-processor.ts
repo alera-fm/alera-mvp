@@ -8,11 +8,20 @@ import { pool } from "./db";
 import { ircamService } from "./ircam-amplify";
 
 const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
+let isProcessing = false; // Prevent overlapping runs
 
 /**
  * Process all scans that are in 'processing' or 'pending' status
  */
 async function processAudioScans() {
+  // Prevent overlapping runs
+  if (isProcessing) {
+    console.log("[Audio Scan Processor] Already processing, skipping this run...");
+    return;
+  }
+
+  isProcessing = true;
+  
   try {
     console.log("[Audio Scan Processor] Checking for processing scans...");
 
@@ -87,6 +96,8 @@ async function processAudioScans() {
       "[Audio Scan Processor] Error in audio scan processor:",
       error
     );
+  } finally {
+    isProcessing = false;
   }
 }
 
@@ -224,17 +235,15 @@ async function markScanAsFailed(scanId: number, reason: string) {
 export function startAudioScanProcessor() {
   console.log("🎵 Starting Audio Scan Processor (checks every 5 minutes)...");
 
-  // Run immediately on startup
-  processAudioScans().catch((error) => {
-    console.error("[Audio Scan Processor] Initial run error:", error);
-  });
+  // Don't run immediately on startup - wait for first interval
+  // This prevents overwhelming the system on startup
 
-  // Then run every 5 minutes
+  // Run every 5 minutes
   setInterval(() => {
     processAudioScans().catch((error) => {
       console.error("[Audio Scan Processor] Scheduled run error:", error);
     });
   }, POLL_INTERVAL);
 
-  console.log("✅ Audio Scan Processor started");
+  console.log("✅ Audio Scan Processor started - will check for scans every 5 minutes");
 }
