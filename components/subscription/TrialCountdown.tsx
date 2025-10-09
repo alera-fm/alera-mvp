@@ -11,77 +11,27 @@ export function TrialCountdown() {
   // Only show for trial users
   if (subscription?.tier !== 'trial') return null
 
-  // Don't show if trial is expired (user should see upgrade prompt elsewhere)
-  if (subscription?.isExpired) return null
+  // Always show for trial users, even if trial is expired
+  // Don't remove banner after trial expires or after submitting release
 
-  const getUrgencyLevel = () => {
-    if (daysRemaining <= 3) return 'critical'
-    if (daysRemaining <= 7) return 'warning'
-    return 'normal'
+  // Use consistent styling (not time-based)
+  const styles = {
+    container: 'bg-gradient-to-r from-purple-50 to-yellow-50 dark:from-purple-900/30 dark:to-yellow-800/20 border-2 border-purple-300 dark:border-purple-700 shadow-lg',
+    text: 'text-purple-900 dark:text-purple-100 font-bold',
+    subtext: 'text-purple-800 dark:text-purple-200',
+    button: 'bg-gradient-to-r from-purple-600 to-yellow-500 hover:from-purple-700 hover:to-yellow-600 text-white font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200'
   }
-
-  const urgencyLevel = getUrgencyLevel()
-
-  const getUrgencyStyles = () => {
-    switch (urgencyLevel) {
-      case 'critical':
-        return {
-          container: 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 border-2 border-red-300 dark:border-red-700 shadow-lg',
-          text: 'text-red-900 dark:text-red-100 font-bold',
-          subtext: 'text-red-800 dark:text-red-200',
-          button: 'bg-red-600 hover:bg-red-700 text-white font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200'
-        }
-      case 'warning':
-        return {
-          container: 'bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-800/20 border-2 border-orange-300 dark:border-orange-700 shadow-lg',
-          text: 'text-orange-900 dark:text-orange-100 font-bold',
-          subtext: 'text-orange-800 dark:text-orange-200',
-          button: 'bg-orange-600 hover:bg-orange-700 text-white font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200'
-        }
-      default:
-        return {
-          container: 'bg-gradient-to-r from-purple-50 to-yellow-50 dark:from-purple-900/30 dark:to-yellow-800/20 border-2 border-purple-300 dark:border-purple-700 shadow-lg',
-          text: 'text-purple-900 dark:text-purple-100 font-bold',
-          subtext: 'text-purple-800 dark:text-purple-200',
-          button: 'bg-gradient-to-r from-purple-600 to-yellow-500 hover:from-purple-700 hover:to-yellow-600 text-white font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200'
-        }
-    }
-  }
-
-  const styles = getUrgencyStyles()
 
   const getMessage = () => {
-    if (daysRemaining === 0) {
-      return 'Keep your momentum going. Your trial expires today!'
-    }
-    if (daysRemaining === 1) {
-      return 'Keep your momentum going. Your trial ends tomorrow!'
-    }
-    if (daysRemaining <= 3) {
-      return `Keep your momentum going. Your trial ends in ${daysRemaining} days.`
-    }
-    if (daysRemaining <= 7) {
-      return `Keep your momentum going. Your trial ends in ${daysRemaining} days.`
-    }
-    return `Keep your momentum going. Your trial ends in ${daysRemaining} days.`
+    return "You're currently on a free trial"
   }
 
   const getSubMessage = () => {
-    if (daysRemaining <= 3) {
-      return 'Upgrade to Pro to ensure your music stays live and your career tools remain uninterrupted.'
-    }
-    if (daysRemaining <= 7) {
-      return 'Upgrade to Pro to ensure your music stays live and your career tools remain uninterrupted.'
-    }
-    return 'Upgrade to Pro to ensure your music stays live and your career tools remain uninterrupted.'
+    return 'Upgrade to Pro to unlock unlimited releases, advanced features, and keep your music live forever.'
   }
 
   const handleUpgradeClick = () => {
-    const reason = urgencyLevel === 'critical' 
-      ? 'Your trial is expiring soon. Upgrade now to maintain access to all features.'
-      : 'Continue your music journey with unlimited access to all ALERA features.'
-    
-    showUpgradeDialog(reason, 'plus')
+    showUpgradeDialog('Continue your music journey with unlimited access to all ALERA features.', 'plus')
   }
 
   return (
@@ -89,8 +39,8 @@ export function TrialCountdown() {
       <CardContent className="p-3 md:p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className={`rounded-full p-2 flex-shrink-0 ${urgencyLevel === 'critical' ? 'bg-red-100 dark:bg-red-900' : urgencyLevel === 'warning' ? 'bg-orange-100 dark:bg-orange-900' : 'bg-purple-100 dark:bg-purple-900'}`}>
-              <Timer className={`h-4 w-4 md:h-5 md:w-5 ${urgencyLevel === 'critical' ? 'text-red-600' : urgencyLevel === 'warning' ? 'text-orange-600' : 'text-purple-600'} ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`} />
+            <div className="rounded-full p-2 flex-shrink-0 bg-purple-100 dark:bg-purple-900">
+              <Timer className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className={`text-sm md:text-base font-semibold leading-tight ${styles.text}`}>

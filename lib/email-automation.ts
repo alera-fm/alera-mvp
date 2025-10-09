@@ -153,7 +153,7 @@ export async function triggerTimeToMakeReleaseEmail(userId: number): Promise<boo
   try {
     // Check if user has started any releases
     const releaseResult = await pool.query(
-      'SELECT id FROM releases WHERE user_id = $1',
+      'SELECT id FROM releases WHERE artist_id = $1',
       [userId]
     );
 

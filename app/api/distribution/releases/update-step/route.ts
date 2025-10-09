@@ -225,44 +225,194 @@ export async function PUT(request: NextRequest) {
       );
 
       // Handle tracks if provided (regardless of step)
+      const insertedTracks = [];
+      const tracksNeedingScans = [];
+
       if (formData.tracks && formData.tracks.length > 0) {
+        // Get existing tracks to check for audio file changes
+        const existingTracksResult = await client.query(
+          "SELECT id, track_number, audio_file_url FROM tracks WHERE release_id = $1 ORDER BY track_number",
+          [releaseId]
+        );
+        const existingTracks = existingTracksResult.rows;
+
         // Delete existing tracks
         await client.query("DELETE FROM tracks WHERE release_id = $1", [
           releaseId,
         ]);
 
-        // Insert new tracks
+        // Insert new tracks and collect their IDs for audio scanning
         for (let i = 0; i < formData.tracks.length; i++) {
           const track = formData.tracks[i];
-          await client.query(
+          const audioUrl = track.audio_file_url || track.audioFileUrl || "";
+
+          // Check if this track had previous audio and if it changed
+          const existingTrack = existingTracks.find(
+            (t) => t.track_number === (track.track_number || i + 1)
+          );
+          const audioChanged =
+            existingTrack && existingTrack.audio_file_url !== audioUrl;
+          const isNewAudio = !existingTrack && audioUrl;
+
+          const trackResult = await client.query(
             `
             INSERT INTO tracks (
               release_id, track_number, track_title, isrc, songwriters, genre, 
               audio_file_url, audio_file_name, artist_names, featured_artists,
               producer_credits, performer_credits, lyrics_text, has_lyrics
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            RETURNING id, track_number, track_title, audio_file_url, isrc
           `,
             [
               releaseId,
-              track.track_number || i + 1, // Use provided track_number or default to index + 1
-              track.track_title || `Track ${i + 1}`, // Ensure we have a title
+              track.track_number || i + 1,
+              track.track_title || `Track ${i + 1}`,
               track.isrc || "",
               JSON.stringify(track.songwriters || []),
-              track.genre || formData.primary_genre || "Unknown", // Use track genre or fallback to release primary genre
-              track.audio_file_url || track.audioFileUrl || "", // Audio file URL
-              track.audio_file_name || track.audioFileName || "", // Audio file name
-              track.artist_names || [], // Artist names array
-              track.featured_artists || [], // Featured artists array
-              JSON.stringify(track.producer_credits || []), // Producer credits
-              JSON.stringify(track.performer_credits || []), // Performer credits
-              track.lyrics_text || "", // Lyrics text
-              track.has_lyrics || false, // Has lyrics flag
+              track.genre || formData.primary_genre || "Unknown",
+              audioUrl,
+              track.audio_file_name || track.audioFileName || "",
+              track.artist_names || [],
+              track.featured_artists || [],
+              JSON.stringify(track.producer_credits || []),
+              JSON.stringify(track.performer_credits || []),
+              track.lyrics_text || "",
+              track.has_lyrics || false,
             ]
           );
+
+          const insertedTrack = trackResult.rows[0];
+          insertedTracks.push(insertedTrack);
+
+          // Only scan if audio is new or changed
+          if ((isNewAudio || audioChanged) && insertedTrack.audio_file_url) {
+            tracksNeedingScans.push({
+              ...insertedTrack,
+              oldTrackId: existingTrack?.id, // Preserve old track ID for scan update
+              audioChanged,
+            });
+            console.log(
+              `[Audio Scan] Track ${insertedTrack.id}: Audio ${
+                audioChanged ? "CHANGED" : "NEW"
+              }, will scan`
+            );
+          } else if (insertedTrack.audio_file_url) {
+            console.log(
+              `[Audio Scan] Track ${insertedTrack.id}: Audio unchanged, skipping scan`
+            );
+          }
         }
       }
 
       await client.query("COMMIT");
+
+      // Trigger audio scanning ONLY for tracks with new or changed audio files
+      if (tracksNeedingScans.length > 0) {
+        console.log(
+          `[Audio Scan] ${tracksNeedingScans.length} tracks need scanning (new or changed audio)`
+        );
+        Promise.all(
+          tracksNeedingScans.map(async (track) => {
+            try {
+              const { ircamService } = await import("@/lib/ircam-amplify");
+
+              // Submit to IRCAM for analysis
+              console.log(`[Audio Scan] Submitting track to IRCAM:`, {
+                track_id: track.id,
+                track_title: track.track_title,
+                audio_url: track.audio_file_url,
+                artist: formData.artist_name,
+                isrc: track.isrc,
+              });
+
+              const ircamJobId = await ircamService.submitAudioAnalysis(
+                track.audio_file_url,
+                {
+                  title: track.track_title,
+                  artist: formData.artist_name,
+                  isrc: track.isrc,
+                }
+              );
+
+              console.log(`[Audio Scan] IRCAM Job Created:`, {
+                job_id: ircamJobId,
+                track_id: track.id,
+              });
+
+              // Store initial scan record in database
+              const dbValues = {
+                release_id: releaseId,
+                track_id: track.id,
+                track_number: track.track_number,
+                artist_id: tokenData.userId,
+                ircam_job_id: ircamJobId,
+                scan_status: "processing",
+                audio_url: track.audio_file_url,
+                track_title: track.track_title,
+                track_artist: formData.artist_name,
+                track_isrc: track.isrc,
+              };
+
+              console.log("[Audio Scan] Saving to database:", dbValues);
+
+              await pool.query(
+                `INSERT INTO audio_scan_results (
+                    release_id,
+                    track_id,
+                    track_number,
+                    artist_id,
+                    ircam_job_id,
+                    scan_status,
+                    audio_url,
+                    track_title,
+                    track_artist,
+                    track_isrc
+                  ) VALUES ($1, $2, $3, $4, $5, 'processing', $6, $7, $8, $9)
+                  ON CONFLICT (release_id, track_number) DO UPDATE SET
+                    track_id = EXCLUDED.track_id,
+                    ircam_job_id = EXCLUDED.ircam_job_id,
+                    scan_status = 'processing',
+                    audio_url = EXCLUDED.audio_url,
+                    track_title = EXCLUDED.track_title,
+                    updated_at = CURRENT_TIMESTAMP`,
+                [
+                  releaseId,
+                  track.id,
+                  track.track_number,
+                  tokenData.userId,
+                  ircamJobId,
+                  track.audio_file_url,
+                  track.track_title,
+                  formData.artist_name,
+                  track.isrc,
+                ]
+              );
+
+              console.log(
+                `[Audio Scan] ✅ Database record created for track ${track.id}`
+              );
+
+              // Update release status to scanning
+              await pool.query(
+                `UPDATE releases SET audio_scan_status = 'scanning' WHERE id = $1`,
+                [releaseId]
+              );
+
+              console.log(
+                `[Audio Scan] ✅ Initiated scan for track ${track.id} (${track.track_title})`
+              );
+            } catch (scanError) {
+              console.error(
+                `[Audio Scan] Failed to initiate scan for track ${track.id}:`,
+                scanError
+              );
+              // Don't fail the release creation if scanning fails
+            }
+          })
+        ).catch((error) => {
+          console.error("[Audio Scan] Error initiating audio scans:", error);
+        });
+      }
 
       // Trigger release submitted email if submitted for review
       if (submitForReview) {

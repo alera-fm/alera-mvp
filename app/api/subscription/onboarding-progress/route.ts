@@ -12,18 +12,21 @@ export async function GET(request: NextRequest) {
     const accountCreated = true;
 
     // Step 2: Set up your Artist Profile
+    // This should check for additional profile details beyond basic registration
     const userProfile = await query(
       `SELECT artist_name, email, is_verified, display_name, phone_number, country, address, identity_verified
-       FROM users 
+       FROM users
        WHERE id = $1`,
       [userId]
     );
 
     const profile = userProfile.rows[0];
+    // Profile is only considered setup if user has added additional info beyond registration
     const artistProfileSetup = !!(
       profile?.artist_name &&
       profile?.email &&
-      profile?.is_verified
+      profile?.is_verified &&
+      (profile?.display_name || profile?.phone_number || profile?.country || profile?.address)
     );
 
     // Step 3: Upload your first single

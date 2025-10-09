@@ -27,15 +27,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is already verified
+    // Check if user already has pending or approved verification
     const existingVerification = await query(
-      `SELECT identity_verified FROM users WHERE id = $1`,
+      `SELECT identity_verification_status FROM users WHERE id = $1`,
       [userId]
     );
 
-    if (existingVerification.rows[0]?.identity_verified) {
+    const status = existingVerification.rows[0]?.identity_verification_status;
+    if (status === "approved") {
       return NextResponse.json(
         { error: "Identity already verified" },
+        { status: 400 }
+      );
+    }
+
+    if (status === "pending") {
+      return NextResponse.json(
+        { error: "Identity verification is already pending admin review" },
         { status: 400 }
       );
     }
@@ -194,27 +202,35 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Check if user is already verified
+    // Check if user already has pending or approved verification
     const existingVerification = await query(
-      `SELECT identity_verified FROM users WHERE id = $1`,
+      `SELECT identity_verification_status FROM users WHERE id = $1`,
       [userId]
     );
 
-    if (existingVerification.rows[0]?.identity_verified) {
+    const status = existingVerification.rows[0]?.identity_verification_status;
+    if (status === "approved") {
       return NextResponse.json(
         { error: "Identity already verified" },
         { status: 400 }
       );
     }
 
-    // Update user with verification data
+    if (status === "pending") {
+      return NextResponse.json(
+        { error: "Identity verification is already pending admin review" },
+        { status: 400 }
+      );
+    }
+
+    // Update user with verification data - SET TO PENDING (not approved)
     await query(
       `UPDATE users 
-       SET identity_verified = TRUE,
+       SET identity_verification_status = 'pending',
            identity_platform = $2,
            identity_username = $3,
            identity_data = $4,
-           identity_verified_at = CURRENT_TIMESTAMP,
+           identity_verification_submitted_at = CURRENT_TIMESTAMP,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $1`,
       [userId, platform, username, JSON.stringify(profileData)]
@@ -222,7 +238,8 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Identity verification completed successfully",
+      message:
+        "Identity verification submitted successfully. Please wait for admin approval.",
     });
   } catch (error) {
     console.error("Identity verification confirmation error:", error);
@@ -239,8 +256,9 @@ export async function GET(request: NextRequest) {
     const userId = await requireAuth(request);
 
     const result = await query(
-      `SELECT identity_verified, identity_platform, identity_username, 
-              identity_data, identity_verified_at
+      `SELECT identity_verification_status, identity_platform, identity_username, 
+              identity_data, identity_verified_at, identity_verification_submitted_at,
+              identity_admin_reviewed_at, identity_admin_notes
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -250,11 +268,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Handle legacy users who have identity_verified but no new status
+    const status =
+      user.identity_verification_status ||
+      (user.identity_verified ? "approved" : "not_submitted");
+    const verified = status === "approved";
+
     return NextResponse.json({
-      verified: user.identity_verified,
+      status,
+      verified,
       platform: user.identity_platform,
       username: user.identity_username,
       verifiedAt: user.identity_verified_at,
+      submittedAt: user.identity_verification_submitted_at,
+      reviewedAt: user.identity_admin_reviewed_at,
+      adminNotes: user.identity_admin_notes,
       profileData: user.identity_data || null,
     });
   } catch (error) {

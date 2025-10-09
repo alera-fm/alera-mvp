@@ -87,8 +87,8 @@ export async function GET(request: NextRequest) {
           : "";
 
       const streamingParams = hasSongFilter
-        ? [decoded.userId, songTitle]
-        : [decoded.userId];
+        ? [userId, songTitle]
+        : [userId];
 
       // Get total streams from streaming platforms
       const totalStreamsQuery = `
@@ -193,8 +193,8 @@ export async function GET(request: NextRequest) {
     // Query Shazam analytics
     if (selectedSocialPlatforms.includes("Shazam") || platforms.length === 0) {
       const shazamParams = hasSongFilter
-        ? [decoded.userId, songTitle]
-        : [decoded.userId];
+        ? [userId, songTitle]
+        : [userId];
 
       const shazamQuery = `
         SELECT COALESCE(SUM(shazam_count), 0) as total_recognitions
@@ -269,8 +269,8 @@ export async function GET(request: NextRequest) {
     // Query TikTok analytics
     if (selectedSocialPlatforms.includes("TikTok") || platforms.length === 0) {
       const tiktokParams = hasSongFilter
-        ? [decoded.userId, songTitle]
-        : [decoded.userId];
+        ? [userId, songTitle]
+        : [userId];
 
       const tiktokQuery = `
         SELECT COALESCE(SUM(creations), 0) as total_usage
@@ -326,8 +326,8 @@ export async function GET(request: NextRequest) {
     // Query Meta analytics (separate from streaming)
     if (selectedSocialPlatforms.includes("Meta") || platforms.length === 0) {
       const metaParams = hasSongFilter
-        ? [decoded.userId, songTitle]
-        : [decoded.userId];
+        ? [userId, songTitle]
+        : [userId];
 
       const metaQuery = `
         SELECT COALESCE(SUM(event_count), 0) as total_events

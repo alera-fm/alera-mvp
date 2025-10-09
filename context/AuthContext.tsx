@@ -1,250 +1,236 @@
-'use client'
+"use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
 
 interface User {
-  id: number
-  email: string
-  artistName?: string
-  isVerified: boolean
-  isAdmin: boolean
-  welcomePricingDialogShown?: boolean
+  id: number;
+  email: string;
+  artistName?: string;
+  isVerified: boolean;
+  isAdmin: boolean;
+  welcomeDialogShown?: boolean;
 }
 
 interface AuthContextType {
-  user: User | null
-  isAuthenticated: boolean | null
-  login: (token: string) => void
-  logout: () => void
-  setUser: (user: User | null) => void
-  refreshUser: () => Promise<void>
-  updateActivity: () => Promise<void>
-  showWelcomePricingDialog: boolean
-  setShowWelcomePricingDialog: (show: boolean) => void
-  markWelcomeDialogShown: () => Promise<void>
+  user: User | null;
+  isAuthenticated: boolean | null;
+  login: (token: string) => void;
+  logout: () => void;
+  setUser: (user: User | null) => void;
+  refreshUser: () => Promise<void>;
+  updateActivity: () => Promise<void>;
+  showWelcomeDialog: boolean;
+  setShowWelcomeDialog: (show: boolean) => void;
+  markWelcomeDialogShown: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [showWelcomePricingDialog, setShowWelcomePricingDialog] = useState<boolean>(false)
-  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState<boolean>(false);
+  const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('authToken')
-      
+      const token = localStorage.getItem("authToken");
+
       if (!token) {
-        setIsAuthenticated(false)
-        return
+        setIsAuthenticated(false);
+        return;
       }
 
       try {
-        const response = await fetch('/api/auth/me', {
+        const response = await fetch("/api/auth/me", {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (response.ok) {
-          const userData = await response.json()
-          setUser(userData)
-          setIsAuthenticated(true)
-          
-          // Check if this is a trial user who hasn't seen the welcome pricing dialog
-          if (userData && !userData.welcomePricingDialogShown && userData.isVerified) {
-            // Only show dialog for trial users, not existing subscribers
-            try {
-              const subscriptionResponse = await fetch('/api/subscription/status', {
-                headers: { 'Authorization': `Bearer ${token}` }
-              })
-              if (subscriptionResponse.ok) {
-                const subscriptionData = await subscriptionResponse.json()
-                // Only show dialog if user is on trial tier
-                if (subscriptionData.subscription?.tier === 'trial') {
-                  setShowWelcomePricingDialog(true)
-                }
-              }
-            } catch (error) {
-              console.error('Failed to check subscription status:', error)
-            }
+          const userData = await response.json();
+          setUser(userData);
+          setIsAuthenticated(true);
+
+          // Check if user hasn't seen the welcome onboarding dialog
+          if (userData && !userData.welcomeDialogShown) {
+            setShowWelcomeDialog(true);
           }
         } else {
-          localStorage.removeItem('authToken')
-          setIsAuthenticated(false)
-          setUser(null)
+          localStorage.removeItem("authToken");
+          setIsAuthenticated(false);
+          setUser(null);
         }
       } catch (error) {
-        console.error('Auth check failed:', error)
-        localStorage.removeItem('authToken')
-        setIsAuthenticated(false)
-        setUser(null)
+        console.error("Auth check failed:", error);
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUser(null);
       }
-    }
+    };
 
-    checkAuth()
-  }, [])
+    checkAuth();
+  }, []);
 
   const login = async (token: string) => {
-    localStorage.setItem('authToken', token)
-    setIsAuthenticated(true)
-    
+    localStorage.setItem("authToken", token);
+    setIsAuthenticated(true);
+
     // Fetch user data immediately after login
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch("/api/auth/me", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        const userData = await response.json()
-        setUser(userData)
-        
-        // Check if this is a trial user who hasn't seen the welcome pricing dialog
-        if (userData && !userData.welcomePricingDialogShown && userData.isVerified) {
-          // Only show dialog for trial users, not existing subscribers
-          try {
-            const subscriptionResponse = await fetch('/api/subscription/status', {
-              headers: { 'Authorization': `Bearer ${token}` }
-            })
-            if (subscriptionResponse.ok) {
-              const subscriptionData = await subscriptionResponse.json()
-              // Only show dialog if user is on trial tier
-              if (subscriptionData.subscription?.tier === 'trial') {
-                setShowWelcomePricingDialog(true)
-              }
-            }
-          } catch (error) {
-            console.error('Failed to check subscription status:', error)
-          }
+        const userData = await response.json();
+        setUser(userData);
+
+        // Check if user hasn't seen the welcome onboarding dialog
+        if (userData && !userData.welcomeDialogShown) {
+          setShowWelcomeDialog(true);
         }
       }
     } catch (error) {
-      console.error('Failed to fetch user data after login:', error)
+      console.error("Failed to fetch user data after login:", error);
     }
-  }
+  };
 
   const logout = () => {
-    localStorage.removeItem('authToken')
-    setIsAuthenticated(false)
-    setUser(null)
-    setShowWelcomePricingDialog(false)
-    router.push('/auth/login')
-  }
+    localStorage.removeItem("authToken");
+    setIsAuthenticated(false);
+    setUser(null);
+    setShowWelcomeDialog(false);
+    router.push("/auth/login");
+  };
 
   const markWelcomeDialogShown = async () => {
-    const token = localStorage.getItem('authToken')
-    if (!token) return
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
 
     try {
-      const response = await fetch('/api/auth/mark-welcome-dialog-shown', {
-        method: 'POST',
+      const response = await fetch("/api/auth/mark-welcome-dialog-shown", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.ok) {
         // Update user state to reflect that dialog has been shown
-        setUser(prev => prev ? { ...prev, welcomePricingDialogShown: true } : null)
-        setShowWelcomePricingDialog(false)
+        setUser((prev) =>
+          prev ? { ...prev, welcomeDialogShown: true } : null
+        );
+        setShowWelcomeDialog(false);
       } else {
-        console.error('Failed to mark welcome dialog as shown')
+        console.error("Failed to mark welcome dialog as shown");
       }
     } catch (error) {
-      console.error('Error marking welcome dialog as shown:', error)
+      console.error("Error marking welcome dialog as shown:", error);
     }
-  }
+  };
 
   const refreshUser = async () => {
-    const token = localStorage.getItem('authToken')
-    if (!token) return
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
 
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch("/api/auth/me", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        const userData = await response.json()
-        setUser(userData)
+        const userData = await response.json();
+        setUser(userData);
       }
     } catch (error) {
-      console.error('Failed to refresh user data:', error)
+      console.error("Failed to refresh user data:", error);
     }
-  }
+  };
 
   const updateActivity = async () => {
-    const token = localStorage.getItem('authToken')
+    const token = localStorage.getItem("authToken");
     if (!token) {
-      console.log('No auth token found for activity update')
-      return
+      console.log("No auth token found for activity update");
+      return;
     }
 
     try {
-      console.log('Updating user activity...')
-      const response = await fetch('/api/auth/activity', {
-        method: 'POST',
+      console.log("Updating user activity...");
+      const response = await fetch("/api/auth/activity", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
       if (response.ok) {
-        console.log('Activity updated successfully')
+        console.log("Activity updated successfully");
       } else {
-        console.error('Activity update failed:', response.status, response.statusText)
+        console.error(
+          "Activity update failed:",
+          response.status,
+          response.statusText
+        );
       }
     } catch (error) {
-      console.error('Failed to update activity:', error)
+      console.error("Failed to update activity:", error);
     }
-  }
+  };
 
   // Set up periodic activity tracking
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated) return;
 
     // Update activity immediately
-    updateActivity()
+    updateActivity();
 
     // Set up interval to update activity every 1 minutes
-    const interval = setInterval(updateActivity, 1 * 60 * 1000)
+    const interval = setInterval(updateActivity, 1 * 60 * 1000);
 
-    return () => clearInterval(interval)
-  }, [isAuthenticated])
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
-      login, 
-      logout, 
-      setUser, 
-      refreshUser, 
-      updateActivity,
-      showWelcomePricingDialog,
-      setShowWelcomePricingDialog,
-      markWelcomeDialogShown
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        login,
+        logout,
+        setUser,
+        refreshUser,
+        updateActivity,
+        showWelcomeDialog,
+        setShowWelcomeDialog,
+        markWelcomeDialogShown,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
-export { AuthContext }
+export { AuthContext };
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }

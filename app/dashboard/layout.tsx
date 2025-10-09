@@ -7,11 +7,11 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import { TrialCountdown } from "@/components/subscription/TrialCountdown";
 import { UpgradeDialog } from "@/components/subscription/UpgradeDialog";
-import { WelcomePricingDialog } from "@/components/subscription/WelcomePricingDialog";
+import { OnboardingDialog } from "@/components/onboarding-dialog";
 import { useAuth } from "@/context/AuthContext";
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  const { showWelcomePricingDialog, setShowWelcomePricingDialog } = useAuth();
+  const { showWelcomeDialog, setShowWelcomeDialog } = useAuth();
 
   return (
     <>
@@ -27,9 +27,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         <FloatingAgentButton />
       </div>
       <UpgradeDialog />
-      <WelcomePricingDialog 
-        isOpen={showWelcomePricingDialog} 
-        onClose={() => setShowWelcomePricingDialog(false)} 
+      <OnboardingDialog
+        isOpen={showWelcomeDialog}
+        onClose={() => setShowWelcomeDialog(false)}
       />
     </>
   );
@@ -43,9 +43,7 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <SubscriptionProvider>
-        <DashboardLayoutContent>
-          {children}
-        </DashboardLayoutContent>
+        <DashboardLayoutContent>{children}</DashboardLayoutContent>
       </SubscriptionProvider>
     </ProtectedRoute>
   );

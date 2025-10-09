@@ -1,22 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { pool } from '@/lib/db'
-import { verifyToken } from '@/lib/auth'
-import { checkReleaseLimit } from '@/lib/subscription-utils'
+import { NextRequest, NextResponse } from "next/server";
+import { pool } from "@/lib/db";
+import { verifyToken } from "@/lib/auth";
+import { checkReleaseLimit } from "@/lib/subscription-utils";
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
+    const token = request.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
-      return NextResponse.json({ error: "No token provided" }, { status: 401 })
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
 
-    const decoded = verifyToken(token)
+    const decoded = verifyToken(token);
     if (!decoded) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const data = await request.json()
-    console.log('[Create Release] received payload keys:', Object.keys(data || {}))
+    const data = await request.json();
+    console.log(
+      "[Create Release] received payload keys:",
+      Object.keys(data || {})
+    );
 
     const {
       distribution_type,
@@ -51,68 +54,120 @@ export async function POST(request: NextRequest) {
       fraud_prevention_agreement,
       tracks,
       submit_for_review,
-      release_date // Added release_date
-    } = data
+      release_date, // Added release_date
+    } = data;
 
     // Validate required fields
-    if (!distribution_type || !artist_name || !release_title || !record_label || !c_line || !p_line || !primary_genre || !language) {
-      return NextResponse.json({ error: 'Missing required fields: Distribution Type, Artist Name, Release Title, Record Label, C-Line, P-Line, Primary Genre, and Language are all required' }, { status: 400 })
+    if (
+      !distribution_type ||
+      !artist_name ||
+      !release_title ||
+      !record_label ||
+      !c_line ||
+      !p_line ||
+      !primary_genre ||
+      !language
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Missing required fields: Distribution Type, Artist Name, Release Title, Record Label, C-Line, P-Line, Primary Genre, and Language are all required",
+        },
+        { status: 400 }
+      );
     }
 
     // Validate songwriter requirements for each track
     if (tracks && tracks.length > 0) {
       for (const track of tracks) {
         if (!track.songwriters || track.songwriters.length === 0) {
-          return NextResponse.json({ 
-            error: 'Each track must have at least one songwriter with first name, last name, and role' 
-          }, { status: 400 })
+          return NextResponse.json(
+            {
+              error:
+                "Each track must have at least one songwriter with first name, last name, and role",
+            },
+            { status: 400 }
+          );
         }
-        
+
         for (const songwriter of track.songwriters) {
-          if (!songwriter.firstName?.trim() || !songwriter.lastName?.trim() || !songwriter.role?.trim()) {
-            return NextResponse.json({ 
-              error: 'Songwriter information is incomplete. Please provide first name, last name, and role for all songwriters' 
-            }, { status: 400 })
+          if (
+            !songwriter.firstName?.trim() ||
+            !songwriter.lastName?.trim() ||
+            !songwriter.role?.trim()
+          ) {
+            return NextResponse.json(
+              {
+                error:
+                  "Songwriter information is incomplete. Please provide first name, last name, and role for all songwriters",
+              },
+              { status: 400 }
+            );
           }
         }
       }
     }
 
     // Check subscription limits for release creation
-    const releaseCheck = await checkReleaseLimit(decoded.userId, distribution_type)
+    const releaseCheck = await checkReleaseLimit(
+      decoded.userId,
+      distribution_type
+    );
     if (!releaseCheck.allowed) {
-      return NextResponse.json({
-        error: releaseCheck.reason,
-        upgradeRequired: releaseCheck.upgradeRequired,
-        subscriptionLimited: true
-      }, { status: 403 })
+      return NextResponse.json(
+        {
+          error: releaseCheck.reason,
+          upgradeRequired: releaseCheck.upgradeRequired,
+          subscriptionLimited: true,
+        },
+        { status: 403 }
+      );
     }
 
     // Validate distribution type vs track count
-    const trackCount = tracks?.length || 0
-    if (distribution_type === 'Single' && trackCount !== 1) {
-      return NextResponse.json({ error: 'Single must have exactly 1 track' }, { status: 400 })
+    const trackCount = tracks?.length || 0;
+    if (distribution_type === "Single" && trackCount !== 1) {
+      return NextResponse.json(
+        { error: "Single must have exactly 1 track" },
+        { status: 400 }
+      );
     }
-    if (distribution_type === 'EP' && (trackCount < 2 || trackCount > 8)) {
-      return NextResponse.json({ error: 'EP must have 2-8 tracks' }, { status: 400 })
+    if (distribution_type === "EP" && (trackCount < 2 || trackCount > 8)) {
+      return NextResponse.json(
+        { error: "EP must have 2-8 tracks" },
+        { status: 400 }
+      );
     }
-    if (distribution_type === 'Album' && trackCount < 8) {
-      return NextResponse.json({ error: 'Album must have 8 or more tracks' }, { status: 400 })
+    if (distribution_type === "Album" && trackCount < 8) {
+      return NextResponse.json(
+        { error: "Album must have 8 or more tracks" },
+        { status: 400 }
+      );
     }
 
     // If submitting for review, validate all required agreements
     if (submit_for_review) {
-      if (!terms_agreed || !fake_streaming_agreement || !distribution_agreement || !artist_names_agreement || !youtube_music_agreement) {
-        return NextResponse.json({ error: 'All agreements must be accepted before submission' }, { status: 400 })
+      if (
+        !terms_agreed ||
+        !fake_streaming_agreement ||
+        !distribution_agreement ||
+        !artist_names_agreement ||
+        !youtube_music_agreement
+      ) {
+        return NextResponse.json(
+          { error: "All agreements must be accepted before submission" },
+          { status: 400 }
+        );
       }
     }
 
-    const client = await pool.connect()
+    const client = await pool.connect();
     try {
-      await client.query('BEGIN')
+      await client.query("BEGIN");
 
       // Insert or update release
-      const releaseResult = await client.query(`
+      const releaseResult = await client.query(
+        `
         INSERT INTO releases (
           artist_id, distribution_type, artist_name, release_title, record_label,
           c_line, p_line, has_spotify_profile, spotify_profile_url, has_apple_profile, apple_profile_url, additional_delivery,
@@ -125,132 +180,260 @@ export async function POST(request: NextRequest) {
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34
         )
         RETURNING *
-      `, [
-        decoded.userId,
-        distribution_type,
-        artist_name,
-        release_title,
-        record_label,
-        c_line || null,
-        p_line || null,
-        has_spotify_profile || false,
-        spotify_profile_url || null,
-        has_apple_profile || false,
-        apple_profile_url || null,
-        JSON.stringify(additional_delivery || []),
-        primary_genre,
-        secondary_genre,
-        language,
-        explicit_lyrics,
-        instrumental,
-        version_info,
-        version_other,
-        release_date,
-        original_release_date || null,
-        previously_released,
-        album_cover_url,
-        JSON.stringify(selected_stores || []),
-        track_price,
-        submit_for_review ? 'under_review' : 'draft',
-        terms_agreed,
-        fake_streaming_agreement,
-        distribution_agreement,
-        artist_names_agreement,
-        snapchat_terms,
-        youtube_music_agreement,
-        fraud_prevention_agreement,
-        submit_for_review ? new Date() : null
-      ])
+      `,
+        [
+          decoded.userId,
+          distribution_type,
+          artist_name,
+          release_title,
+          record_label,
+          c_line || null,
+          p_line || null,
+          has_spotify_profile || false,
+          spotify_profile_url || null,
+          has_apple_profile || false,
+          apple_profile_url || null,
+          JSON.stringify(additional_delivery || []),
+          primary_genre,
+          secondary_genre,
+          language,
+          explicit_lyrics,
+          instrumental,
+          version_info,
+          version_other,
+          release_date,
+          original_release_date || null,
+          previously_released,
+          album_cover_url,
+          JSON.stringify(selected_stores || []),
+          track_price,
+          submit_for_review ? "under_review" : "draft",
+          terms_agreed,
+          fake_streaming_agreement,
+          distribution_agreement,
+          artist_names_agreement,
+          snapchat_terms,
+          youtube_music_agreement,
+          fraud_prevention_agreement,
+          submit_for_review ? new Date() : null,
+        ]
+      );
 
-      const release = releaseResult.rows[0]
+      const release = releaseResult.rows[0];
 
-      // Insert tracks
+      // Insert tracks and collect track IDs for audio scanning
+      const insertedTracks = [];
       if (tracks && tracks.length > 0) {
         for (let i = 0; i < tracks.length; i++) {
-          const track = tracks[i]
-          const audioUrl = track.audio_file_url || track.audioFileUrl || null
-          const audioName = track.audio_file_name || track.audioFileName || null
-          console.log('[Create Release] track', i + 1, {
+          const track = tracks[i];
+          const audioUrl = track.audio_file_url || track.audioFileUrl || null;
+          const audioName =
+            track.audio_file_name || track.audioFileName || null;
+          console.log("[Create Release] track", i + 1, {
             track_title: track.track_title,
             audio_file_url: track.audio_file_url,
             audioFileUrl: track.audioFileUrl,
             resolvedAudioUrl: audioUrl,
             audio_file_name: track.audio_file_name,
             audioFileName: track.audioFileName,
-          })
-          await client.query(`
+          });
+          const trackResult = await client.query(
+            `
             INSERT INTO tracks (
               release_id, track_number, track_title, artist_names, featured_artists,
               songwriters, producer_credits, performer_credits, genre, audio_file_url,
               audio_file_name, isrc, lyrics_text, has_lyrics, add_featured_to_title
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-          `, [
-            release.id,
-            i + 1,
-            track.track_title,
-            track.artist_names || [],
-            track.featured_artists || [],
-            JSON.stringify(track.songwriters || []),
-            JSON.stringify(track.producer_credits || []),
-            JSON.stringify(track.performer_credits || []),
-            track.genre,
-            audioUrl,
-            audioName,
-            track.isrc,
-            track.lyrics_text,
-            track.has_lyrics || false,
-            track.add_featured_to_title || false
-          ])
+            RETURNING id, track_number, track_title, audio_file_url, isrc
+          `,
+            [
+              release.id,
+              i + 1,
+              track.track_title,
+              track.artist_names || [],
+              track.featured_artists || [],
+              JSON.stringify(track.songwriters || []),
+              JSON.stringify(track.producer_credits || []),
+              JSON.stringify(track.performer_credits || []),
+              track.genre,
+              audioUrl,
+              audioName,
+              track.isrc,
+              track.lyrics_text,
+              track.has_lyrics || false,
+              track.add_featured_to_title || false,
+            ]
+          );
+          insertedTracks.push(trackResult.rows[0]);
         }
       }
 
-      await client.query('COMMIT')
+      await client.query("COMMIT");
+
+      // Trigger audio scanning for all tracks with audio files (run asynchronously)
+      if (insertedTracks.length > 0) {
+        Promise.all(
+          insertedTracks
+            .filter((track) => track.audio_file_url) // Only scan tracks with audio
+            .map(async (track) => {
+              try {
+                const { ircamService } = await import("@/lib/ircam-amplify");
+
+                // Submit to IRCAM for analysis
+                console.log(`[Audio Scan] Submitting track to IRCAM:`, {
+                  track_id: track.id,
+                  track_title: track.track_title,
+                  audio_url: track.audio_file_url,
+                  artist: artist_name,
+                  isrc: track.isrc,
+                });
+
+                const ircamJobId = await ircamService.submitAudioAnalysis(
+                  track.audio_file_url,
+                  {
+                    title: track.track_title,
+                    artist: artist_name,
+                    isrc: track.isrc,
+                  }
+                );
+
+                console.log(`[Audio Scan] IRCAM Job Created:`, {
+                  job_id: ircamJobId,
+                  track_id: track.id,
+                });
+
+                // Store initial scan record in database
+                const dbValues = {
+                  release_id: release.id,
+                  track_id: track.id,
+                  track_number: track.track_number,
+                  artist_id: decoded.userId,
+                  ircam_job_id: ircamJobId,
+                  scan_status: "processing",
+                  audio_url: track.audio_file_url,
+                  track_title: track.track_title,
+                  track_artist: artist_name,
+                  track_isrc: track.isrc,
+                };
+
+                console.log("[Audio Scan] Saving to database:", dbValues);
+
+                await pool.query(
+                  `INSERT INTO audio_scan_results (
+                    release_id,
+                    track_id,
+                    track_number,
+                    artist_id,
+                    ircam_job_id,
+                    scan_status,
+                    audio_url,
+                    track_title,
+                    track_artist,
+                    track_isrc
+                  ) VALUES ($1, $2, $3, $4, $5, 'processing', $6, $7, $8, $9)
+                  ON CONFLICT (release_id, track_number) DO UPDATE SET
+                    track_id = EXCLUDED.track_id,
+                    ircam_job_id = EXCLUDED.ircam_job_id,
+                    scan_status = 'processing',
+                    audio_url = EXCLUDED.audio_url,
+                    track_title = EXCLUDED.track_title,
+                    updated_at = CURRENT_TIMESTAMP`,
+                  [
+                    release.id,
+                    track.id,
+                    track.track_number,
+                    decoded.userId,
+                    ircamJobId,
+                    track.audio_file_url,
+                    track.track_title,
+                    artist_name,
+                    track.isrc,
+                  ]
+                );
+
+                console.log(
+                  `[Audio Scan] ✅ Database record created for track ${track.id}`
+                );
+
+                // Update release status to scanning
+                await pool.query(
+                  `UPDATE releases SET audio_scan_status = 'scanning' WHERE id = $1`,
+                  [release.id]
+                );
+
+                console.log(
+                  `[Audio Scan] ✅ Initiated scan for track ${track.id} (${track.track_title})`
+                );
+              } catch (scanError) {
+                console.error(
+                  `[Audio Scan] Failed to initiate scan for track ${track.id}:`,
+                  scanError
+                );
+                // Don't fail the release creation if scanning fails
+              }
+            })
+        ).catch((error) => {
+          console.error("[Audio Scan] Error initiating audio scans:", error);
+        });
+      }
 
       // Trigger release submitted email if submitted for review
       if (submit_for_review) {
         try {
-          const { triggerReleaseSubmittedEmail } = await import('@/lib/email-automation')
-          await triggerReleaseSubmittedEmail(decoded.userId, release_title)
+          const { triggerReleaseSubmittedEmail } = await import(
+            "@/lib/email-automation"
+          );
+          await triggerReleaseSubmittedEmail(decoded.userId, release_title);
         } catch (emailError) {
-          console.error('Error sending release submitted email:', emailError)
+          console.error("Error sending release submitted email:", emailError);
           // Don't fail the release creation if email fails
         }
       }
 
       return NextResponse.json({
-        message: submit_for_review ? 'Release submitted for review successfully' : 'Release saved as draft',
-        release
-      })
+        message: submit_for_review
+          ? "Release submitted for review successfully"
+          : "Release saved as draft",
+        release,
+        audio_scanning:
+          insertedTracks.filter((t) => t.audio_file_url).length > 0
+            ? "Audio scanning initiated for uploaded tracks"
+            : "No audio files to scan",
+      });
     } catch (error) {
-      await client.query('ROLLBACK')
-      throw error
+      await client.query("ROLLBACK");
+      throw error;
     } finally {
-      client.release()
+      client.release();
     }
   } catch (error) {
-    console.error('Create release error:', error)
-    return NextResponse.json({ error: 'Failed to create release' }, { status: 500 })
+    console.error("Create release error:", error);
+    return NextResponse.json(
+      { error: "Failed to create release" },
+      { status: 500 }
+    );
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
+    const token = request.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
-      return NextResponse.json({ error: "No token provided" }, { status: 401 })
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
 
-    const decoded = verifyToken(token)
+    const decoded = verifyToken(token);
     if (!decoded) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const releaseId = searchParams.get('release_id')
+    const { searchParams } = new URL(request.url);
+    const releaseId = searchParams.get("release_id");
 
     if (releaseId) {
       // Get specific release with tracks
-      const releaseResult = await pool.query(`
+      const releaseResult = await pool.query(
+        `
         SELECT r.*, 
                COALESCE(
                  json_agg(
@@ -278,16 +461,22 @@ export async function GET(request: NextRequest) {
         LEFT JOIN tracks t ON r.id = t.release_id
         WHERE r.id = $1 AND r.artist_id = $2
         GROUP BY r.id
-      `, [releaseId, decoded.userId])
+      `,
+        [releaseId, decoded.userId]
+      );
 
       if (releaseResult.rows.length === 0) {
-        return NextResponse.json({ error: 'Release not found' }, { status: 404 })
+        return NextResponse.json(
+          { error: "Release not found" },
+          { status: 404 }
+        );
       }
 
-      return NextResponse.json({ release: releaseResult.rows[0] })
+      return NextResponse.json({ release: releaseResult.rows[0] });
     } else {
       // Get all releases for the artist
-      const releasesResult = await pool.query(`
+      const releasesResult = await pool.query(
+        `
         SELECT r.*, 
                COUNT(t.id) as track_count,
                COALESCE(
@@ -306,12 +495,17 @@ export async function GET(request: NextRequest) {
         WHERE r.artist_id = $1
         GROUP BY r.id, r.upc
         ORDER BY r.created_at DESC
-      `, [decoded.userId])
+      `,
+        [decoded.userId]
+      );
 
-      return NextResponse.json({ releases: releasesResult.rows })
+      return NextResponse.json({ releases: releasesResult.rows });
     }
   } catch (error) {
-    console.error('Get releases error:', error)
-    return NextResponse.json({ error: 'Failed to fetch releases' }, { status: 500 })
+    console.error("Get releases error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch releases" },
+      { status: 500 }
+    );
   }
 }

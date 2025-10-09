@@ -7,6 +7,7 @@ import { PayoutMethodsViewer } from "@/components/admin/payout-methods-viewer";
 import { AdminRoute } from "@/components/auth/admin-route";
 import AnalyticsUpload from "@/components/admin/analytics-upload";
 import { AdminOverview } from "@/components/admin/admin-overview";
+import { IdentityVerificationReview } from "@/components/admin/identity-verification-review";
 import { MobileNavigation } from "@/components/mobile-navigation";
 import { HeaderSection } from "@/components/header-section";
 
@@ -14,13 +15,14 @@ export default function AdminPage() {
   return (
     <AdminRoute>
       <div className="space-y-4 md:space-y-6 p-4 md:p-6">
-        <HeaderSection/>
+        <HeaderSection />
         <h1 className="text-2xl md:text-3xl font-bold text-[#333] dark:text-white">
           Admin Dashboard
         </h1>
 
         <div className="grid gap-4 md:gap-6">
           <AdminOverview />
+          <IdentityVerificationReview />
           <ReleaseManagement />
           <WithdrawalManagement />
           <PayoutMethodsViewer />

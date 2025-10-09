@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSubscription } from "@/context/SubscriptionContext";
-import { Check, X, Shield } from "lucide-react";
+import { Check, Shield } from "lucide-react";
 
 interface OnboardingStep {
   id: string;
@@ -15,7 +15,6 @@ export function OnboardingDashboard() {
   const { subscription } = useSubscription();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
-  const [welcomeVisible, setWelcomeVisible] = useState(true);
 
   useEffect(() => {
     // Only show onboarding for trial users who haven't used their free release
@@ -62,11 +61,6 @@ export function OnboardingDashboard() {
         url: "/dashboard/my-music",
       },
     ];
-  };
-
-  const dismissWelcome = () => {
-    setWelcomeVisible(false);
-    localStorage.setItem("welcomeDismissed", "true");
   };
 
   const handleStepClick = (step: OnboardingStep) => {
@@ -159,36 +153,24 @@ export function OnboardingDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner for New Trial Users */}
-      {welcomeVisible && (
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Welcome to ALERA! 🎵</h2>
-              <p className="text-purple-100">
-                You're on the free trial. Complete your first release to get
-                started!
-              </p>
-            </div>
-            <button
-              onClick={dismissWelcome}
-              className="text-white/80 hover:text-white transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Onboarding Checklist - Matching the Image Design */}
+      {/* Unified Onboarding Card with Welcome Message */}
       <div className="bg-gradient-to-b from-blue-900 via-blue-800 to-purple-700 rounded-2xl p-8 text-white shadow-2xl">
-        <h3 className="text-3xl font-bold mb-8 text-center">
+        {/* Welcome Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-3">Welcome to ALERA! 🎵</h2>
+          <p className="text-purple-100 text-lg">
+            You're on the free trial. Complete your first release to get started!
+          </p>
+        </div>
+
+        {/* Checklist Title */}
+        <h3 className="text-2xl font-bold mb-6 text-center border-t border-white/20 pt-6">
           Your Path to Your First Release!
         </h3>
 
         {/* Steps List */}
         <div className="space-y-4 mb-8">
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <div key={step.id} className="flex items-center space-x-4">
               <div className="flex-shrink-0">
                 {step.completed ? (
@@ -231,7 +213,7 @@ export function OnboardingDashboard() {
         {subscription?.tier === "trial" && (
           <div className="mt-8 text-center">
             <button
-              onClick={() => (window.location.href = "/pricing")}
+              onClick={() => (window.location.href = "/subscription")}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-3 rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
               Upgrade to Unlock All Features

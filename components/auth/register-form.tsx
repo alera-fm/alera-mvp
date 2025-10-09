@@ -1,81 +1,97 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
-import { motion } from "framer-motion"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { motion } from "framer-motion";
+import { GoogleSignInButton } from "./google-signin-button";
 
 export function RegisterForm() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     artistName: "",
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
           artistName: formData.artistName || null,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Registration successful! Please check your email to verify your account.",
-        })
-        router.push(`/auth/welcome?email=${encodeURIComponent(formData.email)}`)
+          description:
+            "Registration successful! Please check your email to verify your account.",
+        });
+        router.push(
+          `/auth/welcome?email=${encodeURIComponent(formData.email)}`
+        );
       } else {
         toast({
           title: "Registration Failed",
           description: data.error || data.message || "Registration failed",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "An error occurred during registration",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <Card className="border-0 shadow-xl bg-white dark:bg-[#0f0f1a]">
         <CardHeader className="text-center pb-6">
-          <CardTitle className="text-2xl font-bold text-[#333] dark:text-white">Create Your Account</CardTitle>
+          <CardTitle className="text-2xl font-bold text-[#333] dark:text-white">
+            Create Your Account
+          </CardTitle>
           <CardDescription className="text-[#666] dark:text-gray-400">
             Join ALERA and start your music journey
           </CardDescription>
@@ -85,7 +101,10 @@ export function RegisterForm() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#333] dark:text-white font-medium">
+              <Label
+                htmlFor="email"
+                className="text-[#333] dark:text-white font-medium"
+              >
                 Email Address
               </Label>
               <div className="relative">
@@ -104,7 +123,10 @@ export function RegisterForm() {
 
             {/* Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[#333] dark:text-white font-medium">
+              <Label
+                htmlFor="password"
+                className="text-[#333] dark:text-white font-medium"
+              >
                 Password
               </Label>
               <div className="relative">
@@ -114,7 +136,9 @@ export function RegisterForm() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a password"
                   value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
                   className="pl-10 pr-10 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a2e] focus:border-purple-500 dark:focus:border-purple-400"
                   required
                 />
@@ -123,15 +147,23 @@ export function RegisterForm() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Artist Name Field (Optional) */}
             <div className="space-y-2">
-              <Label htmlFor="artistName" className="text-[#333] dark:text-white font-medium">
-                Artist Name <span className="text-gray-400 font-normal">(Optional)</span>
+              <Label
+                htmlFor="artistName"
+                className="text-[#333] dark:text-white font-medium"
+              >
+                Artist Name{" "}
+                <span className="text-gray-400 font-normal">(Optional)</span>
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -140,7 +172,9 @@ export function RegisterForm() {
                   type="text"
                   placeholder="Your artist or band name"
                   value={formData.artistName}
-                  onChange={(e) => handleInputChange("artistName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("artistName", e.target.value)
+                  }
                   className="pl-10 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a2e] focus:border-purple-500 dark:focus:border-purple-400"
                 />
               </div>
@@ -162,11 +196,29 @@ export function RegisterForm() {
               )}
             </Button>
 
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-200 dark:border-gray-700" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-[#0f0f1a] px-2 text-gray-500 dark:text-gray-400">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            {/* Google Register Button */}
+            <GoogleSignInButton variant="register" disabled={isLoading} />
+
             {/* Login Link */}
             <div className="text-center pt-4">
               <p className="text-[#666] dark:text-gray-400">
                 Already have an account?{" "}
-                <Link href="/auth/login" className="text-[#5d2c91] dark:text-purple-400 font-medium hover:underline">
+                <Link
+                  href="/auth/login"
+                  className="text-[#5d2c91] dark:text-purple-400 font-medium hover:underline"
+                >
                   Sign in
                 </Link>
               </p>
@@ -175,5 +227,5 @@ export function RegisterForm() {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
