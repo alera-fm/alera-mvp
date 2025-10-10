@@ -24,24 +24,11 @@ export interface StreamingService {
   url: string;
 }
 
-export interface FanEngagement {
-  enabled: boolean;
-  emailSignup?: {
-    enabled: boolean;
-    endpoint?: string;
-  };
-  fanZone?: {
-    enabled: boolean;
-    url?: string;
-  };
-}
-
 export interface ParsedReleaseData {
   artistName: string;
   releaseTitle: string;
   artworkUrl?: string | null;
   streamingServices: StreamingService[];
-  fanEngagement: FanEngagement;
 }
 
 export async function parseReleaseLink(
@@ -139,13 +126,7 @@ async function extractStructuredData(
 ): Promise<ParsedReleaseData> {
   const schema = {
     type: "object",
-    required: [
-      "artistName",
-      "releaseTitle",
-      "artworkUrl",
-      "streamingServices",
-      "fanEngagement",
-    ],
+    required: ["artistName", "releaseTitle", "artworkUrl", "streamingServices"],
     additionalProperties: false,
     properties: {
       artistName: { type: "string" },
@@ -160,32 +141,6 @@ async function extractStructuredData(
           properties: {
             name: { type: "string" },
             url: { type: "string" },
-          },
-        },
-      },
-      fanEngagement: {
-        type: "object",
-        required: ["enabled", "emailSignup", "fanZone"],
-        additionalProperties: false,
-        properties: {
-          enabled: { type: "boolean" },
-          emailSignup: {
-            type: "object",
-            required: ["enabled", "endpoint"],
-            additionalProperties: false,
-            properties: {
-              enabled: { type: "boolean" },
-              endpoint: { type: "string" },
-            },
-          },
-          fanZone: {
-            type: "object",
-            required: ["enabled", "url"],
-            additionalProperties: false,
-            properties: {
-              enabled: { type: "boolean" },
-              url: { type: "string" },
-            },
           },
         },
       },
@@ -215,7 +170,7 @@ ${streamingUrls.join("\n")}
 CONTEXT:
 ${contextSnippet}
 
-Classify each URL above into the streamingServices array with correct service names. Extract artistName and releaseTitle.`,
+Classify each URL above into the streamingServices array with correct service names (Spotify, Apple Music, iTunes, Amazon Music, etc.). Extract artistName and releaseTitle from metadata/context.`,
         },
       ],
       response_format: {
@@ -231,15 +186,16 @@ Classify each URL above into the streamingServices array with correct service na
   const json = completion.choices[0]?.message?.content;
   if (!json) throw new Error("Empty OpenAI response");
 
-  const data = JSON.parse(json) as ParsedReleaseData;
-  data.artistName = data.artistName?.trim() || "Unknown Artist";
-  data.releaseTitle = data.releaseTitle?.trim() || "Unknown Release";
-  data.artworkUrl = data.artworkUrl || null;
+  const extractedData = JSON.parse(json) as any;
 
-  // Keep only valid HTTP(S) links
-  data.streamingServices = (data.streamingServices || []).filter((s) =>
-    /^https?:\/\//.test(s.url)
-  );
+  const data: ParsedReleaseData = {
+    artistName: extractedData.artistName?.trim() || "Unknown Artist",
+    releaseTitle: extractedData.releaseTitle?.trim() || "Unknown Release",
+    artworkUrl: extractedData.artworkUrl || null,
+    streamingServices: (extractedData.streamingServices || []).filter(
+      (s: any) => /^https?:\/\//.test(s.url)
+    ),
+  };
 
   return data;
 }

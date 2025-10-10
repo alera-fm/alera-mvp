@@ -77,8 +77,8 @@ export async function POST(
     const insertResult = await pool.query(
       `INSERT INTO release_links (
         release_id, artist_name, release_title, artwork_url, 
-        streaming_services, fan_engagement, source_url
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        streaming_services, source_url
+      ) VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id, parsed_at`,
       [
         releaseId,
@@ -86,7 +86,6 @@ export async function POST(
         parsedData.releaseTitle,
         parsedData.artworkUrl,
         JSON.stringify(parsedData.streamingServices),
-        JSON.stringify(parsedData.fanEngagement),
         sourceUrl,
       ]
     );
@@ -159,7 +158,7 @@ export async function GET(
     // Get all parsed links for this release
     const result = await pool.query(
       `SELECT id, artist_name, release_title, artwork_url, 
-              streaming_services, fan_engagement, source_url, 
+              streaming_services, source_url, 
               parsed_at, created_at, updated_at
        FROM release_links 
        WHERE release_id = $1 
@@ -173,7 +172,6 @@ export async function GET(
       releaseTitle: row.release_title,
       artworkUrl: row.artwork_url,
       streamingServices: row.streaming_services,
-      fanEngagement: row.fan_engagement,
       sourceUrl: row.source_url,
       parsedAt: row.parsed_at,
       createdAt: row.created_at,

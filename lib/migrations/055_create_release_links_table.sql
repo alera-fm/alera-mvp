@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS release_links (
     release_title VARCHAR(255) NOT NULL,
     artwork_url TEXT,
     streaming_services JSONB NOT NULL DEFAULT '[]',
-    fan_engagement JSONB NOT NULL DEFAULT '{}',
     source_url TEXT NOT NULL,
     parsed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -24,6 +23,5 @@ ON release_links(release_id, source_url);
 -- Add comments
 COMMENT ON TABLE release_links IS 'Stores parsed release link data from distributor links';
 COMMENT ON COLUMN release_links.streaming_services IS 'JSON array of streaming service objects with name and url';
-COMMENT ON COLUMN release_links.fan_engagement IS 'JSON object with fan engagement configuration';
 COMMENT ON COLUMN release_links.source_url IS 'Original distributor link that was parsed';
 

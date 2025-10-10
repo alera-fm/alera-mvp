@@ -12,12 +12,14 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    // Get release by slug/title
+    // Get release by slug/title with artist's public page link
     const releaseResult = await pool.query(
       `SELECT r.id, r.release_title, r.status, r.created_at,
-              u.artist_name, u.id as artist_id
+              u.artist_name, u.id as artist_id,
+              lp.slug as artist_slug
        FROM releases r
        JOIN users u ON r.artist_id = u.id
+       LEFT JOIN landing_pages lp ON lp.artist_id = u.id
        WHERE r.status = 'live' 
        AND (
          LOWER(REPLACE(r.release_title, ' ', '-')) = $1 
@@ -33,35 +35,36 @@ export async function GET(
       return NextResponse.json({ error: "Release not found" }, { status: 404 });
     }
 
-    const release = releaseResult.rows[0];
+    const releaseRow = releaseResult.rows[0];
 
     // Get the latest parsed link data for this release
     const linkResult = await pool.query(
       `SELECT artist_name, release_title, artwork_url, 
-              streaming_services, fan_engagement, parsed_at
+              streaming_services, parsed_at
        FROM release_links 
        WHERE release_id = $1 
        ORDER BY parsed_at DESC 
        LIMIT 1`,
-      [release.id]
+      [releaseRow.id]
     );
+
+    // Build artist public link from landing_pages.slug (from LEFT JOIN above)
+    // artist_slug comes from: LEFT JOIN landing_pages lp ON lp.artist_id = u.id
+    const artistPublicLink = releaseRow.artist_slug
+      ? `/p/${releaseRow.artist_slug}`
+      : "";
 
     // If no parsed link data exists, return basic release info
     if (linkResult.rows.length === 0) {
       return NextResponse.json({
         success: true,
         release: {
-          id: release.id,
-          artistName: release.artist_name,
-          releaseTitle: release.release_title,
+          status: releaseRow.status,
+          artistName: releaseRow.artist_name,
+          releaseTitle: releaseRow.release_title,
           artworkUrl: null,
           streamingServices: [],
-          fanEngagement: {
-            enabled: false,
-          },
-          status: release.status,
-          createdAt: release.created_at,
-          hasParsedData: false,
+          artistPublicLink: artistPublicLink,
         },
       });
     }
@@ -72,16 +75,12 @@ export async function GET(
     return NextResponse.json({
       success: true,
       release: {
-        id: release.id,
+        status: releaseRow.status,
         artistName: linkData.artist_name,
         releaseTitle: linkData.release_title,
         artworkUrl: linkData.artwork_url,
         streamingServices: linkData.streaming_services,
-        fanEngagement: linkData.fan_engagement,
-        status: release.status,
-        createdAt: release.created_at,
-        parsedAt: linkData.parsed_at,
-        hasParsedData: true,
+        artistPublicLink: artistPublicLink,
       },
     });
   } catch (error) {
