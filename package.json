@@ -13,6 +13,7 @@
     "@aws-sdk/s3-request-presigner": "^3.882.0",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
+    "@mendable/firecrawl-js": "^4.3.8",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",

@@ -16,12 +16,14 @@ let isProcessing = false; // Prevent overlapping runs
 async function processAudioScans() {
   // Prevent overlapping runs
   if (isProcessing) {
-    console.log("[Audio Scan Processor] Already processing, skipping this run...");
+    console.log(
+      "[Audio Scan Processor] Already processing, skipping this run..."
+    );
     return;
   }
 
   isProcessing = true;
-  
+
   try {
     console.log("[Audio Scan Processor] Checking for processing scans...");
 
@@ -245,5 +247,7 @@ export function startAudioScanProcessor() {
     });
   }, POLL_INTERVAL);
 
-  console.log("✅ Audio Scan Processor started - will check for scans every 5 minutes");
+  console.log(
+    "✅ Audio Scan Processor started - will check for scans every 5 minutes"
+  );
 }

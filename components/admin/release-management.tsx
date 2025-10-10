@@ -30,6 +30,7 @@ import {
 import { toast } from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
 import { Music, ExternalLink } from "lucide-react";
+import { ReleaseLinkManager } from "./release-link-manager";
 
 // Helper function to safely format dates
 const safeFormatDistance = (dateString: string | null | undefined): string => {
@@ -245,14 +246,14 @@ export function ReleaseManagement() {
       const response = await fetch(
         `/api/admin/releases/${releaseId}/update-status`,
         {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            update_status: newUpdateStatus,
-          }),
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          update_status: newUpdateStatus,
+        }),
         }
       );
 
@@ -279,11 +280,11 @@ export function ReleaseManagement() {
     setProcessing(releaseId);
     try {
       const token = localStorage.getItem("authToken");
-
+      
       // Prepare track codes array
       const trackCodes = Object.entries(trackIsrcCodes).map(
         ([trackId, isrc]) => ({
-          trackId,
+        trackId,
           isrc,
         })
       );
@@ -321,7 +322,7 @@ export function ReleaseManagement() {
 
   const initializeCodes = (release: Release) => {
     setUpcCode(release.upc || "");
-
+    
     // Initialize track ISRC codes
     const initialTrackCodes: { [key: string]: string } = {};
     if (release.tracks) {
@@ -439,9 +440,9 @@ export function ReleaseManagement() {
       const response = await fetch(
         `/api/admin/releases/${release.id}/download`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         }
       );
 
@@ -812,7 +813,7 @@ export function ReleaseManagement() {
                                             selectedRelease.original_release_date
                                           ).toLocaleDateString()
                                         : "Not specified"}
-                                    </div>
+                                  </div>
                                     <div>
                                       <strong>Previously Released:</strong>{" "}
                                       {selectedRelease.previously_released
@@ -857,79 +858,79 @@ export function ReleaseManagement() {
                                               .producers &&
                                               selectedRelease.credits.producers
                                                 .length > 0 && (
-                                                <div>
+                                              <div>
                                                   <strong>Producers:</strong>{" "}
                                                   {selectedRelease.credits.producers.join(
                                                     ", "
                                                   )}
-                                                </div>
-                                              )}
+                                              </div>
+                                            )}
                                             {selectedRelease.credits.writers &&
                                               selectedRelease.credits.writers
                                                 .length > 0 && (
-                                                <div>
+                                              <div>
                                                   <strong>Writers:</strong>{" "}
                                                   {selectedRelease.credits.writers.join(
                                                     ", "
                                                   )}
-                                                </div>
-                                              )}
+                                              </div>
+                                            )}
                                             {selectedRelease.credits
                                               .composers &&
                                               selectedRelease.credits.composers
                                                 .length > 0 && (
-                                                <div>
+                                              <div>
                                                   <strong>Composers:</strong>{" "}
                                                   {selectedRelease.credits.composers.join(
                                                     ", "
                                                   )}
-                                                </div>
-                                              )}
+                                              </div>
+                                            )}
                                             {selectedRelease.credits
                                               .engineers &&
                                               selectedRelease.credits.engineers
                                                 .length > 0 && (
-                                                <div>
+                                              <div>
                                                   <strong>Engineers:</strong>{" "}
                                                   {selectedRelease.credits.engineers.join(
                                                     ", "
                                                   )}
-                                                </div>
-                                              )}
+                                              </div>
+                                            )}
                                             {selectedRelease.credits.mixedBy &&
                                               selectedRelease.credits.mixedBy
                                                 .length > 0 && (
-                                                <div>
+                                              <div>
                                                   <strong>Mixed By:</strong>{" "}
                                                   {selectedRelease.credits.mixedBy.join(
                                                     ", "
                                                   )}
-                                                </div>
-                                              )}
+                                              </div>
+                                            )}
                                             {selectedRelease.credits
                                               .masteredBy &&
                                               selectedRelease.credits.masteredBy
                                                 .length > 0 && (
-                                                <div>
+                                              <div>
                                                   <strong>Mastered By:</strong>{" "}
                                                   {selectedRelease.credits.masteredBy.join(
                                                     ", "
                                                   )}
-                                                </div>
-                                              )}
+                                              </div>
+                                            )}
                                             {selectedRelease.credits
                                               .featuredArtists &&
                                               selectedRelease.credits
                                                 .featuredArtists.length > 0 && (
-                                                <div>
+                                              <div>
                                                   <strong>
                                                     Featured Artists:
                                                   </strong>{" "}
                                                   {selectedRelease.credits.featuredArtists.join(
                                                     ", "
                                                   )}
-                                                </div>
-                                              )}
+                                              </div>
+                                            )}
                                           </>
                                         ) : (
                                           <div className="text-gray-500">
@@ -1020,8 +1021,8 @@ export function ReleaseManagement() {
                                         variant="outline"
                                         className="text-xs"
                                       >
-                                        {store}
-                                      </Badge>
+                                      {store}
+                                    </Badge>
                                     )
                                   ) || (
                                     <span className="text-sm text-gray-500">
@@ -1034,28 +1035,28 @@ export function ReleaseManagement() {
                               {/* Track Details */}
                               {selectedRelease.tracks &&
                                 selectedRelease.tracks.length > 0 && (
-                                  <div className="space-y-4">
+                                <div className="space-y-4">
                                     <h3 className="font-medium text-lg border-b pb-2">
                                       Track Details
                                     </h3>
-                                    <div className="space-y-4">
+                                  <div className="space-y-4">
                                       {selectedRelease.tracks.map(
                                         (track, index) => (
                                           <div
                                             key={index}
                                             className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800"
                                           >
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                              <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                  <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded text-xs font-medium">
-                                                    Track {track.track_number}
-                                                  </span>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                              <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded text-xs font-medium">
+                                                Track {track.track_number}
+                                              </span>
                                                   <div className="font-medium">
                                                     {track.track_title}
                                                   </div>
-                                                </div>
-                                                <div className="text-sm space-y-1">
+                                            </div>
+                                            <div className="text-sm space-y-1">
                                                   <div>
                                                     <strong>Artists:</strong>{" "}
                                                     {track.artist_names?.join(
@@ -1086,11 +1087,11 @@ export function ReleaseManagement() {
                                                       ? "Yes"
                                                       : "No"}
                                                   </div>
-                                                </div>
-                                              </div>
+                                            </div>
+                                          </div>
 
-                                              <div className="space-y-2">
-                                                <div className="text-sm space-y-1">
+                                          <div className="space-y-2">
+                                            <div className="text-sm space-y-1">
                                                   <div>
                                                     <strong>Audio File:</strong>{" "}
                                                     {track.audio_file_name
@@ -1098,15 +1099,15 @@ export function ReleaseManagement() {
                                                       : "❌ Not uploaded"}
                                                   </div>
 
-                                                  {/* Songwriters */}
-                                                  <div>
+                                              {/* Songwriters */}
+                                              <div>
                                                     <strong>
                                                       Songwriters:
                                                     </strong>
                                                     {track.songwriters &&
                                                     track.songwriters.length >
                                                       0 ? (
-                                                      <div className="mt-1 space-y-1">
+                                                  <div className="mt-1 space-y-1">
                                                         {track.songwriters.map(
                                                           (
                                                             songwriter: any,
@@ -1124,25 +1125,25 @@ export function ReleaseManagement() {
                                                                 songwriter.last_name}{" "}
                                                               -{" "}
                                                               {songwriter.role}
-                                                            </div>
+                                                      </div>
                                                           )
                                                         )}
-                                                      </div>
-                                                    ) : (
+                                                  </div>
+                                                ) : (
                                                       <span className="text-gray-500">
                                                         {" "}
                                                         Not specified
                                                       </span>
-                                                    )}
-                                                  </div>
+                                                )}
+                                              </div>
 
-                                                  {/* Producer Credits */}
-                                                  <div>
-                                                    <strong>Producers:</strong>
+                                              {/* Producer Credits */}
+                                              <div>
+                                                <strong>Producers:</strong>
                                                     {track.producer_credits &&
                                                     track.producer_credits
                                                       .length > 0 ? (
-                                                      <div className="mt-1 space-y-1">
+                                                  <div className="mt-1 space-y-1">
                                                         {track.producer_credits.map(
                                                           (
                                                             producer: any,
@@ -1154,25 +1155,25 @@ export function ReleaseManagement() {
                                                             >
                                                               {producer.name} -{" "}
                                                               {producer.role}
-                                                            </div>
+                                                      </div>
                                                           )
                                                         )}
-                                                      </div>
-                                                    ) : (
+                                                  </div>
+                                                ) : (
                                                       <span className="text-gray-500">
                                                         {" "}
                                                         Not specified
                                                       </span>
-                                                    )}
-                                                  </div>
+                                                )}
+                                              </div>
 
-                                                  {/* Performer Credits */}
-                                                  <div>
-                                                    <strong>Performers:</strong>
+                                              {/* Performer Credits */}
+                                              <div>
+                                                <strong>Performers:</strong>
                                                     {track.performer_credits &&
                                                     track.performer_credits
                                                       .length > 0 ? (
-                                                      <div className="mt-1 space-y-1">
+                                                  <div className="mt-1 space-y-1">
                                                         {track.performer_credits.map(
                                                           (
                                                             performer: any,
@@ -1184,34 +1185,34 @@ export function ReleaseManagement() {
                                                             >
                                                               {performer.name} -{" "}
                                                               {performer.role}
-                                                            </div>
+                                                      </div>
                                                           )
                                                         )}
-                                                      </div>
-                                                    ) : (
+                                                  </div>
+                                                ) : (
                                                       <span className="text-gray-500">
                                                         {" "}
                                                         Not specified
                                                       </span>
-                                                    )}
-                                                  </div>
-                                                </div>
+                                                )}
                                               </div>
                                             </div>
+                                          </div>
+                                        </div>
 
-                                            {/* Lyrics */}
-                                            {track.lyrics_text && (
-                                              <div className="mt-3 pt-3 border-t">
+                                        {/* Lyrics */}
+                                        {track.lyrics_text && (
+                                          <div className="mt-3 pt-3 border-t">
                                                 <strong className="text-sm">
                                                   Lyrics:
                                                 </strong>
-                                                <div className="mt-1 text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded max-h-32 overflow-y-auto">
+                                            <div className="mt-1 text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded max-h-32 overflow-y-auto">
                                                   <pre className="whitespace-pre-wrap font-mono">
                                                     {track.lyrics_text}
                                                   </pre>
-                                                </div>
-                                              </div>
-                                            )}
+                                            </div>
+                                          </div>
+                                        )}
                                           </div>
                                         )
                                       )}
@@ -1442,6 +1443,26 @@ export function ReleaseManagement() {
                                   </div>
                                 </div>
                               )}
+
+                              {/* Release Link Manager - Only show for live releases */}
+                              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p className="text-sm text-blue-800">
+                                  Debug: Release status is "
+                                  {selectedRelease.status}"
+                                </p>
+                                {selectedRelease.status === "live" && (
+                                  <ReleaseLinkManager
+                                    releaseId={selectedRelease.id}
+                                    releaseTitle={selectedRelease.release_title}
+                                  />
+                                )}
+                                {selectedRelease.status !== "live" && (
+                                  <p className="text-sm text-blue-600 mt-2">
+                                    Release Link Manager only appears for LIVE
+                                    releases
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           )}
                         </DialogContent>
@@ -1451,8 +1472,8 @@ export function ReleaseManagement() {
                         <label className="text-xs font-medium text-gray-500 mb-1 block">
                           Update Status
                         </label>
-                        <Select
-                          value={release.status}
+                        <Select 
+                          value={release.status} 
                           onValueChange={(newStatus) =>
                             updateReleaseStatus(release.id, newStatus)
                           }
@@ -1671,7 +1692,7 @@ export function ReleaseManagement() {
                                             selectedRelease.created_at
                                           )}
                                         </div>
-                                        {selectedRelease.submitted_at && (
+                                    {selectedRelease.submitted_at && (
                                           <div>
                                             <strong>Submitted:</strong>{" "}
                                             {safeFormatDistance(
@@ -1772,7 +1793,7 @@ export function ReleaseManagement() {
                                                 selectedRelease.original_release_date
                                               ).toLocaleDateString()
                                             : "Not specified"}
-                                        </div>
+                                      </div>
                                         <div>
                                           <strong>Previously Released:</strong>{" "}
                                           {selectedRelease.previously_released
@@ -1818,90 +1839,90 @@ export function ReleaseManagement() {
                                                   .producers &&
                                                   selectedRelease.credits
                                                     .producers.length > 0 && (
-                                                    <div>
+                                                  <div>
                                                       <strong>
                                                         Producers:
                                                       </strong>{" "}
                                                       {selectedRelease.credits.producers.join(
                                                         ", "
                                                       )}
-                                                    </div>
-                                                  )}
+                                                  </div>
+                                                )}
                                                 {selectedRelease.credits
                                                   .writers &&
                                                   selectedRelease.credits
                                                     .writers.length > 0 && (
-                                                    <div>
+                                                  <div>
                                                       <strong>Writers:</strong>{" "}
                                                       {selectedRelease.credits.writers.join(
                                                         ", "
                                                       )}
-                                                    </div>
-                                                  )}
+                                                  </div>
+                                                )}
                                                 {selectedRelease.credits
                                                   .composers &&
                                                   selectedRelease.credits
                                                     .composers.length > 0 && (
-                                                    <div>
+                                                  <div>
                                                       <strong>
                                                         Composers:
                                                       </strong>{" "}
                                                       {selectedRelease.credits.composers.join(
                                                         ", "
                                                       )}
-                                                    </div>
-                                                  )}
+                                                  </div>
+                                                )}
                                                 {selectedRelease.credits
                                                   .engineers &&
                                                   selectedRelease.credits
                                                     .engineers.length > 0 && (
-                                                    <div>
+                                                  <div>
                                                       <strong>
                                                         Engineers:
                                                       </strong>{" "}
                                                       {selectedRelease.credits.engineers.join(
                                                         ", "
                                                       )}
-                                                    </div>
-                                                  )}
+                                                  </div>
+                                                )}
                                                 {selectedRelease.credits
                                                   .mixedBy &&
                                                   selectedRelease.credits
                                                     .mixedBy.length > 0 && (
-                                                    <div>
+                                                  <div>
                                                       <strong>Mixed By:</strong>{" "}
                                                       {selectedRelease.credits.mixedBy.join(
                                                         ", "
                                                       )}
-                                                    </div>
-                                                  )}
+                                                  </div>
+                                                )}
                                                 {selectedRelease.credits
                                                   .masteredBy &&
                                                   selectedRelease.credits
                                                     .masteredBy.length > 0 && (
-                                                    <div>
+                                                  <div>
                                                       <strong>
                                                         Mastered By:
                                                       </strong>{" "}
                                                       {selectedRelease.credits.masteredBy.join(
                                                         ", "
                                                       )}
-                                                    </div>
-                                                  )}
+                                                  </div>
+                                                )}
                                                 {selectedRelease.credits
                                                   .featuredArtists &&
                                                   selectedRelease.credits
                                                     .featuredArtists.length >
                                                     0 && (
-                                                    <div>
+                                                  <div>
                                                       <strong>
                                                         Featured Artists:
                                                       </strong>{" "}
                                                       {selectedRelease.credits.featuredArtists.join(
                                                         ", "
                                                       )}
-                                                    </div>
-                                                  )}
+                                                  </div>
+                                                )}
                                               </>
                                             ) : (
                                               <div className="text-gray-500">
@@ -1997,8 +2018,8 @@ export function ReleaseManagement() {
                                             variant="outline"
                                             className="text-xs"
                                           >
-                                            {store}
-                                          </Badge>
+                                          {store}
+                                        </Badge>
                                         )
                                       ) || (
                                         <span className="text-sm text-gray-500">
@@ -2021,21 +2042,21 @@ export function ReleaseManagement() {
                                           : "❌ No"}
                                         {selectedRelease.has_spotify_profile &&
                                           selectedRelease.spotify_profile_url && (
-                                            <div className="mt-1">
-                                              <a
+                                          <div className="mt-1">
+                                            <a 
                                                 href={
                                                   selectedRelease.spotify_profile_url
                                                 }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 dark:text-blue-400 hover:underline text-xs break-all"
-                                              >
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="text-blue-600 dark:text-blue-400 hover:underline text-xs break-all"
+                                            >
                                                 {
                                                   selectedRelease.spotify_profile_url
                                                 }
-                                              </a>
-                                            </div>
-                                          )}
+                                            </a>
+                                          </div>
+                                        )}
                                       </div>
                                       <div>
                                         <strong>
@@ -2046,21 +2067,21 @@ export function ReleaseManagement() {
                                           : "❌ No"}
                                         {selectedRelease.has_apple_profile &&
                                           selectedRelease.apple_profile_url && (
-                                            <div className="mt-1">
-                                              <a
+                                          <div className="mt-1">
+                                            <a 
                                                 href={
                                                   selectedRelease.apple_profile_url
                                                 }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 dark:text-blue-400 hover:underline text-xs break-all"
-                                              >
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="text-blue-600 dark:text-blue-400 hover:underline text-xs break-all"
+                                            >
                                                 {
                                                   selectedRelease.apple_profile_url
                                                 }
-                                              </a>
-                                            </div>
-                                          )}
+                                            </a>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -2069,7 +2090,7 @@ export function ReleaseManagement() {
                                   {selectedRelease.additional_delivery &&
                                     selectedRelease.additional_delivery.length >
                                       0 && (
-                                      <div className="space-y-4">
+                                    <div className="space-y-4">
                                         <h3 className="font-medium text-lg border-b pb-2">
                                           Additional Delivery Options (
                                           {
@@ -2078,7 +2099,7 @@ export function ReleaseManagement() {
                                           }{" "}
                                           selected)
                                         </h3>
-                                        <div className="grid gap-2">
+                                      <div className="grid gap-2">
                                           {selectedRelease.additional_delivery.map(
                                             (option) => (
                                               <div
@@ -2089,41 +2110,41 @@ export function ReleaseManagement() {
                                                   variant="secondary"
                                                   className="text-xs"
                                                 >
-                                                  ✅ {option}
-                                                </Badge>
-                                              </div>
+                                              ✅ {option}
+                                            </Badge>
+                                          </div>
                                             )
                                           )}
-                                        </div>
                                       </div>
-                                    )}
+                                    </div>
+                                  )}
 
                                   {/* Track Details */}
                                   {selectedRelease.tracks &&
                                     selectedRelease.tracks.length > 0 && (
-                                      <div className="space-y-4">
+                                    <div className="space-y-4">
                                         <h3 className="font-medium text-lg border-b pb-2">
                                           Track Details
                                         </h3>
-                                        <div className="space-y-4">
+                                      <div className="space-y-4">
                                           {selectedRelease.tracks.map(
                                             (track, index) => (
                                               <div
                                                 key={index}
                                                 className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800"
                                               >
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                  <div className="space-y-2">
-                                                    <div className="flex items-center gap-2">
-                                                      <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded text-xs font-medium">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                  <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded text-xs font-medium">
                                                         Track{" "}
                                                         {track.track_number}
-                                                      </span>
+                                                  </span>
                                                       <div className="font-medium">
                                                         {track.track_title}
                                                       </div>
-                                                    </div>
-                                                    <div className="text-sm space-y-1">
+                                                </div>
+                                                <div className="text-sm space-y-1">
                                                       <div>
                                                         <strong>
                                                           Artists:
@@ -2160,11 +2181,11 @@ export function ReleaseManagement() {
                                                           ? "Yes"
                                                           : "No"}
                                                       </div>
-                                                    </div>
-                                                  </div>
+                                                </div>
+                                              </div>
 
-                                                  <div className="space-y-2">
-                                                    <div className="text-sm space-y-1">
+                                              <div className="space-y-2">
+                                                <div className="text-sm space-y-1">
                                                       <div>
                                                         <strong>
                                                           Audio File:
@@ -2174,15 +2195,15 @@ export function ReleaseManagement() {
                                                           : "❌ Not uploaded"}
                                                       </div>
 
-                                                      {/* Songwriters */}
-                                                      <div>
+                                                  {/* Songwriters */}
+                                                  <div>
                                                         <strong>
                                                           Songwriters:
                                                         </strong>
                                                         {track.songwriters &&
                                                         track.songwriters
                                                           .length > 0 ? (
-                                                          <div className="mt-1 space-y-1">
+                                                      <div className="mt-1 space-y-1">
                                                             {track.songwriters.map(
                                                               (
                                                                 songwriter: any,
@@ -2202,27 +2223,27 @@ export function ReleaseManagement() {
                                                                   {
                                                                     songwriter.role
                                                                   }
-                                                                </div>
+                                                          </div>
                                                               )
                                                             )}
-                                                          </div>
-                                                        ) : (
+                                                      </div>
+                                                    ) : (
                                                           <span className="text-gray-500">
                                                             {" "}
                                                             Not specified
                                                           </span>
-                                                        )}
-                                                      </div>
+                                                    )}
+                                                  </div>
 
-                                                      {/* Producer Credits */}
-                                                      <div>
+                                                  {/* Producer Credits */}
+                                                  <div>
                                                         <strong>
                                                           Producers:
                                                         </strong>
                                                         {track.producer_credits &&
                                                         track.producer_credits
                                                           .length > 0 ? (
-                                                          <div className="mt-1 space-y-1">
+                                                      <div className="mt-1 space-y-1">
                                                             {track.producer_credits.map(
                                                               (
                                                                 producer: any,
@@ -2239,27 +2260,27 @@ export function ReleaseManagement() {
                                                                   {
                                                                     producer.role
                                                                   }
-                                                                </div>
+                                                          </div>
                                                               )
                                                             )}
-                                                          </div>
-                                                        ) : (
+                                                      </div>
+                                                    ) : (
                                                           <span className="text-gray-500">
                                                             {" "}
                                                             Not specified
                                                           </span>
-                                                        )}
-                                                      </div>
+                                                    )}
+                                                  </div>
 
-                                                      {/* Performer Credits */}
-                                                      <div>
+                                                  {/* Performer Credits */}
+                                                  <div>
                                                         <strong>
                                                           Performers:
                                                         </strong>
                                                         {track.performer_credits &&
                                                         track.performer_credits
                                                           .length > 0 ? (
-                                                          <div className="mt-1 space-y-1">
+                                                      <div className="mt-1 space-y-1">
                                                             {track.performer_credits.map(
                                                               (
                                                                 performer: any,
@@ -2276,34 +2297,34 @@ export function ReleaseManagement() {
                                                                   {
                                                                     performer.role
                                                                   }
-                                                                </div>
+                                                          </div>
                                                               )
                                                             )}
-                                                          </div>
-                                                        ) : (
+                                                      </div>
+                                                    ) : (
                                                           <span className="text-gray-500">
                                                             {" "}
                                                             Not specified
                                                           </span>
-                                                        )}
-                                                      </div>
-                                                    </div>
+                                                    )}
                                                   </div>
                                                 </div>
+                                              </div>
+                                            </div>
 
-                                                {/* Lyrics */}
-                                                {track.lyrics_text && (
-                                                  <div className="mt-3 pt-3 border-t">
+                                            {/* Lyrics */}
+                                            {track.lyrics_text && (
+                                              <div className="mt-3 pt-3 border-t">
                                                     <strong className="text-sm">
                                                       Lyrics:
                                                     </strong>
-                                                    <div className="mt-1 text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded max-h-32 overflow-y-auto">
+                                                <div className="mt-1 text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded max-h-32 overflow-y-auto">
                                                       <pre className="whitespace-pre-wrap font-mono">
                                                         {track.lyrics_text}
                                                       </pre>
-                                                    </div>
-                                                  </div>
-                                                )}
+                                                </div>
+                                              </div>
+                                            )}
                                               </div>
                                             )
                                           )}
@@ -2513,7 +2534,7 @@ export function ReleaseManagement() {
                                         {editingCodes ? "Cancel" : "Edit Codes"}
                                       </Button>
                                     </div>
-
+                                    
                                     {editingCodes ? (
                                       <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
                                         {/* UPC Code */}
@@ -2535,23 +2556,23 @@ export function ReleaseManagement() {
                                         {/* Track ISRC Codes */}
                                         {selectedRelease.tracks &&
                                           selectedRelease.tracks.length > 0 && (
-                                            <div>
+                                          <div>
                                               <label className="text-sm font-medium">
                                                 Track ISRC Codes
                                               </label>
-                                              <div className="space-y-2 mt-2">
+                                            <div className="space-y-2 mt-2">
                                                 {selectedRelease.tracks.map(
                                                   (track: any) => (
                                                     <div
                                                       key={track.id}
                                                       className="flex items-center gap-3"
                                                     >
-                                                      <span className="text-sm font-medium w-32">
+                                                  <span className="text-sm font-medium w-32">
                                                         Track{" "}
                                                         {track.track_number}:
-                                                      </span>
-                                                      <input
-                                                        type="text"
+                                                  </span>
+                                                  <input
+                                                    type="text"
                                                         value={
                                                           trackIsrcCodes[
                                                             track.id
@@ -2560,21 +2581,21 @@ export function ReleaseManagement() {
                                                         onChange={(e) =>
                                                           setTrackIsrcCodes(
                                                             (prev) => ({
-                                                              ...prev,
+                                                      ...prev,
                                                               [track.id]:
                                                                 e.target.value,
                                                             })
                                                           )
                                                         }
-                                                        placeholder="Enter ISRC code"
-                                                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                                      />
-                                                    </div>
+                                                    placeholder="Enter ISRC code"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                                  />
+                                                </div>
                                                   )
                                                 )}
-                                              </div>
                                             </div>
-                                          )}
+                                          </div>
+                                        )}
 
                                         {/* Save/Cancel Buttons */}
                                         <div className="flex gap-2 pt-2">
@@ -2619,11 +2640,11 @@ export function ReleaseManagement() {
                                         {/* Display Current ISRC Codes */}
                                         {selectedRelease.tracks &&
                                           selectedRelease.tracks.length > 0 && (
-                                            <div>
+                                          <div>
                                               <span className="text-sm font-medium">
                                                 Track ISRC Codes:
                                               </span>
-                                              <div className="space-y-1 mt-1">
+                                            <div className="space-y-1 mt-1">
                                                 {selectedRelease.tracks.map(
                                                   (track: any) => (
                                                     <div
@@ -2638,12 +2659,12 @@ export function ReleaseManagement() {
                                                         {track.isrc ||
                                                           "Not assigned"}
                                                       </span>
-                                                    </div>
+                                                </div>
                                                   )
                                                 )}
-                                              </div>
                                             </div>
-                                          )}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
@@ -2667,8 +2688,8 @@ export function ReleaseManagement() {
                                         <label className="text-sm font-medium">
                                           Update Status
                                         </label>
-                                        <Select
-                                          value={selectedRelease.status}
+                                        <Select 
+                                          value={selectedRelease.status} 
                                           onValueChange={(newStatus) =>
                                             updateReleaseStatus(
                                               selectedRelease.id,
@@ -2711,7 +2732,7 @@ export function ReleaseManagement() {
                                         <label className="text-sm font-medium">
                                           Update Status (Changes)
                                         </label>
-                                        <Select
+                                        <Select 
                                           value={
                                             selectedRelease.update_status ||
                                             "none"
@@ -2748,11 +2769,31 @@ export function ReleaseManagement() {
                                   </div>
                                 </div>
                               )}
+
+                              {/* Release Link Manager - Only show for live releases */}
+                              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p className="text-sm text-blue-800">
+                                  Debug: Release status is "
+                                  {selectedRelease?.status}"
+                                </p>
+                                {selectedRelease?.status === "live" && (
+                                  <ReleaseLinkManager
+                                    releaseId={selectedRelease?.id}
+                                    releaseTitle={selectedRelease.release_title}
+                                  />
+                                )}
+                                {selectedRelease?.status !== "live" && (
+                                  <p className="text-sm text-blue-600 mt-2">
+                                    Release Link Manager only appears for LIVE
+                                    releases
+                                  </p>
+                                )}
+                              </div>
                             </DialogContent>
                           </Dialog>
 
-                          <Select
-                            value={release.status}
+                          <Select 
+                            value={release.status} 
                             onValueChange={(newStatus) =>
                               updateReleaseStatus(release.id, newStatus)
                             }

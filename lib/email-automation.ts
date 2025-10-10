@@ -1,5 +1,5 @@
-import { scheduleEmail, sendEmail } from './email-service';
-import { pool } from './db';
+import { scheduleEmail, sendEmail } from "./email-service";
+import { pool } from "./db";
 
 // Background email processing - runs automatically
 let emailProcessor: NodeJS.Timeout | null = null;
@@ -7,7 +7,7 @@ let isEmailProcessing = false; // Prevent overlapping runs
 
 export interface EmailTrigger {
   userId: number;
-  triggerType: 'welcome' | 'artist_page_tip' | 'ai_career_manager';
+  triggerType: "welcome" | "artist_page_tip" | "ai_career_manager";
   scheduledFor: Date;
 }
 
@@ -16,7 +16,7 @@ export async function triggerWelcomeEmail(userId: number): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -26,35 +26,35 @@ export async function triggerWelcomeEmail(userId: number): Promise<boolean> {
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send welcome email immediately
     const success = await sendEmail({
       to: user.email,
-      templateName: 'welcome',
-      artistName
+      templateName: "welcome",
+      artistName,
     });
 
     if (success) {
       // Schedule the artist page tip email for 3 days later
       const tipEmailDate = new Date();
       tipEmailDate.setDate(tipEmailDate.getDate() + 3);
-      await scheduleEmail(userId, 'artistPageTip', tipEmailDate);
+      await scheduleEmail(userId, "artistPageTip", tipEmailDate);
 
       // Schedule the AI career manager email for 7 days later
       const aiEmailDate = new Date();
       aiEmailDate.setDate(aiEmailDate.getDate() + 7);
-      await scheduleEmail(userId, 'aiCareerManager', aiEmailDate);
+      await scheduleEmail(userId, "aiCareerManager", aiEmailDate);
 
       // Schedule the time to make release email for 14 days later
       const releaseEmailDate = new Date();
       releaseEmailDate.setDate(releaseEmailDate.getDate() + 14);
-      await scheduleEmail(userId, 'timeToMakeRelease', releaseEmailDate);
+      await scheduleEmail(userId, "timeToMakeRelease", releaseEmailDate);
 
       // Schedule the trial ending soon email for 23 days later (7 days before 30-day trial ends)
       const trialEndingDate = new Date();
       trialEndingDate.setDate(trialEndingDate.getDate() + 23);
-      await scheduleEmail(userId, 'trialEndingSoon', trialEndingDate);
+      await scheduleEmail(userId, "trialEndingSoon", trialEndingDate);
 
       console.log(`Welcome email sent to user ${userId}`);
       return true;
@@ -62,29 +62,33 @@ export async function triggerWelcomeEmail(userId: number): Promise<boolean> {
 
     return false;
   } catch (error) {
-    console.error('Error triggering welcome email:', error);
+    console.error("Error triggering welcome email:", error);
     return false;
   }
 }
 
 // Email 2: Artist page tip - triggered 3 days after signup (only if no page created)
-export async function triggerArtistPageTipEmail(userId: number): Promise<boolean> {
+export async function triggerArtistPageTipEmail(
+  userId: number
+): Promise<boolean> {
   try {
     // Check if user has created a public page
     const pageResult = await pool.query(
-      'SELECT id FROM landing_pages WHERE artist_id = $1',
+      "SELECT id FROM landing_pages WHERE artist_id = $1",
       [userId]
     );
 
     // If user already has a public page, don't send the tip email
     if (pageResult.rows.length > 0) {
-      console.log(`User ${userId} already has a public page, skipping tip email`);
+      console.log(
+        `User ${userId} already has a public page, skipping tip email`
+      );
       return true;
     }
 
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -94,13 +98,13 @@ export async function triggerArtistPageTipEmail(userId: number): Promise<boolean
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send artist page tip email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'artistPageTip',
-      artistName
+      templateName: "artistPageTip",
+      artistName,
     });
 
     if (success) {
@@ -109,17 +113,19 @@ export async function triggerArtistPageTipEmail(userId: number): Promise<boolean
 
     return success;
   } catch (error) {
-    console.error('Error triggering artist page tip email:', error);
+    console.error("Error triggering artist page tip email:", error);
     return false;
   }
 }
 
 // Email 3: AI Career Manager - triggered 7 days after signup
-export async function triggerAICareerManagerEmail(userId: number): Promise<boolean> {
+export async function triggerAICareerManagerEmail(
+  userId: number
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -129,13 +135,13 @@ export async function triggerAICareerManagerEmail(userId: number): Promise<boole
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send AI career manager email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'aiCareerManager',
-      artistName
+      templateName: "aiCareerManager",
+      artistName,
     });
 
     if (success) {
@@ -144,29 +150,33 @@ export async function triggerAICareerManagerEmail(userId: number): Promise<boole
 
     return success;
   } catch (error) {
-    console.error('Error triggering AI career manager email:', error);
+    console.error("Error triggering AI career manager email:", error);
     return false;
   }
 }
 
 // Email 4: Time to Make a Release - triggered 14 days after signup (only if no release started)
-export async function triggerTimeToMakeReleaseEmail(userId: number): Promise<boolean> {
+export async function triggerTimeToMakeReleaseEmail(
+  userId: number
+): Promise<boolean> {
   try {
     // Check if user has started any releases
     const releaseResult = await pool.query(
-      'SELECT id FROM releases WHERE artist_id = $1',
+      "SELECT id FROM releases WHERE artist_id = $1",
       [userId]
     );
 
     // If user already has releases, don't send the email
     if (releaseResult.rows.length > 0) {
-      console.log(`User ${userId} already has releases, skipping time to make release email`);
+      console.log(
+        `User ${userId} already has releases, skipping time to make release email`
+      );
       return true;
     }
 
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -176,13 +186,13 @@ export async function triggerTimeToMakeReleaseEmail(userId: number): Promise<boo
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send time to make release email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'timeToMakeRelease',
-      artistName
+      templateName: "timeToMakeRelease",
+      artistName,
     });
 
     if (success) {
@@ -191,17 +201,19 @@ export async function triggerTimeToMakeReleaseEmail(userId: number): Promise<boo
 
     return success;
   } catch (error) {
-    console.error('Error triggering time to make release email:', error);
+    console.error("Error triggering time to make release email:", error);
     return false;
   }
 }
 
 // Email 5: Trial Ending Soon - triggered 7 days before trial expires
-export async function triggerTrialEndingSoonEmail(userId: number): Promise<boolean> {
+export async function triggerTrialEndingSoonEmail(
+  userId: number
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -211,13 +223,13 @@ export async function triggerTrialEndingSoonEmail(userId: number): Promise<boole
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send trial ending soon email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'trialEndingSoon',
-      artistName
+      templateName: "trialEndingSoon",
+      artistName,
     });
 
     if (success) {
@@ -226,7 +238,7 @@ export async function triggerTrialEndingSoonEmail(userId: number): Promise<boole
 
     return success;
   } catch (error) {
-    console.error('Error triggering trial ending soon email:', error);
+    console.error("Error triggering trial ending soon email:", error);
     return false;
   }
 }
@@ -236,7 +248,7 @@ export async function triggerTrialEndedEmail(userId: number): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -246,13 +258,13 @@ export async function triggerTrialEndedEmail(userId: number): Promise<boolean> {
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send trial ended email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'trialEnded',
-      artistName
+      templateName: "trialEnded",
+      artistName,
     });
 
     if (success) {
@@ -261,17 +273,20 @@ export async function triggerTrialEndedEmail(userId: number): Promise<boolean> {
 
     return success;
   } catch (error) {
-    console.error('Error triggering trial ended email:', error);
+    console.error("Error triggering trial ended email:", error);
     return false;
   }
 }
 
 // Email 7: Release Submitted - triggered immediately when release is submitted
-export async function triggerReleaseSubmittedEmail(userId: number, releaseTitle: string): Promise<boolean> {
+export async function triggerReleaseSubmittedEmail(
+  userId: number,
+  releaseTitle: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -281,33 +296,38 @@ export async function triggerReleaseSubmittedEmail(userId: number, releaseTitle:
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send release submitted email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'releaseSubmitted',
+      templateName: "releaseSubmitted",
       artistName,
-      releaseTitle
+      releaseTitle,
     });
 
     if (success) {
-      console.log(`Release submitted email sent to user ${userId} for release: ${releaseTitle}`);
+      console.log(
+        `Release submitted email sent to user ${userId} for release: ${releaseTitle}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering release submitted email:', error);
+    console.error("Error triggering release submitted email:", error);
     return false;
   }
 }
 
 // Email 8: Release Approved - triggered when admin approves release
-export async function triggerReleaseApprovedEmail(userId: number, releaseTitle: string): Promise<boolean> {
+export async function triggerReleaseApprovedEmail(
+  userId: number,
+  releaseTitle: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -317,33 +337,38 @@ export async function triggerReleaseApprovedEmail(userId: number, releaseTitle: 
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send release approved email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'releaseApproved',
+      templateName: "releaseApproved",
       artistName,
-      releaseTitle
+      releaseTitle,
     });
 
     if (success) {
-      console.log(`Release approved email sent to user ${userId} for release: ${releaseTitle}`);
+      console.log(
+        `Release approved email sent to user ${userId} for release: ${releaseTitle}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering release approved email:', error);
+    console.error("Error triggering release approved email:", error);
     return false;
   }
 }
 
 // Email 9: Release Live - triggered when admin changes status to "Live"
-export async function triggerReleaseLiveEmail(userId: number, releaseTitle: string): Promise<boolean> {
+export async function triggerReleaseLiveEmail(
+  userId: number,
+  releaseTitle: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -353,33 +378,38 @@ export async function triggerReleaseLiveEmail(userId: number, releaseTitle: stri
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send release live email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'releaseLive',
+      templateName: "releaseLive",
       artistName,
-      releaseTitle
+      releaseTitle,
     });
 
     if (success) {
-      console.log(`Release live email sent to user ${userId} for release: ${releaseTitle}`);
+      console.log(
+        `Release live email sent to user ${userId} for release: ${releaseTitle}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering release live email:', error);
+    console.error("Error triggering release live email:", error);
     return false;
   }
 }
 
 // Email 10: Release Rejected - triggered when admin changes status to "Rejected"
-export async function triggerReleaseRejectedEmail(userId: number, releaseTitle: string): Promise<boolean> {
+export async function triggerReleaseRejectedEmail(
+  userId: number,
+  releaseTitle: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -389,33 +419,40 @@ export async function triggerReleaseRejectedEmail(userId: number, releaseTitle: 
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send release rejected email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'releaseRejected',
+      templateName: "releaseRejected",
       artistName,
-      releaseTitle
+      releaseTitle,
     });
 
     if (success) {
-      console.log(`Release rejected email sent to user ${userId} for release: ${releaseTitle}`);
+      console.log(
+        `Release rejected email sent to user ${userId} for release: ${releaseTitle}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering release rejected email:', error);
+    console.error("Error triggering release rejected email:", error);
     return false;
   }
 }
 
 // Email 11: Payout Sent - triggered when admin marks withdrawal as "Paid"
-export async function triggerPayoutSentEmail(userId: number, amount: string, payoutMethod: string, lastFour: string): Promise<boolean> {
+export async function triggerPayoutSentEmail(
+  userId: number,
+  amount: string,
+  payoutMethod: string,
+  lastFour: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -425,35 +462,40 @@ export async function triggerPayoutSentEmail(userId: number, amount: string, pay
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send payout sent email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'payoutSent',
+      templateName: "payoutSent",
       artistName,
       amount,
       payoutMethod,
-      lastFour
+      lastFour,
     });
 
     if (success) {
-      console.log(`Payout sent email sent to user ${userId} for amount: ${amount}`);
+      console.log(
+        `Payout sent email sent to user ${userId} for amount: ${amount}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering payout sent email:', error);
+    console.error("Error triggering payout sent email:", error);
     return false;
   }
 }
 
 // Email 12: Payout Method Approved - triggered when admin approves payout method
-export async function triggerPayoutMethodApprovedEmail(userId: number, payoutMethod: string): Promise<boolean> {
+export async function triggerPayoutMethodApprovedEmail(
+  userId: number,
+  payoutMethod: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -463,33 +505,39 @@ export async function triggerPayoutMethodApprovedEmail(userId: number, payoutMet
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send payout method approved email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'payoutMethodApproved',
+      templateName: "payoutMethodApproved",
       artistName,
-      payoutMethod
+      payoutMethod,
     });
 
     if (success) {
-      console.log(`Payout method approved email sent to user ${userId} for method: ${payoutMethod}`);
+      console.log(
+        `Payout method approved email sent to user ${userId} for method: ${payoutMethod}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering payout method approved email:', error);
+    console.error("Error triggering payout method approved email:", error);
     return false;
   }
 }
 
 // Email 13: Subscription Confirmation - triggered when user upgrades to Plus/Pro
-export async function triggerSubscriptionConfirmationEmail(userId: number, tier: string, billingCycle: string): Promise<boolean> {
+export async function triggerSubscriptionConfirmationEmail(
+  userId: number,
+  tier: string,
+  billingCycle: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -499,34 +547,39 @@ export async function triggerSubscriptionConfirmationEmail(userId: number, tier:
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send subscription confirmation email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'subscriptionConfirmation',
+      templateName: "subscriptionConfirmation",
       artistName,
       tier,
-      billingCycle
+      billingCycle,
     });
 
     if (success) {
-      console.log(`Subscription confirmation email sent to user ${userId} for tier: ${tier}`);
+      console.log(
+        `Subscription confirmation email sent to user ${userId} for tier: ${tier}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering subscription confirmation email:', error);
+    console.error("Error triggering subscription confirmation email:", error);
     return false;
   }
 }
 
 // Email 14: Subscription Payment Failed - triggered when recurring payment fails
-export async function triggerSubscriptionPaymentFailedEmail(userId: number, tier: string): Promise<boolean> {
+export async function triggerSubscriptionPaymentFailedEmail(
+  userId: number,
+  tier: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -536,23 +589,25 @@ export async function triggerSubscriptionPaymentFailedEmail(userId: number, tier
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send subscription payment failed email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'subscriptionPaymentFailed',
+      templateName: "subscriptionPaymentFailed",
       artistName,
-      tier
+      tier,
     });
 
     if (success) {
-      console.log(`Subscription payment failed email sent to user ${userId} for tier: ${tier}`);
+      console.log(
+        `Subscription payment failed email sent to user ${userId} for tier: ${tier}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering subscription payment failed email:', error);
+    console.error("Error triggering subscription payment failed email:", error);
     return false;
   }
 }
@@ -584,11 +639,14 @@ export async function checkExpiredTrials(): Promise<void> {
           console.log(`Trial ended email sent to user ${trial.user_id}`);
         }
       } catch (error) {
-        console.error(`Error sending trial ended email to user ${trial.user_id}:`, error);
+        console.error(
+          `Error sending trial ended email to user ${trial.user_id}:`,
+          error
+        );
       }
     }
   } catch (error) {
-    console.error('Error checking expired trials:', error);
+    console.error("Error checking expired trials:", error);
   }
 }
 
@@ -596,14 +654,16 @@ export async function checkExpiredTrials(): Promise<void> {
 export async function processScheduledEmails(): Promise<void> {
   // Prevent overlapping runs
   if (isEmailProcessing) {
-    console.log('[Email Processor] Already processing, skipping this run...');
+    console.log("[Email Processor] Already processing, skipping this run...");
     return;
   }
 
   isEmailProcessing = true;
-  
+
   try {
-    const { getScheduledEmails, markEmailAsSent } = await import('./email-service');
+    const { getScheduledEmails, markEmailAsSent } = await import(
+      "./email-service"
+    );
     const scheduledEmails = await getScheduledEmails();
     const now = new Date();
 
@@ -612,16 +672,16 @@ export async function processScheduledEmails(): Promise<void> {
         let success = false;
 
         switch (email.templateName) {
-          case 'artistPageTip':
+          case "artistPageTip":
             success = await triggerArtistPageTipEmail(email.userId);
             break;
-          case 'aiCareerManager':
+          case "aiCareerManager":
             success = await triggerAICareerManagerEmail(email.userId);
             break;
-          case 'timeToMakeRelease':
+          case "timeToMakeRelease":
             success = await triggerTimeToMakeReleaseEmail(email.userId);
             break;
-          case 'trialEndingSoon':
+          case "trialEndingSoon":
             success = await triggerTrialEndingSoonEmail(email.userId);
             break;
           default:
@@ -637,18 +697,21 @@ export async function processScheduledEmails(): Promise<void> {
     // Also check for expired trials
     await checkExpiredTrials();
   } catch (error) {
-    console.error('Error processing scheduled emails:', error);
+    console.error("Error processing scheduled emails:", error);
   } finally {
     isEmailProcessing = false;
   }
 }
 
 // Email 11: Takedown Request - triggered when user requests a takedown
-export async function triggerTakedownRequestEmail(userId: number, releaseTitle: string): Promise<boolean> {
+export async function triggerTakedownRequestEmail(
+  userId: number,
+  releaseTitle: string
+): Promise<boolean> {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, email, artist_name FROM users WHERE id = $1',
+      "SELECT id, email, artist_name FROM users WHERE id = $1",
       [userId]
     );
 
@@ -658,23 +721,25 @@ export async function triggerTakedownRequestEmail(userId: number, releaseTitle: 
     }
 
     const user = userResult.rows[0];
-    const artistName = user.artist_name || 'Artist';
+    const artistName = user.artist_name || "Artist";
 
     // Send takedown request email
     const success = await sendEmail({
       to: user.email,
-      templateName: 'takedownRequest',
+      templateName: "takedownRequest",
       artistName,
-      releaseTitle
+      releaseTitle,
     });
 
     if (success) {
-      console.log(`Takedown request email sent to user ${userId} for release: ${releaseTitle}`);
+      console.log(
+        `Takedown request email sent to user ${userId} for release: ${releaseTitle}`
+      );
     }
 
     return success;
   } catch (error) {
-    console.error('Error triggering takedown request email:', error);
+    console.error("Error triggering takedown request email:", error);
     return false;
   }
 }
@@ -682,22 +747,22 @@ export async function triggerTakedownRequestEmail(userId: number, releaseTitle: 
 // Start automatic email processing (runs every 5 minutes)
 export function startEmailProcessor(): void {
   if (emailProcessor) {
-    console.log('Email processor already running');
+    console.log("Email processor already running");
     return;
   }
 
-  console.log('Starting automatic email processor...');
-  
+  console.log("Starting automatic email processor...");
+
   // Don't process emails immediately on startup - wait for first interval
   // This prevents overwhelming the system on startup
-  
+
   // Process every 5 minutes (not 1 minute!)
   emailProcessor = setInterval(async () => {
-    console.log('Processing scheduled emails...');
+    console.log("Processing scheduled emails...");
     await processScheduledEmails();
   }, 5 * 60 * 1000); // 5 minutes (was incorrectly 1 minute)
 
-  console.log('Email processor started - checking every 5 minutes');
+  console.log("Email processor started - checking every 5 minutes");
 }
 
 // Stop email processing
@@ -705,6 +770,6 @@ export function stopEmailProcessor(): void {
   if (emailProcessor) {
     clearInterval(emailProcessor);
     emailProcessor = null;
-    console.log('Email processor stopped');
+    console.log("Email processor stopped");
   }
 }
