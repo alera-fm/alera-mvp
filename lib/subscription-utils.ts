@@ -393,34 +393,12 @@ export async function checkReleaseLimit(
     return { allowed: true };
   }
 
-  // Trial users can create one release if they haven't used their free release yet
-  if (subscription.tier === "trial" && !subscription.free_release_used) {
-    // Double-check by counting actual releases to handle migration cases
-    const { pool } = await import("@/lib/db");
-    const releaseCount = await pool.query(
-      `SELECT COUNT(*) FROM releases WHERE artist_id = $1`,
-      [userId]
-    );
-    const totalReleases = parseInt(releaseCount.rows[0]?.count || "0");
-
-    if (totalReleases >= 1) {
-      return {
-        allowed: false,
-        reason:
-          "You've already used your free release. Upgrade to Plus or Pro to distribute more music.",
-        upgradeRequired: "plus",
-      };
-    }
-
-    return { allowed: true };
-  }
-
-  // If trial user has already used their free release
-  if (subscription.tier === "trial" && subscription.free_release_used) {
+  // FIXED: Trial users CANNOT create releases at all
+  if (subscription.tier === "trial") {
     return {
       allowed: false,
       reason:
-        "You've already used your free release. Upgrade to Plus or Pro to distribute more music.",
+        "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.",
       upgradeRequired: "plus",
     };
   }
@@ -530,9 +508,10 @@ export async function checkFanZoneAccess(
     };
   }
 
-  // Pro and trial users have full access (but not if payment is pending/failed)
+  // FIXED: Plus and Pro users have full access to campaigns and fan import
+  // Trial users should NOT have access to these premium features
   if (
-    (subscription.tier === "pro" || subscription.tier === "trial") &&
+    (subscription.tier === "plus" || subscription.tier === "pro") &&
     subscription.status === "active"
   ) {
     return { allowed: true };
@@ -573,9 +552,10 @@ export async function checkMonetizationAccess(
     };
   }
 
-  // Only Pro and trial users can access monetization features (but not if payment is pending/failed)
+  // FIXED: Plus and Pro users can access monetization features (tip jar, paid subscriptions)
+  // Trial users should NOT have access to these premium features
   if (
-    (subscription.tier === "pro" || subscription.tier === "trial") &&
+    (subscription.tier === "plus" || subscription.tier === "pro") &&
     subscription.status === "active"
   ) {
     return { allowed: true };

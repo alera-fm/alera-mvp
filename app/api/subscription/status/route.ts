@@ -164,24 +164,20 @@ export async function GET(request: NextRequest) {
           isActiveSubscription &&
           monthlyTokenUsage < 100000),
 
-      // CRITICAL FIX: Fan features ONLY for active paid users OR actual trial users
-      // Users with pending/failed payments get NO access to these premium features
+      // FIXED: Premium features for Plus and Pro users (trial users get NO access)
+      // Trial users should NOT have access to campaigns, fan import, tip jar, or gated content
       fan_campaigns:
-        (subscription.tier === "trial" && subscription.status === "active") ||
-        (subscription.tier === "pro" && isActiveSubscription) ||
-        (subscription.tier === "plus" && isActiveSubscription),
+        (subscription.tier === "plus" || subscription.tier === "pro") &&
+        isActiveSubscription,
       fan_import:
-        (subscription.tier === "trial" && subscription.status === "active") ||
-        (subscription.tier === "pro" && isActiveSubscription) ||
-        (subscription.tier === "plus" && isActiveSubscription),
+        (subscription.tier === "plus" || subscription.tier === "pro") &&
+        isActiveSubscription,
       tip_jar:
-        (subscription.tier === "trial" && subscription.status === "active") ||
-        (subscription.tier === "pro" && isActiveSubscription) ||
-        (subscription.tier === "plus" && isActiveSubscription),
+        (subscription.tier === "plus" || subscription.tier === "pro") &&
+        isActiveSubscription,
       paid_subscriptions:
-        (subscription.tier === "trial" && subscription.status === "active") ||
-        (subscription.tier === "pro" && isActiveSubscription) ||
-        (subscription.tier === "plus" && isActiveSubscription),
+        (subscription.tier === "plus" || subscription.tier === "pro") &&
+        isActiveSubscription,
 
       // Analytics access: Trial users get basic analytics only
       analytics_advanced:

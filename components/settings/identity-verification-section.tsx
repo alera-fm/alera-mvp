@@ -474,7 +474,7 @@ export function IdentityVerificationSection() {
         </CardTitle>
         <CardDescription>
           {step === "form"
-            ? "Verify your identity using one of your social media accounts or ID to unlock release submission”."
+            ? "Verify your identity using one of your social media accounts or ID to unlock release submission."
             : "Please confirm this is your account."}
         </CardDescription>
       </CardHeader>
