@@ -124,24 +124,84 @@ export function IdentityVerificationReview() {
     }
   };
 
+  // Helper function to determine verification method from data
+  const getVerificationMethod = (verification: IdentityVerification) => {
+    // If idv_method is explicitly set, use it
+    if (verification.idv_method) {
+      return verification.idv_method;
+    }
+
+    // Auto-detect based on available data
+    if (verification.identity_data && verification.identity_platform) {
+      return "social";
+    }
+
+    if (
+      verification.idv_document_url ||
+      verification.idv_full_name ||
+      verification.idv_document_type
+    ) {
+      return "document";
+    }
+
+    return "unknown";
+  };
+
+  // Helper function to generate profile URLs
+  const getProfileUrl = (verification: IdentityVerification) => {
+    const username = verification.identity_username?.replace("@", "") || "";
+
+    switch (verification.identity_platform) {
+      case "instagram":
+        return `https://instagram.com/${username}`;
+      case "tiktok":
+        return `https://tiktok.com/@${username}`;
+      case "youtube":
+        return `https://youtube.com/@${username}`;
+      case "facebook":
+        // Handle Facebook URLs that might already be full URLs
+        if (username.startsWith("http")) {
+          // Clean up malformed Facebook URLs
+          const cleanUrl = username.replace(/^@/, "").trim();
+
+          // If it contains multiple facebook.com URLs, extract the last valid one
+          const facebookMatches = cleanUrl.match(
+            /https:\/\/www\.facebook\.com\/[^?\s]+/g
+          );
+          if (facebookMatches && facebookMatches.length > 0) {
+            return facebookMatches[facebookMatches.length - 1];
+          }
+
+          return cleanUrl;
+        }
+        return `https://facebook.com/${username}`;
+      default:
+        return null;
+    }
+  };
+
   const getProfileData = (verification: IdentityVerification) => {
     const data = verification.identity_data;
     if (!data) return null;
 
+    // Handle nested data structure for Instagram
+    const userData = data.user || data.data?.user;
+
     switch (verification.identity_platform) {
       case "instagram":
         return {
-          displayName: data.user?.full_name || data.user?.username,
+          displayName: userData?.full_name || userData?.username,
           profilePicture:
-            data.user?.profile_pic_url_hd || data.user?.profile_pic_url,
-          followers: data.user?.follower_count,
-          bio: data.user?.biography,
+            userData?.profile_pic_url_hd || userData?.profile_pic_url,
+          followers:
+            userData?.edge_follow?.count || userData?.edge_followed_by?.count,
+          bio: userData?.biography,
         };
       case "tiktok":
         return {
           displayName: data.user?.nickname || data.user?.uniqueId,
           profilePicture: data.user?.avatarLarger || data.user?.avatarMedium,
-          followers: data.user?.followerCount,
+          followers: data.stats?.followerCount || data.statsV2?.followerCount,
           bio: data.user?.signature,
         };
       case "youtube":
@@ -184,10 +244,38 @@ export function IdentityVerificationReview() {
           <Shield className="h-5 w-5" />
           Identity Verification Review
         </CardTitle>
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
           {verifications.length} pending verification
           {verifications.length !== 1 ? "s" : ""}
         </div>
+
+        {/* Verification Method Summary */}
+        {verifications.length > 0 && (
+          <div className="flex gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+              <span className="text-gray-600 dark:text-gray-400">
+                Social Media:{" "}
+                {
+                  verifications.filter(
+                    (v) => getVerificationMethod(v) === "social"
+                  ).length
+                }
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+              <span className="text-gray-600 dark:text-gray-400">
+                Document:{" "}
+                {
+                  verifications.filter(
+                    (v) => getVerificationMethod(v) === "document"
+                  ).length
+                }
+              </span>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {verifications.length === 0 ? (
@@ -201,6 +289,7 @@ export function IdentityVerificationReview() {
         ) : (
           <div className="space-y-4">
             {verifications.map((verification) => {
+              const verificationMethod = getVerificationMethod(verification);
               const profileData = getProfileData(verification);
               const isReviewing = reviewing === verification.id;
               const isProcessing = processing === verification.id;
@@ -224,7 +313,25 @@ export function IdentityVerificationReview() {
                         </div>
                       </div>
 
-                      {verification.idv_method === "social" ? (
+                      {/* Verification Method Badge */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge
+                          variant={
+                            verificationMethod === "social"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className="font-semibold"
+                        >
+                          {verificationMethod === "social"
+                            ? "Social Media Verification"
+                            : verificationMethod === "document"
+                            ? "Document Verification"
+                            : "Unknown Method"}
+                        </Badge>
+                      </div>
+
+                      {verificationMethod === "social" ? (
                         <div className="flex items-center gap-2 mb-2">
                           {getPlatformIcon(verification.identity_platform)}
                           <Badge variant="outline" className="capitalize">
@@ -233,6 +340,16 @@ export function IdentityVerificationReview() {
                           <span className="text-sm font-medium">
                             @{verification.identity_username}
                           </span>
+                          {getProfileUrl(verification) && (
+                            <a
+                              href={getProfileUrl(verification)!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-700 text-xs ml-2 flex items-center gap-1"
+                            >
+                              🔗 Visit Profile
+                            </a>
+                          )}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 mb-2">
@@ -266,83 +383,219 @@ export function IdentityVerificationReview() {
                     </Badge>
                   </div>
 
-                  {verification.idv_method === "social" && profileData && (
-                    <div className="mb-4 p-3 bg-white dark:bg-gray-700 rounded-lg">
-                      <div className="flex items-center gap-3 mb-2">
-                        {profileData.profilePicture && (
-                          <img
-                            src={profileData.profilePicture}
-                            alt="Profile"
-                            className="w-12 h-12 rounded-full"
-                          />
-                        )}
-                        <div>
-                          <div className="font-medium">
-                            {profileData.displayName}
+                  {verificationMethod === "social" && (
+                    <div className="mb-4 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center gap-2 mb-3">
+                        {getPlatformIcon(verification.identity_platform)}
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          Social Media Profile Data
+                        </h4>
+                      </div>
+
+                      {profileData ? (
+                        <>
+                          <div className="flex items-start gap-4 mb-3">
+                            {profileData.profilePicture && (
+                              <div className="relative">
+                                <img
+                                  src={`/api/proxy-image?url=${encodeURIComponent(
+                                    profileData.profilePicture
+                                  )}`}
+                                  alt="Profile"
+                                  className="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-600"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const originalSrc = target.src;
+
+                                    // If proxy fails, try direct URL as fallback
+                                    if (
+                                      originalSrc.includes("/api/proxy-image")
+                                    ) {
+                                      target.src = profileData.profilePicture;
+                                      return;
+                                    }
+
+                                    // If both fail, show placeholder
+                                    target.style.display = "none";
+                                    const placeholder =
+                                      document.createElement("div");
+                                    placeholder.className =
+                                      "w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex items-center justify-center";
+                                    placeholder.innerHTML =
+                                      '<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>';
+                                    target.parentNode?.insertBefore(
+                                      placeholder,
+                                      target
+                                    );
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="font-medium text-lg mb-1">
+                                {profileData.displayName}
+                              </div>
+                              <div className="text-sm text-gray-500 mb-2">
+                                @{verification.identity_username}
+                              </div>
+                              {profileData.followers && (
+                                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                  👥 {profileData.followers.toLocaleString()}{" "}
+                                  followers
+                                </div>
+                              )}
+                              {profileData.subscribers && (
+                                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                  📺 {profileData.subscribers.toLocaleString()}{" "}
+                                  subscribers
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {profileData.followers && (
-                            <div className="text-sm text-gray-500">
-                              {profileData.followers.toLocaleString()} followers
+
+                          {profileData.bio && (
+                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Bio:
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                                {profileData.bio}
+                              </div>
                             </div>
                           )}
-                        </div>
-                      </div>
-                      {profileData.bio && (
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          {profileData.bio}
+                        </>
+                      ) : (
+                        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                          <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                            <strong>⚠️ No Profile Data Available:</strong> The
+                            social media profile data could not be retrieved.
+                            Please verify manually by visiting the profile.
+                          </div>
+                          <div className="mt-2 text-sm">
+                            <strong>Profile URL:</strong> @
+                            {verification.identity_username} on{" "}
+                            {verification.identity_platform}
+                          </div>
                         </div>
                       )}
+
+                      <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="text-xs text-blue-800 dark:text-blue-200">
+                          <strong>🔍 Verification Check:</strong> Verify that
+                          this social media profile belongs to the artist and
+                          matches their submitted information.
+                        </div>
+                        {getProfileUrl(verification) && (
+                          <div className="mt-2">
+                            <a
+                              href={getProfileUrl(verification)!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors"
+                            >
+                              🌐 Open {verification.identity_platform} Profile
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
-                  {verification.idv_method === "document" && (
-                    <div className="mb-4 p-3 bg-white dark:bg-gray-700 rounded-lg">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-5 w-5 text-blue-600" />
-                          <span className="font-medium">
-                            Document Verification
-                          </span>
-                        </div>
+                  {verificationMethod === "document" && (
+                    <div className="mb-4 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Shield className="h-5 w-5 text-blue-600" />
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          Document Verification Details
+                        </h4>
+                      </div>
 
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <strong>Document Type:</strong>{" "}
-                            {verification.idv_document_type?.replace("_", " ")}
-                          </div>
-                          <div>
-                            <strong>Full Name:</strong>{" "}
-                            {verification.idv_full_name}
-                          </div>
-                          <div>
-                            <strong>Date of Birth:</strong>{" "}
-                            {verification.idv_date_of_birth
-                              ? new Date(
+                      {verification.idv_full_name ||
+                      verification.idv_document_type ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          {verification.idv_document_type && (
+                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                📄 Document Type
+                              </div>
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {verification.idv_document_type.replace(
+                                  "_",
+                                  " "
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {verification.idv_full_name && (
+                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                👤 Full Name
+                              </div>
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {verification.idv_full_name}
+                              </div>
+                            </div>
+                          )}
+
+                          {verification.idv_date_of_birth && (
+                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                📅 Date of Birth
+                              </div>
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {new Date(
                                   verification.idv_date_of_birth
-                                ).toLocaleDateString()
-                              : "N/A"}
-                          </div>
+                                ).toLocaleDateString()}
+                              </div>
+                            </div>
+                          )}
+
                           {verification.idv_document_number && (
-                            <div>
-                              <strong>Document Number:</strong>{" "}
-                              {verification.idv_document_number}
+                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                🔢 Document Number
+                              </div>
+                              <div className="text-sm text-gray-900 dark:text-white font-mono">
+                                {verification.idv_document_number}
+                              </div>
                             </div>
                           )}
                         </div>
-
-                        {verification.idv_document_url && (
-                          <div>
-                            <strong className="text-sm">Document Image:</strong>
-                            <div className="mt-2">
-                              <img
-                                src={verification.idv_document_url}
-                                alt="Verification Document"
-                                className="max-w-full h-auto rounded-lg border"
-                                style={{ maxHeight: "300px" }}
-                              />
-                            </div>
+                      ) : (
+                        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 mb-4">
+                          <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                            <strong>⚠️ No Document Details Available:</strong>{" "}
+                            The document verification details could not be
+                            retrieved. Please contact the user for additional
+                            information.
                           </div>
-                        )}
+                        </div>
+                      )}
+
+                      {verification.idv_document_url && (
+                        <div className="mb-4">
+                          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            📸 Document Image
+                          </div>
+                          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                            <img
+                              src={verification.idv_document_url}
+                              alt="Verification Document"
+                              className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600"
+                              style={{ maxHeight: "400px" }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="text-xs text-blue-800 dark:text-blue-200">
+                          <strong>🔍 Verification Check:</strong> Verify that
+                          the document is clear, authentic, and the information
+                          matches the artist's submitted details. Check for any
+                          signs of tampering or falsification.
+                        </div>
                       </div>
                     </div>
                   )}

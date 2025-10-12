@@ -28,6 +28,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import Image from "next/image";
 // Type definitions
 interface StreamingService {
   name: string;
@@ -45,7 +46,8 @@ interface SongData {
 
 export default function PublicReleasePage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const artistname = params.artistname as string;
+  const releasetitle = params.releasetitle as string;
 
   const [releaseData, setReleaseData] = useState<SongData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,12 +69,17 @@ export default function PublicReleasePage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!artistname || !releasetitle) return;
 
     const fetchReleaseData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/public/release/${slug}`);
+        // Encode the parameters to handle spaces and special characters
+        const encodedArtist = encodeURIComponent(artistname);
+        const encodedRelease = encodeURIComponent(releasetitle);
+        const response = await fetch(
+          `/api/public/release/${encodedArtist}/${encodedRelease}`
+        );
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -94,28 +101,82 @@ export default function PublicReleasePage() {
     };
 
     fetchReleaseData();
-  }, [slug]);
+  }, [artistname, releasetitle]);
 
-  // Service Icon Component
+  // Update page title when release data is loaded
+  useEffect(() => {
+    // if (releaseData) {
+    //   document.title = `${releaseData.releaseTitle} by ${releaseData.artistName} | Alera`;
+    // } else {
+    // Set default title while loading or if no data
+    const decodedArtist = decodeURIComponent(artistname || "");
+    const decodedRelease = decodeURIComponent(releasetitle || "");
+    document.title = `${decodedRelease} by ${decodedArtist} | Alera`;
+    // }
+  }, [releaseData, artistname, releasetitle]);
+
+  // Service Icon Component - Uses actual platform images with fallback to lucide icons
   const ServiceIcon = ({ serviceName }: { serviceName: string }) => {
-    const iconClass = "w-6 h-6 flex-shrink-0";
+    const imageClass = "w-6 h-6 flex-shrink-0 object-contain";
+    const fallbackIconClass = "w-6 h-6 flex-shrink-0";
 
-    switch (serviceName.toLowerCase()) {
-      case "spotify":
-        return <Disc3 className={iconClass} />;
-      case "apple music":
-        return <Music2 className={iconClass} />;
-      case "youtube music":
-        return <PlayCircle className={iconClass} />;
-      case "amazon music":
-        return <Radio className={iconClass} />;
-      case "tidal":
-        return <Headphones className={iconClass} />;
-      case "deezer":
-        return <Music className={iconClass} />;
-      default:
-        return <Music className={iconClass} />;
+    // Map service names to image files (only for platforms we have images for)
+    const getImagePath = (name: string) => {
+      const normalizedName = name.toLowerCase();
+
+      if (normalizedName.includes("spotify")) return "/platforms/spotify.png";
+      if (normalizedName.includes("apple")) return "/platforms/apple-music.png";
+      if (normalizedName.includes("youtube")) return "/platforms/youtube.png";
+      if (normalizedName.includes("tidal")) return "/platforms/tidal.png";
+      if (normalizedName.includes("deezer")) return "/platforms/deezer.png";
+      if (normalizedName.includes("pandora")) return "/platforms/pandora.png";
+      if (normalizedName.includes("itunes"))
+        return "/platforms/apple-music.png";
+
+      return null;
+    };
+
+    // Get fallback lucide icon for platforms without images
+    const getFallbackIcon = (name: string) => {
+      const normalizedName = name.toLowerCase();
+
+      if (normalizedName.includes("amazon"))
+        return <Radio className={fallbackIconClass} />;
+      if (normalizedName.includes("soundcloud"))
+        return <Music2 className={fallbackIconClass} />;
+      if (normalizedName.includes("bandcamp"))
+        return <Disc3 className={fallbackIconClass} />;
+
+      // Default fallback icon
+      return <Music className={fallbackIconClass} />;
+    };
+
+    const imagePath = getImagePath(serviceName);
+
+    // If we have an image for this platform, use it
+    if (imagePath) {
+      return (
+        <img
+          src={imagePath}
+          alt={`${serviceName} logo`}
+          className={imageClass}
+          onError={(e) => {
+            // Fallback to lucide icon if image fails to load
+            const parent = e.currentTarget.parentElement;
+            if (parent) {
+              e.currentTarget.remove();
+              const icon = getFallbackIcon(serviceName);
+              const wrapper = document.createElement("div");
+              wrapper.innerHTML = icon.props.children || "";
+              parent.appendChild(wrapper.firstChild as Node);
+            }
+          }}
+        />
+      );
     }
+
+    // Fallback to lucide icons for platforms without images
+    return getFallbackIcon(serviceName);
   };
 
   if (loading) {
@@ -128,12 +189,70 @@ export default function PublicReleasePage() {
 
   if (error || !releaseData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="text-gray-400 text-xl text-center">
-          <h1 className="text-3xl font-bold mb-4 text-white">
-            Release Not Found
-          </h1>
-          <p>{error || "The release you are looking for does not exist."}</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-6">
+        <div className="text-center max-w-md mx-auto">
+          {/* Icon */}
+          <div className="mb-8">
+            <div className="text-8xl mb-4">🎵</div>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#A04EF7] to-[#C798F9] mx-auto rounded-full"></div>
+          </div>
+
+          {/* Error Message */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
+              Release Not Found
+            </h1>
+            <p className="text-xl text-gray-300 mb-2">
+              Oops! This release doesn't exist.
+            </p>
+            <p className="text-gray-400 mb-6">
+              The release you're looking for may have been removed, renamed, or
+              doesn't exist yet.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-4">
+            <button
+              onClick={() => window.history.back()}
+              className="w-full px-8 py-4 bg-[#A04EF7] text-white font-semibold rounded-xl hover:bg-[#C798F9] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[#A04EF7] focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+              Go Back
+            </button>
+
+            <a
+              href="https://www.alera.fm"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full px-8 py-4 bg-transparent border-2 border-gray-600 text-gray-300 font-semibold rounded-xl hover:bg-gray-700 hover:text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+              Discover More Music
+            </a>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-12 pt-8 border-t border-gray-700">
+            <div className="flex items-center justify-center">
+              <p className="text-xs text-gray-500 mr-2">Powered by</p>
+              <a
+                href="https://www.alera.fm"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-80 transition-opacity flex items-center"
+              >
+                <Image
+                  src="/images/alera-logo-white.png"
+                  alt="Alera"
+                  width={24}
+                  height={24}
+                  className="h-6 w-6"
+                />
+                <span className="text-white ml-1 font-medium text-sm">
+                  Alera
+                </span>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -300,7 +419,7 @@ export default function PublicReleasePage() {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 px-8 py-4 bg-transparent border-2 border-[#A04EF7] text-[#A04EF7] font-semibold rounded-xl hover:bg-[#A04EF7] hover:text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[#A04EF7] focus:ring-offset-2 focus:ring-offset-[#0a0a0a] min-h-[56px]"
               >
-                <span>View Artist Page</span>
+                <span>View My Page</span>
                 <ChevronRight className="w-4 h-4" />
               </a>
             </div>
@@ -309,17 +428,26 @@ export default function PublicReleasePage() {
 
         {/* Footer */}
         <footer className="mt-auto pt-12 text-center">
-          <p className="text-sm text-zinc-500">
-            Powered by{" "}
+          <div className="mt-4 flex items-center justify-center">
+            <p className="text-xs text-white/40 mr-2">Powered by</p>
             <a
-              href={"https://app.alera.fm"}
+              href="https://www.alera.fm"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#A04EF7] font-medium hover:text-[#C798F9] transition-colors"
+              className="hover:opacity-80 transition-opacity flex items-center"
             >
-              ALERA
+              <Image
+                src="/images/alera-logo-white.png"
+                alt="Alera"
+                width={40}
+                height={40}
+                className="h-12 w-12"
+              />
+              <span className="text-white mt-[1px] -ml-1 font-medium">
+                Alera
+              </span>
             </a>
-          </p>
+          </div>
         </footer>
       </div>
       <Dialog

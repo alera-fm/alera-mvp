@@ -159,7 +159,8 @@ export function OnboardingDashboard() {
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-3">Welcome to ALERA! 🎵</h2>
           <p className="text-purple-100 text-lg">
-            You're on the free trial. Complete your first release to get started!
+            You're on the free trial. Complete your first release to get
+            started!
           </p>
         </div>
 

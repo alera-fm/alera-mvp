@@ -13,7 +13,7 @@ export async function GET(
 
     const releaseResult = await pool.query(
       `
-      SELECT r.*, u.artist_name as artist_display_name, u.email as artist_email,
+      SELECT r.*, u.artist_name, u.email as artist_email,
              COALESCE(
                json_agg(
                  json_build_object(

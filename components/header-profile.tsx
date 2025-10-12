@@ -5,7 +5,8 @@ import { AccountSettingsDropdown } from "./account-settings-dropdown"
 
 interface User {
   email: string
-  display_name?: string
+  artistName?: string
+  artist_name?: string
   firstname?: string
   lastname?: string
 }

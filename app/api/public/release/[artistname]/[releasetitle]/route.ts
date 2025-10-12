@@ -2,17 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 
 /**
- * GET /api/public/release/[slug]
- * Get public release data by slug
+ * GET /api/public/release/[artistname]/[releasetitle]
+ * Get public release data by artist name and release title
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ artistname: string; releasetitle: string }> }
 ) {
   try {
-    const { slug } = await params;
+    const { artistname, releasetitle } = await params;
 
-    // Get release by slug/title with artist's public page link
+    // Decode URL parameters (handles %20 spaces and other encoded characters)
+    const decodedArtist = decodeURIComponent(artistname).toLowerCase();
+    const decodedRelease = decodeURIComponent(releasetitle).toLowerCase();
+
+    // Get release by artist name and release title with artist's public page link
     const releaseResult = await pool.query(
       `SELECT r.id, r.release_title, r.status, r.created_at,
               u.artist_name, u.id as artist_id,
@@ -22,13 +26,18 @@ export async function GET(
        LEFT JOIN landing_pages lp ON lp.artist_id = u.id
        WHERE r.status = 'live' 
        AND (
-         LOWER(REPLACE(r.release_title, ' ', '-')) = $1 
-         OR LOWER(REPLACE(r.release_title, ' ', '_')) = $1
-         OR LOWER(r.release_title) = $1
+         LOWER(REPLACE(u.artist_name, ' ', '-')) = $1 
+         OR LOWER(REPLACE(u.artist_name, ' ', '_')) = $1
+         OR LOWER(u.artist_name) = $1
+       )
+       AND (
+         LOWER(REPLACE(r.release_title, ' ', '-')) = $2 
+         OR LOWER(REPLACE(r.release_title, ' ', '_')) = $2
+         OR LOWER(r.release_title) = $2
        )
        ORDER BY r.created_at DESC
        LIMIT 1`,
-      [slug.toLowerCase()]
+      [decodedArtist, decodedRelease]
     );
 
     if (releaseResult.rows.length === 0) {

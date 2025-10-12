@@ -328,8 +328,8 @@ export function IdentityVerificationSection() {
             Identity Verification Pending
           </CardTitle>
           <CardDescription>
-            Your identity verification is under review. Please wait for admin
-            approval.
+            Verify your identity using one of your social media accounts or ID
+            to unlock release submission
           </CardDescription>
         </CardHeader>
         <CardContent>

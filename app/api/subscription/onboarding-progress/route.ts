@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Step 2: Set up your Artist Profile
     // This should check for additional profile details beyond basic registration
     const userProfile = await query(
-      `SELECT artist_name, email, is_verified, display_name, phone_number, country, address, identity_verified
+      `SELECT artist_name, email, is_verified, phone_number, country, address_line_1, identity_verified
        FROM users
        WHERE id = $1`,
       [userId]
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       profile?.artist_name &&
       profile?.email &&
       profile?.is_verified &&
-      (profile?.display_name || profile?.phone_number || profile?.country || profile?.address)
+      (profile?.phone_number || profile?.country || profile?.address_line_1)
     );
 
     // Step 3: Upload your first single

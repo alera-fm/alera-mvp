@@ -53,7 +53,6 @@ interface UserProfile {
   id: number;
   email: string;
   artist_name: string;
-  display_name: string;
   phone_number: string;
   country: string;
   address_line_1: string;
@@ -115,6 +114,7 @@ function SettingsPageContent() {
   const [showEmailChangeDialog, setShowEmailChangeDialog] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [isRequestingEmailChange, setIsRequestingEmailChange] = useState(false);
+  const [showOnboardingBanner, setShowOnboardingBanner] = useState(false);
   const { toast } = useToast();
 
   const fetchProfile = async () => {
@@ -129,6 +129,14 @@ function SettingsPageContent() {
       if (response.ok) {
         const data = await response.json();
         setProfile(data.user);
+
+        // Check if profile onboarding is complete
+        const hasAdditionalInfo = !!(
+          data.user?.phone_number ||
+          data.user?.country ||
+          data.user?.address_line_1
+        );
+        setShowOnboardingBanner(!hasAdditionalInfo && activeTab === "profile");
       } else {
         throw new Error("Failed to fetch profile");
       }
@@ -196,11 +204,23 @@ function SettingsPageContent() {
       if (response.ok) {
         const data = await response.json();
         setProfile(data.user);
+
+        // Check if profile onboarding is now complete
+        const hasAdditionalInfo = !!(
+          data.user?.phone_number ||
+          data.user?.country ||
+          data.user?.address_line_1
+        );
+        setShowOnboardingBanner(!hasAdditionalInfo);
+
         // Refresh user data in AuthContext to update across the app
         await refreshUser();
+
         toast({
           title: "Success",
-          description: "Profile updated successfully!",
+          description: hasAdditionalInfo
+            ? "Profile updated successfully! Onboarding step completed! 🎉"
+            : "Profile updated successfully!",
         });
       } else {
         const errorData = await response.json();
@@ -363,6 +383,18 @@ function SettingsPageContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    // Update banner visibility when tab changes
+    if (profile) {
+      const hasAdditionalInfo = !!(
+        profile?.phone_number ||
+        profile?.country ||
+        profile?.address_line_1
+      );
+      setShowOnboardingBanner(!hasAdditionalInfo && activeTab === "profile");
+    }
+  }, [activeTab, profile]);
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -415,6 +447,52 @@ function SettingsPageContent() {
             </TabsList>
 
             <TabsContent value="profile">
+              {/* Onboarding Banner */}
+              {showOnboardingBanner && (
+                <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 dark:border-blue-900">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+                        <User className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                            Complete Your Artist Profile (Step 2 of 5)
+                          </h3>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            To complete this onboarding step, please fill in{" "}
+                            <strong>at least one</strong> of the following
+                            fields below:
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                            <span>Phone Number</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                            <span>Country</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                            <span>Address (Line 1)</span>
+                          </div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            💡 <strong>Tip:</strong> Once you fill in at least
+                            one field and save, Step 2 will be marked as
+                            complete!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -426,7 +504,7 @@ function SettingsPageContent() {
                   {profile && (
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 md:col-span-2">
                           <Label htmlFor="artist_name">Artist Name</Label>
                           <div className="relative">
                             <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -436,22 +514,6 @@ function SettingsPageContent() {
                               value={profile.artist_name || ""}
                               onChange={(e) =>
                                 updateProfile("artist_name", e.target.value)
-                              }
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="display_name">Display Name</Label>
-                          <div className="relative">
-                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                            <Input
-                              id="display_name"
-                              placeholder="Enter your display name"
-                              value={profile.display_name || ""}
-                              onChange={(e) =>
-                                updateProfile("display_name", e.target.value)
                               }
                               className="pl-10"
                             />
@@ -485,7 +547,17 @@ function SettingsPageContent() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="phone_number">Phone Number</Label>
+                          <Label
+                            htmlFor="phone_number"
+                            className="flex items-center gap-2"
+                          >
+                            Phone Number
+                            {showOnboardingBanner && (
+                              <span className="text-xs font-normal text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full">
+                                Complete Step 2
+                              </span>
+                            )}
+                          </Label>
                           <div className="relative">
                             <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input
@@ -495,13 +567,27 @@ function SettingsPageContent() {
                               onChange={(e) =>
                                 updateProfile("phone_number", e.target.value)
                               }
-                              className="pl-10"
+                              className={`pl-10 ${
+                                showOnboardingBanner && !profile.phone_number
+                                  ? "ring-2 ring-blue-200 dark:ring-blue-800"
+                                  : ""
+                              }`}
                             />
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="country">Country</Label>
+                          <Label
+                            htmlFor="country"
+                            className="flex items-center gap-2"
+                          >
+                            Country
+                            {showOnboardingBanner && (
+                              <span className="text-xs font-normal text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full">
+                                Complete Step 2
+                              </span>
+                            )}
+                          </Label>
                           <div className="relative">
                             <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input
@@ -511,7 +597,11 @@ function SettingsPageContent() {
                               onChange={(e) =>
                                 updateProfile("country", e.target.value)
                               }
-                              className="pl-10"
+                              className={`pl-10 ${
+                                showOnboardingBanner && !profile.country
+                                  ? "ring-2 ring-blue-200 dark:ring-blue-800"
+                                  : ""
+                              }`}
                             />
                           </div>
                         </div>
@@ -523,8 +613,16 @@ function SettingsPageContent() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="address_line_1">
+                            <Label
+                              htmlFor="address_line_1"
+                              className="flex items-center gap-2"
+                            >
                               Address Line 1
+                              {showOnboardingBanner && (
+                                <span className="text-xs font-normal text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full">
+                                  Complete Step 2
+                                </span>
+                              )}
                             </Label>
                             <Input
                               id="address_line_1"
@@ -533,6 +631,11 @@ function SettingsPageContent() {
                               onChange={(e) =>
                                 updateProfile("address_line_1", e.target.value)
                               }
+                              className={`${
+                                showOnboardingBanner && !profile.address_line_1
+                                  ? "ring-2 ring-blue-200 dark:ring-blue-800"
+                                  : ""
+                              }`}
                             />
                           </div>
                           <div className="space-y-2">

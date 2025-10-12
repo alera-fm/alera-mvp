@@ -243,18 +243,19 @@ export async function getOnboardingProgress(userId: number): Promise<any[]> {
   try {
     // Step 1: Check if user profile is completed
     const userProfile = await query(
-      `SELECT artist_name, email, is_verified, display_name, phone_number, country, address, identity_verified
+      `SELECT artist_name, email, is_verified, phone_number, country, address_line_1, identity_verified
        FROM users 
        WHERE id = $1`,
       [userId]
     );
 
     const profile = userProfile.rows[0];
-    // Profile is considered complete if they have the essential fields
+    // Profile is considered complete if they have the essential fields + at least one additional field
     const profileCompleted = !!(
       profile?.artist_name &&
       profile?.email &&
-      profile?.is_verified
+      profile?.is_verified &&
+      (profile?.phone_number || profile?.country || profile?.address_line_1)
     );
 
     // Step 2: Check if user has any releases
