@@ -147,10 +147,10 @@ export async function GET(request: NextRequest) {
 
     // Feature access based on tier AND status (users with payment issues get trial access)
     const featureAccess = {
-      // Release creation: Trial users can create ONE release, paid users can create unlimited
+      // NEW: Release creation: Trial users can create ONE release, paid users can create unlimited
       release_creation:
         (subscription.tier === "trial" &&
-          totalReleases < 1 &&
+          !subscription.free_release_used &&
           isActiveSubscription) ||
         (subscription.tier !== "trial" && isActiveSubscription),
 

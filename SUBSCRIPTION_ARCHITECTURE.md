@@ -2,18 +2,18 @@
 
 ## Overview
 
-ALERA implements a 3-tier subscription system with a 1-month free trial that funnels users into paid Plus or Pro tiers. The system includes feature gating, usage tracking, and Stripe integration for payment processing.
+ALERA implements a 3-tier subscription system with a one-release free trial that funnels users into paid Plus or Pro tiers. The system includes feature gating, usage tracking, and Stripe integration for payment processing.
 
 ## Subscription Tiers
 
-### 1. **Trial (Free - 1 Month)**
+### 1. **Trial (Free - One Release)**
 
-- **Duration**: 1 month from registration
+- **Duration**: Until first release submission (not time-based)
 - **Access**: Full feature access with specific limitations
 - **Limitations**:
-  - **Release Limit**: No releases allowed (must upgrade to create releases)
+  - **Release Limit**: ONE free release allowed (trial ends after submission)
   - **AI Agent**: 1,500 tokens per day
-- **Expiration Behavior**: Prompted to upgrade with limited access (no features until upgrade)
+- **Expiration Behavior**: Trial ends immediately after successful release submission, user must upgrade to create more releases
 
 ### 2. **Plus ($4.99/month)**
 

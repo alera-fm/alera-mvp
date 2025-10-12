@@ -663,8 +663,8 @@ export function DistributionFlow({
       if (!canCreate) {
         const message =
           formData.distribution_type === "Single"
-            ? "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music."
-            : "Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.";
+            ? "You've used your free release. Upgrade to Plus or Pro to create unlimited releases."
+            : "Trial users can only create Single releases. Upgrade to Plus or Pro to create EPs and Albums.";
         showUpgradeDialog(message, "plus");
         return;
       }
@@ -726,8 +726,8 @@ export function DistributionFlow({
       if (!canCreate) {
         const message =
           formData.distribution_type === "Single"
-            ? "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music."
-            : "Trial users can only create Single releases. Upgrade to Plus to create EPs and Albums.";
+            ? "You've used your free release. Upgrade to Plus or Pro to create unlimited releases."
+            : "Trial users can only create Single releases. Upgrade to Plus or Pro to create EPs and Albums.";
         showUpgradeDialog(message, "plus");
         return;
       }
@@ -2512,15 +2512,14 @@ export function DistributionFlow({
             Release Creation Limit Reached
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-            Trial users cannot create releases. Upgrade to Plus or Pro to start
-            distributing your music and unlock the full power of your music
-            career.
+            You've used your free release. Upgrade to Plus or Pro to create
+            unlimited releases and unlock the full power of your music career.
           </p>
 
           <Button
             onClick={() =>
               showUpgradeDialog(
-                "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.",
+                "You've used your free release. Upgrade to Plus or Pro to create unlimited releases.",
                 "plus"
               )
             }

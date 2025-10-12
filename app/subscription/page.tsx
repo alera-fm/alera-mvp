@@ -183,8 +183,8 @@ function SubscriptionPageContent() {
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                     Releases to 150+ Platforms
                   </td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-500">
-                    0
+                  <td className="px-6 py-4 text-center text-sm text-blue-600 font-semibold">
+                    1 Free Release
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-green-600">
                     Unlimited
@@ -200,8 +200,8 @@ function SubscriptionPageContent() {
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                     Keep 100% of Royalties
                   </td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-500">
-                    ✗
+                  <td className="px-6 py-4 text-center text-sm text-green-600">
+                    ✓
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-green-600">
                     ✓
@@ -217,8 +217,8 @@ function SubscriptionPageContent() {
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                     Spotify Verified Checkmark
                   </td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-500">
-                    ✗
+                  <td className="px-6 py-4 text-center text-sm text-green-600">
+                    ✓
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-green-600">
                     ✓
@@ -234,8 +234,8 @@ function SubscriptionPageContent() {
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                     Custom Landing Page Builder
                   </td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-500">
-                    ✗
+                  <td className="px-6 py-4 text-center text-sm text-green-600">
+                    ✓
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-green-600">
                     ✓
@@ -266,7 +266,24 @@ function SubscriptionPageContent() {
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                    Fan Monetization
+                    Fan Zone Access
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-500">
+                    ✗
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-green-600">
+                    ✓
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-green-600">
+                    ✓
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-green-600">
+                    ✓
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    Fan Monetization (Tips & Subscriptions)
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-gray-500">
                     ✗

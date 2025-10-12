@@ -116,11 +116,6 @@ export function UpgradeDialog() {
                 <h3 className="font-semibold">
                   Current Plan: {getCurrentTierName()}
                 </h3>
-                {subscription?.tier === "trial" && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {subscription.daysRemaining} days remaining in trial
-                  </p>
-                )}
               </div>
               <Badge variant="outline">
                 {subscription?.tier === "trial"
@@ -154,15 +149,18 @@ export function UpgradeDialog() {
             >
               Yearly
             </Button>
-            {billingCycle === "yearly" && (
+          </div>
+
+          {billingCycle === "yearly" && (
+            <div className="flex justify-center w-full">
               <Badge
                 variant="secondary"
                 className="ml-2 bg-green-500 text-white animate-pulse"
               >
                 🎉 Save 20%
               </Badge>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Tier comparison */}
           <div className="grid md:grid-cols-3 gap-4 md:gap-6">

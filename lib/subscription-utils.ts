@@ -393,14 +393,20 @@ export async function checkReleaseLimit(
     return { allowed: true };
   }
 
-  // FIXED: Trial users CANNOT create releases at all
+  // NEW: Trial users can create ONE release, then trial ends
   if (subscription.tier === "trial") {
-    return {
-      allowed: false,
-      reason:
-        "Trial users cannot create releases. Upgrade to Plus or Pro to start distributing your music.",
-      upgradeRequired: "plus",
-    };
+    // Check if they've already used their free release
+    if (subscription.free_release_used) {
+      return {
+        allowed: false,
+        reason:
+          "You've already used your free release. Upgrade to Plus or Pro to distribute more music.",
+        upgradeRequired: "plus",
+      };
+    }
+
+    // Trial users can create their first release
+    return { allowed: true };
   }
 
   // Default case - should not reach here but just in case

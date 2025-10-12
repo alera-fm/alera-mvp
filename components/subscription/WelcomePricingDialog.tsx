@@ -108,7 +108,7 @@ export function WelcomePricingDialog({
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl md:text-3xl font-bold">
-            Welcome to ALERA! 🎵
+            Welcome to ALERA!
           </DialogTitle>
           <DialogDescription className="text-base md:text-lg mt-2">
             Choose your plan to start distributing your music and building your
@@ -125,8 +125,8 @@ export function WelcomePricingDialog({
                   You're currently on a Free Trial
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Experience basic features for 1 month. Upgrade to unlock your
-                  full potential!
+                  Create one free release to get started. Upgrade to unlock
+                  unlimited releases and advanced features!
                 </p>
               </div>
               <Badge variant="outline" className="bg-white dark:bg-gray-800">

@@ -81,7 +81,7 @@ foundation is ready.</h1>
 <div class="footer" style="text-align: center; padding-top: 30px; border-top: 1px solid #333333;  font-size: 12px; color: #757575;"> 
 <p>&copy; 2025 ALERA. All Rights Reserved.<br> 
 You received this email because you signed up for an account on alera.fm.</p> </div> </div> </body> 
-</html>`
+</html>`,
   },
 
   artistPageTip: {
@@ -185,7 +185,7 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   aiCareerManager: {
@@ -294,7 +294,7 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   timeToMakeRelease: {
@@ -383,12 +383,13 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   trialEndingSoon: {
-    subject: "Your ALERA free trial is ending in 7 days",
-    preHeader: "Don't lose access to your releases and career tools. Upgrade your plan now.",
+    subject: "Ready to create more releases on ALERA?",
+    preHeader:
+      "Don't lose access to your releases and career tools. Upgrade your plan now.",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -455,10 +456,10 @@ family=Inter:wght@400;600;700&display=swap');
  <div class="header" style="text-align: center; padding-bottom: 30px;">  <img src="https://i.imgur.com/87B9DNn.jpeg" alt="ALERA Logo" style="max-width:  600px;"> 
  </div>
  <div class="content"> 
- <h1 style="font-size: 28px; font-weight: 700; text-align: center;color: #FFFFFF; margin-top: 0;">Your Free Trial is Ending Soon</h1> 
+ <h1 style="font-size: 28px; font-weight: 700; text-align: center;color: #FFFFFF; margin-top: 0;">Ready to Create More Releases?</h1> 
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Hi [Artist Name],</p> 
- <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Just a heads-up that your 1-month free trial of ALERA is ending in 7 days. We hope you've had  a chance to see how our tools can help you manage and grow your music career.</p> 
- <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">To ensure your releases stay live and you keep access to your analytics, wallet, and Fan Zone,  please upgrade to a paid plan before your trial ends.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">You've used your free release on ALERA. We hope you've had a chance to see how our tools can help you manage and grow your music career.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">To create unlimited releases and unlock advanced features like the Fan Zone, AI Career Manager, and more, please upgrade to Plus or Pro.</p> 
   
  <div style="text-align: center;"> 
  <a href="https://app.alera.fm/subscription" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Upgrade Your Plan</a> 
@@ -472,12 +473,13 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   trialEnded: {
-    subject: "Your ALERA free trial has ended",
-    preHeader: "Please upgrade to a paid plan to continue using your ALERA tools.",
+    subject: "Ready to create unlimited releases on ALERA?",
+    preHeader:
+      "Please upgrade to a paid plan to continue using your ALERA tools.",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -544,11 +546,11 @@ family=Inter:wght@400;600;700&display=swap');
  <div class="header" style="text-align: center; padding-bottom: 30px;">  <img src="https://i.imgur.com/87B9DNn.jpeg" alt="ALERA Logo" style="max-width:  600px;"> 
  </div>
  <div class="content"> 
- <h1 style="font-size: 28px; font-weight: 700; text-align: center;color: #FFFFFF; margin-top: 0;">Your Free Trial Has Ended</h1> 
+ <h1 style="font-size: 28px; font-weight: 700; text-align: center;color: #FFFFFF; margin-top: 0;">Ready to Create More Releases?</h1> 
  <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Hi [Artist Name],</p> 
- <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Your 1-month free trial of ALERA has now ended. Your access to Pro features like the Fan Zone,  unlimited releases, and the AI Career Manager has been paused.</p> 
- <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Your data, any previous releases, and your settings are all safely saved. To regain full access  and continue managing your music career with ALERA, please upgrade to a paid plan.</p> 
- <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Ready to continue? Choose a plan that fits your journey and pick up right where you left off.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">You've used your free release on ALERA. Your access to create more releases has been limited, but all your data, releases, and settings are safely saved.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">To create unlimited releases and unlock advanced features like the Fan Zone, AI Career Manager, and more, please upgrade to Plus or Pro.</p> 
+ <p style="font-size: 16px; line-height: 1.6; color: #A3A3A3;">Ready to continue? Choose a plan that fits your journey and create unlimited music.</p> 
   
  <div style="text-align: center;"> 
  <a href="https://app.alera.fm/subscription" class="button" style="display: inline-block;  padding: 12px 24px; background-color: #A04EF7; color: #FFFFFF; text-decoration: none;  border-radius: 8px; font-weight: 600; margin-top: 25px; text-align: center;">Upgrade Your Plan</a> 
@@ -562,12 +564,13 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   releaseSubmitted: {
     subject: "We've Received Your Release, [Release Title]",
-    preHeader: "It's now with our review team. We'll have an update for you soon!",
+    preHeader:
+      "It's now with our review team. We'll have an update for you soon!",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -635,12 +638,13 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   releaseApproved: {
-    subject: "Good news! Your release \"[Release Title]\" has been approved.",
-    preHeader: "It's now on its way to Spotify, Apple Music, and all other major stores.",
+    subject: 'Good news! Your release "[Release Title]" has been approved.',
+    preHeader:
+      "It's now on its way to Spotify, Apple Music, and all other major stores.",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -725,11 +729,11 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   releaseLive: {
-    subject: "It's Live! Your new release \"[Release Title]\" is out now.",
+    subject: 'It\'s Live! Your new release "[Release Title]" is out now.',
     preHeader: "Share your music with the world!",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
@@ -815,12 +819,13 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   releaseRejected: {
-    subject: "An update regarding your release, \"[Release Title]\"",
-    preHeader: "Your release submission requires your attention before it can be sent to stores.",
+    subject: 'An update regarding your release, "[Release Title]"',
+    preHeader:
+      "Your release submission requires your attention before it can be sent to stores.",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -904,12 +909,13 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   payoutSent: {
     subject: "Your payout of [Amount] is on its way!",
-    preHeader: "We've sent your recent ALERA earnings to your selected payout method.",
+    preHeader:
+      "We've sent your recent ALERA earnings to your selected payout method.",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -994,7 +1000,7 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   payoutMethodApproved: {
@@ -1083,7 +1089,7 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   subscriptionConfirmation: {
@@ -1175,7 +1181,7 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   emailVerification: {
@@ -1271,12 +1277,14 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   subscriptionPaymentFailed: {
-    subject: "Action Required: There's an issue with your ALERA subscription payment",
-    preHeader: "Please update your payment method to keep access to your Pro/Plus features.",
+    subject:
+      "Action Required: There's an issue with your ALERA subscription payment",
+    preHeader:
+      "Please update your payment method to keep access to your Pro/Plus features.",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -1361,12 +1369,13 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
+</html>`,
   },
 
   takedownRequest: {
     subject: "Takedown Request Received for [Release Title]",
-    preHeader: "We've received your takedown request and will process it shortly.",
+    preHeader:
+      "We've received your takedown request and will process it shortly.",
     html: `<!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -1435,25 +1444,29 @@ family=Inter:wght@400;600;700&display=swap');
  You received this email because you signed up for an account on alera.fm.</p>  </div> 
  </div> 
 </body> 
-</html>`
-  }
+</html>`,
+  },
 };
 
 export function getEmailTemplate(templateName: string): EmailTemplate | null {
   return EMAIL_TEMPLATES[templateName] || null;
 }
 
-export function replaceEmailPlaceholders(html: string, artistName: string, data?: {
-  releaseTitle?: string;
-  amount?: string;
-  payoutMethod?: string;
-  lastFour?: string;
-  tier?: string;
-  billingCycle?: string;
-  verificationUrl?: string;
-}): string {
+export function replaceEmailPlaceholders(
+  html: string,
+  artistName: string,
+  data?: {
+    releaseTitle?: string;
+    amount?: string;
+    payoutMethod?: string;
+    lastFour?: string;
+    tier?: string;
+    billingCycle?: string;
+    verificationUrl?: string;
+  }
+): string {
   let result = html.replace(/\[Artist Name\]/g, artistName);
-  
+
   if (data?.releaseTitle) {
     result = result.replace(/\[Release Title\]/g, data.releaseTitle);
   }
@@ -1475,6 +1488,6 @@ export function replaceEmailPlaceholders(html: string, artistName: string, data?
   if (data?.verificationUrl) {
     result = result.replace(/\[VERIFICATION_URL\]/g, data.verificationUrl);
   }
-  
+
   return result;
 }

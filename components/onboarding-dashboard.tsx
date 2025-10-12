@@ -157,7 +157,7 @@ export function OnboardingDashboard() {
       <div className="bg-gradient-to-b from-blue-900 via-blue-800 to-purple-700 rounded-2xl p-8 text-white shadow-2xl">
         {/* Welcome Header */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3">Welcome to ALERA! 🎵</h2>
+          <h2 className="text-3xl font-bold mb-3">Welcome to ALERA!</h2>
           <p className="text-purple-100 text-lg">
             You're on the free trial. Complete your first release to get
             started!
@@ -217,7 +217,7 @@ export function OnboardingDashboard() {
               onClick={() => (window.location.href = "/subscription")}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-3 rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
-              Upgrade to Unlock All Features
+              Upgrade to Create Unlimited Releases
             </button>
           </div>
         )}

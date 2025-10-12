@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Loader2, Crown, Zap } from "lucide-react";
@@ -10,8 +16,14 @@ import { useSubscription } from "@/context/SubscriptionContext";
 import { useRegionalPricing } from "@/hooks/use-regional-pricing";
 
 interface Subscription {
-  tier: 'trial' | 'plus' | 'pro';
-  status: 'active' | 'expired' | 'cancelled' | 'cancelling' | 'pending_payment' | 'payment_failed';
+  tier: "trial" | "plus" | "pro";
+  status:
+    | "active"
+    | "expired"
+    | "cancelled"
+    | "cancelling"
+    | "pending_payment"
+    | "payment_failed";
   trialExpiresAt?: string;
   subscriptionExpiresAt?: string;
   current_period_end?: string;
@@ -70,8 +82,8 @@ export function SubscriptionDetails() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          returnUrl: window.location.href // Return to the current page
-        })
+          returnUrl: window.location.href, // Return to the current page
+        }),
       });
 
       if (response.ok) {
@@ -89,7 +101,10 @@ export function SubscriptionDetails() {
       console.error("Error accessing customer portal:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to access billing portal",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to access billing portal",
         variant: "destructive",
       });
     } finally {
@@ -99,49 +114,57 @@ export function SubscriptionDetails() {
 
   const getTierDetails = (tier: string) => {
     switch (tier) {
-      case 'trial':
+      case "trial":
         return {
-          name: 'Trial',
-          description: 'Free 1-month trial with basic features',
+          name: "Trial",
+          description: "Free trial - Create one release to get started",
           icon: Zap,
-          color: 'bg-blue-500',
-          textColor: 'text-blue-500',
+          color: "bg-blue-500",
+          textColor: "text-blue-500",
           features: [
-            '1 Single release',
-            '1,500 AI tokens per day',
-            'Basic fan management',
+            "1 Free release",
+            "1,500 AI tokens per day",
+            "Basic fan management",
           ],
         };
-      case 'plus':
+      case "plus":
         return {
-          name: 'Plus',
-          description: 'Perfect for growing artists',
+          name: "Plus",
+          description: "Perfect for growing artists",
           icon: Crown,
-          color: 'bg-purple-500',
-          textColor: 'text-purple-500',
-          price: formatPrice(pricing.plus.monthly.amount, pricing.plus.monthly.currency) + '/month',
+          color: "bg-purple-500",
+          textColor: "text-purple-500",
+          price:
+            formatPrice(
+              pricing.plus.monthly.amount,
+              pricing.plus.monthly.currency
+            ) + "/month",
           features: [
-            'Unlimited releases (Singles, EPs, & Albums)',
-            '100,000 AI tokens per month',
-            'Fan Zone Access',
-            'Basic analytics',
+            "Unlimited releases (Singles, EPs, & Albums)",
+            "100,000 AI tokens per month",
+            "Fan Zone Access",
+            "Basic analytics",
           ],
         };
-      case 'pro':
+      case "pro":
         return {
-          name: 'Pro',
-          description: 'For serious artists and labels',
+          name: "Pro",
+          description: "For serious artists and labels",
           icon: Crown,
-          color: 'bg-gradient-to-r from-purple-600 to-yellow-500',
-          textColor: 'text-yellow-500',
-          price: formatPrice(pricing.pro.monthly.amount, pricing.pro.monthly.currency) + '/month',
+          color: "bg-gradient-to-r from-purple-600 to-yellow-500",
+          textColor: "text-yellow-500",
+          price:
+            formatPrice(
+              pricing.pro.monthly.amount,
+              pricing.pro.monthly.currency
+            ) + "/month",
           features: [
-            'Everything in Plus',
-            'Direct Fan Monetisation (Tips & Subscriptions)',
-            'Unlimited AI Career Manager',
-            'Advanced Fan Zone Access (Campaigns & Import)',
-            'Deeper Career Analytics',
-            'Priority Support',
+            "Everything in Plus",
+            "Direct Fan Monetisation (Tips & Subscriptions)",
+            "Unlimited AI Career Manager",
+            "Advanced Fan Zone Access (Campaigns & Import)",
+            "Deeper Career Analytics",
+            "Priority Support",
           ],
         };
       default:
@@ -150,37 +173,39 @@ export function SubscriptionDetails() {
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        console.warn('Invalid date string:', dateString);
-        return 'N/A';
+        console.warn("Invalid date string:", dateString);
+        return "N/A";
       }
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'N/A';
+      console.error("Error formatting date:", error);
+      return "N/A";
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
+      case "active":
         return <Badge className="bg-green-500">Active</Badge>;
-      case 'cancelling':
+      case "cancelling":
         return <Badge className="bg-orange-500">Cancelling</Badge>;
-      case 'expired':
+      case "expired":
         return <Badge variant="destructive">Expired</Badge>;
-      case 'cancelled':
+      case "cancelled":
         return <Badge variant="secondary">Cancelled</Badge>;
-      case 'pending_payment':
-        return <Badge className="bg-yellow-500 text-white">Payment Pending</Badge>;
-      case 'payment_failed':
+      case "pending_payment":
+        return (
+          <Badge className="bg-yellow-500 text-white">Payment Pending</Badge>
+        );
+      case "payment_failed":
         return <Badge variant="destructive">Payment Failed</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
@@ -201,7 +226,8 @@ export function SubscriptionDetails() {
         <CardHeader>
           <CardTitle className="text-red-500">No Subscription Found</CardTitle>
           <CardDescription>
-            There was an error loading your subscription details. Please try refreshing the page.
+            There was an error loading your subscription details. Please try
+            refreshing the page.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -228,7 +254,8 @@ export function SubscriptionDetails() {
           </div>
           <div className="flex items-center gap-2">
             {/* Manage Subscription Button - Shows Stripe Portal */}
-            {(subscription.stripeCustomerId || subscription.tier !== 'trial') && (
+            {(subscription.stripeCustomerId ||
+              subscription.tier !== "trial") && (
               <Button
                 variant="outline"
                 onClick={handleManageSubscription}
@@ -246,39 +273,54 @@ export function SubscriptionDetails() {
             )}
 
             {/* Upgrade Button */}
-            {subscription.tier !== 'pro' && subscription.status !== 'cancelled' && (
-              <Button
-                onClick={async () => {
-                  try {
-                    // For existing paid subscribers, redirect to portal
-                    if (subscription.stripeCustomerId && subscription.tier !== 'trial') {
-                      await handleManageSubscription();
-                      return;
+            {subscription.tier !== "pro" &&
+              subscription.status !== "cancelled" && (
+                <Button
+                  onClick={async () => {
+                    try {
+                      // For existing paid subscribers, redirect to portal
+                      if (
+                        subscription.stripeCustomerId &&
+                        subscription.tier !== "trial"
+                      ) {
+                        await handleManageSubscription();
+                        return;
+                      }
+
+                      // For trial users, show upgrade dialog
+                      const targetTier =
+                        subscription.tier === "trial" ? "plus" : "pro";
+                      showUpgradeDialog(
+                        `Upgrade to ${targetTier === "plus" ? "Plus" : "Pro"}`,
+                        targetTier
+                      );
+                    } catch (error) {
+                      console.error("Error handling upgrade:", error);
+                      toast({
+                        title: "Error",
+                        description:
+                          "Failed to process upgrade request. Please try again.",
+                        variant: "destructive",
+                      });
                     }
-
-                    // For trial users, show upgrade dialog
-                    const targetTier = subscription.tier === 'trial' ? 'plus' : 'pro';
-                    showUpgradeDialog(
-                      `Upgrade to ${targetTier === 'plus' ? 'Plus' : 'Pro'}`,
-                      targetTier
-                    );
-                  } catch (error) {
-                    console.error('Error handling upgrade:', error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to process upgrade request. Please try again.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                className="flex items-center gap-2"
-                title={`Upgrade to ${subscription.tier === 'trial' ? `Plus (${formatPrice(pricing.plus.monthly.amount, pricing.plus.monthly.currency)}/month)` : `Pro (${formatPrice(pricing.pro.monthly.amount, pricing.pro.monthly.currency)}/month)`}`}
-              >
-                <Crown className="h-4 w-4" />
-                Upgrade to {subscription.tier === 'trial' ? 'Plus' : 'Pro'}
-              </Button>
-            )}
-
+                  }}
+                  className="flex items-center gap-2"
+                  title={`Upgrade to ${
+                    subscription.tier === "trial"
+                      ? `Plus (${formatPrice(
+                          pricing.plus.monthly.amount,
+                          pricing.plus.monthly.currency
+                        )}/month)`
+                      : `Pro (${formatPrice(
+                          pricing.pro.monthly.amount,
+                          pricing.pro.monthly.currency
+                        )}/month)`
+                  }`}
+                >
+                  <Crown className="h-4 w-4" />
+                  Upgrade to {subscription.tier === "trial" ? "Plus" : "Pro"}
+                </Button>
+              )}
           </div>
         </div>
       </CardHeader>
@@ -290,54 +332,64 @@ export function SubscriptionDetails() {
               <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Status
               </h4>
-              <p className="font-medium">{subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}</p>
+              <p className="font-medium">
+                {subscription.status.charAt(0).toUpperCase() +
+                  subscription.status.slice(1)}
+              </p>
             </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                {subscription.tier === 'trial' 
-                  ? 'Trial Expires' 
-                  : subscription.status === 'cancelling' 
-                    ? 'Active Until' 
-                    : 'Next Billing Date'}
+                {subscription.tier === "trial"
+                  ? "Trial Status"
+                  : subscription.status === "cancelling"
+                  ? "Active Until"
+                  : "Next Billing Date"}
               </h4>
               <p className="font-medium">
-                {subscription.tier === 'trial' ? (
-                  `${formatDate(subscription.trialExpiresAt)} (${subscription.daysRemaining} days remaining)`
-                ) : (
-                  (() => {
-                    const billingDate = subscription.current_period_end || subscription.subscriptionExpiresAt;
-                    if (billingDate) {
-                      return formatDate(billingDate);
-                    } else if (subscription.stripeCustomerId || subscription.stripeSubscriptionId) {
-                      return 'Loading billing date...';
-                    } else {
-                      return 'No billing cycle (Manual subscription)';
-                    }
-                  })()
-                )}
+                {subscription.tier === "trial"
+                  ? "Free trial - Create one release to get started"
+                  : (() => {
+                      const billingDate =
+                        subscription.current_period_end ||
+                        subscription.subscriptionExpiresAt;
+                      if (billingDate) {
+                        return formatDate(billingDate);
+                      } else if (
+                        subscription.stripeCustomerId ||
+                        subscription.stripeSubscriptionId
+                      ) {
+                        return "Loading billing date...";
+                      } else {
+                        return "No billing cycle (Manual subscription)";
+                      }
+                    })()}
               </p>
             </div>
           </div>
 
           {/* Cancellation Notice */}
-          {subscription.status === 'cancelling' && (
+          {subscription.status === "cancelling" && (
             <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
               <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-2">
                 Subscription Cancelled
               </h4>
               <p className="text-sm text-orange-700 dark:text-orange-300">
-                Your subscription has been cancelled but will remain active until{' '}
+                Your subscription has been cancelled but will remain active
+                until{" "}
                 <span className="font-medium">
                   {(() => {
-                    const billingDate = subscription.current_period_end || subscription.subscriptionExpiresAt;
+                    const billingDate =
+                      subscription.current_period_end ||
+                      subscription.subscriptionExpiresAt;
                     if (billingDate) {
                       return formatDate(billingDate);
                     } else {
-                      return 'the end of your current billing period';
+                      return "the end of your current billing period";
                     }
                   })()}
-                </span>. 
-                You can continue using all {tierDetails.name} features until then.
+                </span>
+                . You can continue using all {tierDetails.name} features until
+                then.
               </p>
             </div>
           )}
