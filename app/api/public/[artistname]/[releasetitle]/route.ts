@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 
 /**
- * GET /api/public/release/[artistname]/[releasetitle]
+ * GET /api/public/[artistname]/[releasetitle]
  * Get public release data by artist name and release title
  */
 export async function GET(

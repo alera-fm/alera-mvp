@@ -78,7 +78,7 @@ export default function PublicReleasePage() {
         const encodedArtist = encodeURIComponent(artistname);
         const encodedRelease = encodeURIComponent(releasetitle);
         const response = await fetch(
-          `/api/public/release/${encodedArtist}/${encodedRelease}`
+          `/api/public/${encodedArtist}/${encodedRelease}`
         );
 
         if (!response.ok) {
@@ -105,14 +105,24 @@ export default function PublicReleasePage() {
 
   // Update page title when release data is loaded
   useEffect(() => {
-    // if (releaseData) {
-    //   document.title = `${releaseData.releaseTitle} by ${releaseData.artistName} | Alera`;
-    // } else {
-    // Set default title while loading or if no data
+    // Format the URL-decoded parameters properly while loading
     const decodedArtist = decodeURIComponent(artistname || "");
     const decodedRelease = decodeURIComponent(releasetitle || "");
-    document.title = `${decodedRelease} by ${decodedArtist} | Alera`;
-    // }
+
+    // Format the text properly (capitalize first letters, handle hyphens/underscores)
+    const formatTitle = (text: string) => {
+      return text
+        .replace(/[-_]/g, " ") // Replace hyphens and underscores with spaces
+        .split(" ")
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
+    };
+
+    document.title = `${formatTitle(decodedRelease)} by ${formatTitle(
+      decodedArtist
+    )} | Alera`;
   }, [releaseData, artistname, releasetitle]);
 
   // Service Icon Component - Uses actual platform images with fallback to lucide icons
