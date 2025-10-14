@@ -24,6 +24,21 @@
     --input: 240 5.9% 90%;
     --ring: 263 85% 50%;
     --radius: 0.5rem;
+
+    /* Extended color palette */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+    --error: 0 84.2% 60.2%;
+    --error-foreground: 0 0% 98%;
+
+    /* Alera brand colors */
+    --alera-lime: 75 100% 50%;
+    --alera-purple: 274 52% 37%;
+    --alera-dark-purple: 254 55% 26%;
   }
 
   .dark {
@@ -46,6 +61,21 @@
     --border: 240 4% 12%;
     --input: 240 4% 12%;
     --ring: 263 85% 60%;
+
+    /* Extended color palette - dark mode */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 0 0% 100%;
+    --info: 199 89% 58%;
+    --info-foreground: 0 0% 100%;
+    --error: 0 63% 45%;
+    --error-foreground: 0 0% 100%;
+
+    /* Alera brand colors remain same in dark mode */
+    --alera-lime: 75 100% 50%;
+    --alera-purple: 274 52% 47%;
+    --alera-dark-purple: 254 55% 36%;
   }
 }
 
@@ -59,29 +89,29 @@
   }
 }
 
-/* ALERA brand colors */
+/* ALERA brand colors - using CSS variables */
 .bg-alera-lime {
-  background-color: #bfff00;
+  background-color: hsl(var(--alera-lime));
 }
 
 .text-alera-lime {
-  color: #bfff00;
+  color: hsl(var(--alera-lime));
 }
 
 .bg-alera-purple {
-  background-color: #5d2c91;
+  background-color: hsl(var(--alera-purple));
 }
 
 .text-alera-purple {
-  color: #5d2c91;
+  color: hsl(var(--alera-purple));
 }
 
 .bg-alera-dark-purple {
-  background-color: #2d1b69;
+  background-color: hsl(var(--alera-dark-purple));
 }
 
 .text-alera-dark-purple {
-  color: #2d1b69;
+  color: hsl(var(--alera-dark-purple));
 }
 
 /* Custom rounded corners for cards */
@@ -118,30 +148,34 @@
   scrollbar-width: none; /* Firefox */
 }
 
-
 /* Alera-specific styles */
 .alera-gradient {
-  background: linear-gradient(135deg, #1a0b2e, #2f1a45, #513a6b);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--alera-dark-purple)),
+    hsl(var(--alera-purple)),
+    hsl(var(--primary))
+  );
 }
 
 .alera-button {
-  @apply bg-alera-yellow text-alera-purple-dark font-medium rounded-full px-6 py-3 transition-all hover:shadow-lg hover:scale-105;
+  @apply bg-alera-lime text-alera-dark-purple font-medium rounded-full px-6 py-3 transition-all hover:shadow-lg hover:scale-105;
 }
 
 .alera-button-outline {
-  @apply bg-white/10 backdrop-blur-md text-white border border-white/20 font-medium rounded-full px-6 py-3 transition-all hover:bg-white/20 hover:shadow-lg;
+  @apply bg-background/10 backdrop-blur-md text-foreground border border-border font-medium rounded-full px-6 py-3 transition-all hover:bg-background/20 hover:shadow-lg;
 }
 
 .alera-card {
-  @apply bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-lg;
+  @apply bg-card/5 backdrop-blur-md rounded-2xl border border-border overflow-hidden shadow-lg;
 }
 
 /* Unified surface for editor cards */
 .alera-surface {
-  @apply bg-white dark:bg-[#0f0f1a] backdrop-blur-md border border-white/10;
+  @apply bg-card backdrop-blur-md border border-border;
 }
 
 /* Login-style input for editor forms */
 .alera-form-input {
-  @apply w-full h-12 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a2e] text-[#333] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 focus:ring-0 transition-colors;
+  @apply w-full h-12 px-4 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-0 transition-colors;
 }

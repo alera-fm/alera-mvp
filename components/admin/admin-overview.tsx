@@ -48,22 +48,25 @@ export function AdminOverview() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-[#333] dark:text-white">
-            Overview
+          <CardTitle className="text-lg font-semibold text-foreground">
+            Platform Overview
           </CardTitle>
         </CardHeader>
         <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse min-h-[120px] p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded mb-3"></div>
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
-          ))}
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse min-h-[140px] p-6 rounded-xl border border-border bg-gradient-to-br from-muted/50 to-muted/30"
+              >
+                <div className="h-10 w-10 bg-muted rounded-lg mb-4"></div>
+                <div className="h-8 bg-muted rounded mb-2"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     );
@@ -75,40 +78,40 @@ export function AdminOverview() {
       shortTitle: "Online",
       value: data.onlineUsers,
       icon: Users,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      gradient: "from-primary/10 to-primary/5",
+      iconColor: "text-primary",
     },
     {
       title: "New Users (Today)",
       shortTitle: "New Users",
       value: data.newUsersToday,
       icon: UserPlus,
-      color: "text-green-600",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
+      gradient: "from-primary/10 to-primary/5",
+      iconColor: "text-primary",
     },
     {
       title: "New Subscriptions (Today)",
       shortTitle: "Subscriptions",
       value: data.newSubscriptionsToday,
       icon: CreditCard,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      gradient: "from-success/10 to-success/5",
+      iconColor: "text-success",
     },
     {
       title: "New Releases (Today)",
       shortTitle: "New Releases",
       value: data.newReleasesToday,
       icon: Music,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20",
+      gradient: "from-info/10 to-info/5",
+      iconColor: "text-info",
     },
   ];
 
   return (
-    <Card>
+    <Card className="border-border bg-card">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-[#333] dark:text-white">
-          Overview
+        <CardTitle className="text-lg font-semibold text-foreground">
+          Platform Overview
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -118,16 +121,20 @@ export function AdminOverview() {
             return (
               <div
                 key={index}
-                className={`p-4 rounded-lg ${item.bgColor} border border-gray-200 dark:border-gray-700 min-h-[120px] flex flex-col justify-between`}
+                className={`group p-6 rounded-xl border border-border bg-gradient-to-br ${item.gradient} hover:shadow-lg hover:scale-[1.02] transition-all duration-300 min-h-[140px] flex flex-col justify-between`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <Icon className={`h-6 w-6 ${item.color}`} />
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`p-2.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50 group-hover:scale-110 transition-transform duration-300`}
+                  >
+                    <Icon className={`h-5 w-5 ${item.iconColor}`} />
+                  </div>
                 </div>
-                <div className="flex-1 flex flex-col justify-center">
-                  <div className="text-3xl font-bold text-[#333] dark:text-white mb-2">
+                <div className="flex-1 flex flex-col justify-end">
+                  <div className="text-3xl font-bold text-foreground mb-2">
                     {item.value.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 leading-tight">
+                  <div className="text-sm text-muted-foreground leading-tight font-medium">
                     <span className="hidden sm:inline">{item.title}</span>
                     <span className="sm:hidden">{item.shortTitle}</span>
                   </div>

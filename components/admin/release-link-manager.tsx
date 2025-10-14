@@ -143,7 +143,7 @@ export function ReleaseLinkManager({
               )}
             </Button>
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Enter a link from Ditto, DistroKid, TuneCore, or other distributors
             to automatically extract streaming service links.
           </p>
@@ -153,11 +153,11 @@ export function ReleaseLinkManager({
       {/* Parsed Links List */}
       {isLoadingLinks ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : parsedLinks.length > 0 ? (
         <div className="space-y-4">
-          <h4 className="font-medium text-sm text-gray-700">Parsed Links</h4>
+          <h4 className="font-medium text-sm">Parsed Links</h4>
           {parsedLinks.map((link) => (
             <Card key={link.id}>
               <CardContent className="pt-6">
@@ -165,14 +165,14 @@ export function ReleaseLinkManager({
                   <div className="flex items-start justify-between">
                     <div>
                       <h5 className="font-medium">{link.artistName}</h5>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {link.releaseTitle}
                       </p>
                       <a
                         href={link.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1"
+                        className="text-xs text-info hover:underline flex items-center gap-1 mt-1"
                       >
                         View source <ExternalLink className="h-3 w-3" />
                       </a>
@@ -187,26 +187,32 @@ export function ReleaseLinkManager({
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-2">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
                       Streaming Services ({link.streamingServices.length})
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {link.streamingServices.map((service, idx) => (
-                        <a
+                        <Button
                           key={idx}
-                          href={service.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs"
+                          variant="secondary"
+                          size="sm"
+                          asChild
+                          className="text-xs h-7"
                         >
-                          <Music className="h-3 w-3" />
-                          {service.name}
-                        </a>
+                          <a
+                            href={service.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Music className="h-3 w-3 mr-1" />
+                            {service.name}
+                          </a>
+                        </Button>
                       ))}
                     </div>
                   </div>
 
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     Parsed{" "}
                     {new Date(link.parsedAt).toLocaleDateString(undefined, {
                       year: "numeric",
@@ -222,7 +228,7 @@ export function ReleaseLinkManager({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-500 text-center py-4">
+        <p className="text-sm text-muted-foreground text-center py-4">
           No parsed links yet. Enter a distributor link above to get started.
         </p>
       )}

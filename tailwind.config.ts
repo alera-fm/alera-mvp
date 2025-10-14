@@ -20,17 +20,6 @@ const config = {
     },
     extend: {
       colors: {
-        alera: {
-          purple: {
-            dark: "#1A0B2E",
-            DEFAULT: "#2F1A45",
-            light: "#513A6B",
-          },
-          yellow: {
-            DEFAULT: "#E1FF3F",
-            light: "#F1FF94",
-          },
-        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -63,6 +52,27 @@ const config = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        error: {
+          DEFAULT: "hsl(var(--error))",
+          foreground: "hsl(var(--error-foreground))",
+        },
+        alera: {
+          lime: "hsl(var(--alera-lime))",
+          purple: "hsl(var(--alera-purple))",
+          "dark-purple": "hsl(var(--alera-dark-purple))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

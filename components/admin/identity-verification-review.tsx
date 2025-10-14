@@ -230,7 +230,7 @@ export function IdentityVerificationReview() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -244,7 +244,7 @@ export function IdentityVerificationReview() {
           <Shield className="h-5 w-5" />
           Identity Verification Review
         </CardTitle>
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+        <div className="text-sm text-muted-foreground mb-3">
           {verifications.length} pending verification
           {verifications.length !== 1 ? "s" : ""}
         </div>
@@ -253,8 +253,8 @@ export function IdentityVerificationReview() {
         {verifications.length > 0 && (
           <div className="flex gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-              <span className="text-gray-600 dark:text-gray-400">
+              <div className="w-3 h-3 bg-info rounded-full"></div>
+              <span className="text-muted-foreground">
                 Social Media:{" "}
                 {
                   verifications.filter(
@@ -264,8 +264,8 @@ export function IdentityVerificationReview() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-              <span className="text-gray-600 dark:text-gray-400">
+              <div className="w-3 h-3 bg-success rounded-full"></div>
+              <span className="text-muted-foreground">
                 Document:{" "}
                 {
                   verifications.filter(
@@ -279,8 +279,8 @@ export function IdentityVerificationReview() {
       </CardHeader>
       <CardContent>
         {verifications.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-8 text-muted-foreground">
+            <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
             <p>No pending identity verifications</p>
             <p className="text-sm mt-2">
               All identity verifications have been reviewed
@@ -297,17 +297,17 @@ export function IdentityVerificationReview() {
               return (
                 <div
                   key={verification.id}
-                  className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800"
+                  className="border rounded-lg p-4 bg-card"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <User className="h-5 w-5 text-gray-600" />
+                        <User className="h-5 w-5 text-muted-foreground" />
                         <div>
                           <div className="font-medium">
                             {verification.artist_name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {verification.email}
                           </div>
                         </div>
@@ -345,7 +345,7 @@ export function IdentityVerificationReview() {
                               href={getProfileUrl(verification)!}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-500 hover:text-blue-700 text-xs ml-2 flex items-center gap-1"
+                              className="text-info hover:opacity-80 text-xs ml-2 flex items-center gap-1"
                             >
                               🔗 Visit Profile
                             </a>
@@ -353,7 +353,7 @@ export function IdentityVerificationReview() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 mb-2">
-                          <Shield className="h-4 w-4 text-blue-600" />
+                          <Shield className="h-4 w-4 text-info" />
                           <Badge variant="outline" className="capitalize">
                             {verification.idv_document_type?.replace("_", " ")}
                           </Badge>
@@ -363,7 +363,7 @@ export function IdentityVerificationReview() {
                         </div>
                       )}
 
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Submitted:{" "}
                         {formatDistanceToNow(
                           new Date(
@@ -384,10 +384,10 @@ export function IdentityVerificationReview() {
                   </div>
 
                   {verificationMethod === "social" && (
-                    <div className="mb-4 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div className="mb-4 p-4 bg-background rounded-lg border">
                       <div className="flex items-center gap-2 mb-3">
                         {getPlatformIcon(verification.identity_platform)}
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                        <h4 className="font-semibold">
                           Social Media Profile Data
                         </h4>
                       </div>
@@ -402,7 +402,7 @@ export function IdentityVerificationReview() {
                                     profileData.profilePicture
                                   )}`}
                                   alt="Profile"
-                                  className="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-600"
+                                  className="w-16 h-16 rounded-full border-2"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     const originalSrc = target.src;
@@ -420,9 +420,9 @@ export function IdentityVerificationReview() {
                                     const placeholder =
                                       document.createElement("div");
                                     placeholder.className =
-                                      "w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex items-center justify-center";
+                                      "w-16 h-16 rounded-full border-2 bg-muted flex items-center justify-center";
                                     placeholder.innerHTML =
-                                      '<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>';
+                                      '<svg class="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>';
                                     target.parentNode?.insertBefore(
                                       placeholder,
                                       target
@@ -435,17 +435,17 @@ export function IdentityVerificationReview() {
                               <div className="font-medium text-lg mb-1">
                                 {profileData.displayName}
                               </div>
-                              <div className="text-sm text-gray-500 mb-2">
+                              <div className="text-sm text-muted-foreground mb-2">
                                 @{verification.identity_username}
                               </div>
                               {profileData.followers && (
-                                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                <div className="text-sm font-medium">
                                   👥 {profileData.followers.toLocaleString()}{" "}
                                   followers
                                 </div>
                               )}
                               {profileData.subscribers && (
-                                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                <div className="text-sm font-medium">
                                   📺 {profileData.subscribers.toLocaleString()}{" "}
                                   subscribers
                                 </div>
@@ -454,19 +454,17 @@ export function IdentityVerificationReview() {
                           </div>
 
                           {profileData.bio && (
-                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="bg-muted p-3 rounded-lg">
+                              <div className="text-sm font-medium mb-1">
                                 Bio:
                               </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-300">
-                                {profileData.bio}
-                              </div>
+                              <div className="text-sm">{profileData.bio}</div>
                             </div>
                           )}
                         </>
                       ) : (
-                        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                          <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                        <div className="p-4 bg-warning/10 rounded-lg border border-warning/20">
+                          <div className="text-sm text-warning">
                             <strong>⚠️ No Profile Data Available:</strong> The
                             social media profile data could not be retrieved.
                             Please verify manually by visiting the profile.
@@ -479,22 +477,28 @@ export function IdentityVerificationReview() {
                         </div>
                       )}
 
-                      <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <div className="text-xs text-blue-800 dark:text-blue-200">
+                      <div className="mt-3 p-3 bg-info/10 rounded-lg">
+                        <div className="text-xs text-info">
                           <strong>🔍 Verification Check:</strong> Verify that
                           this social media profile belongs to the artist and
                           matches their submitted information.
                         </div>
                         {getProfileUrl(verification) && (
                           <div className="mt-2">
-                            <a
-                              href={getProfileUrl(verification)!}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors"
+                            <Button
+                              variant="info"
+                              size="sm"
+                              asChild
+                              className="text-xs h-7"
                             >
-                              🌐 Open {verification.identity_platform} Profile
-                            </a>
+                              <a
+                                href={getProfileUrl(verification)!}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                🌐 Open {verification.identity_platform} Profile
+                              </a>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -502,10 +506,10 @@ export function IdentityVerificationReview() {
                   )}
 
                   {verificationMethod === "document" && (
-                    <div className="mb-4 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div className="mb-4 p-4 bg-background rounded-lg border">
                       <div className="flex items-center gap-2 mb-4">
-                        <Shield className="h-5 w-5 text-blue-600" />
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                        <Shield className="h-5 w-5 text-info" />
+                        <h4 className="font-semibold">
                           Document Verification Details
                         </h4>
                       </div>
@@ -514,11 +518,11 @@ export function IdentityVerificationReview() {
                       verification.idv_document_type ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           {verification.idv_document_type && (
-                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="bg-muted p-3 rounded-lg">
+                              <div className="text-sm font-medium text-muted-foreground mb-1">
                                 📄 Document Type
                               </div>
-                              <div className="text-sm text-gray-900 dark:text-white">
+                              <div className="text-sm">
                                 {verification.idv_document_type.replace(
                                   "_",
                                   " "
@@ -528,22 +532,22 @@ export function IdentityVerificationReview() {
                           )}
 
                           {verification.idv_full_name && (
-                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="bg-muted p-3 rounded-lg">
+                              <div className="text-sm font-medium text-muted-foreground mb-1">
                                 👤 Full Name
                               </div>
-                              <div className="text-sm text-gray-900 dark:text-white">
+                              <div className="text-sm">
                                 {verification.idv_full_name}
                               </div>
                             </div>
                           )}
 
                           {verification.idv_date_of_birth && (
-                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="bg-muted p-3 rounded-lg">
+                              <div className="text-sm font-medium text-muted-foreground mb-1">
                                 📅 Date of Birth
                               </div>
-                              <div className="text-sm text-gray-900 dark:text-white">
+                              <div className="text-sm">
                                 {new Date(
                                   verification.idv_date_of_birth
                                 ).toLocaleDateString()}
@@ -552,19 +556,19 @@ export function IdentityVerificationReview() {
                           )}
 
                           {verification.idv_document_number && (
-                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="bg-muted p-3 rounded-lg">
+                              <div className="text-sm font-medium text-muted-foreground mb-1">
                                 🔢 Document Number
                               </div>
-                              <div className="text-sm text-gray-900 dark:text-white font-mono">
+                              <div className="text-sm font-mono">
                                 {verification.idv_document_number}
                               </div>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 mb-4">
-                          <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                        <div className="p-4 bg-warning/10 rounded-lg border border-warning/20 mb-4">
+                          <div className="text-sm text-warning">
                             <strong>⚠️ No Document Details Available:</strong>{" "}
                             The document verification details could not be
                             retrieved. Please contact the user for additional
@@ -575,22 +579,22 @@ export function IdentityVerificationReview() {
 
                       {verification.idv_document_url && (
                         <div className="mb-4">
-                          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <div className="text-sm font-medium text-muted-foreground mb-2">
                             📸 Document Image
                           </div>
-                          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                          <div className="border-2 border-dashed rounded-lg p-4">
                             <img
                               src={verification.idv_document_url}
                               alt="Verification Document"
-                              className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600"
+                              className="max-w-full h-auto rounded-lg border"
                               style={{ maxHeight: "400px" }}
                             />
                           </div>
                         </div>
                       )}
 
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <div className="text-xs text-blue-800 dark:text-blue-200">
+                      <div className="p-3 bg-info/10 rounded-lg">
+                        <div className="text-xs text-info">
                           <strong>🔍 Verification Check:</strong> Verify that
                           the document is clear, authentic, and the information
                           matches the artist's submitted details. Check for any
@@ -605,7 +609,7 @@ export function IdentityVerificationReview() {
                       <Button
                         size="sm"
                         onClick={() => setReviewing(verification.id)}
-                        className="bg-green-600 hover:bg-green-700"
+                        variant="success"
                       >
                         <Check className="h-4 w-4 mr-1" />
                         Review
@@ -630,7 +634,7 @@ export function IdentityVerificationReview() {
                             reviewVerification(verification.id, "approved")
                           }
                           disabled={isProcessing}
-                          className="bg-green-600 hover:bg-green-700"
+                          variant="success"
                         >
                           {isProcessing ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />

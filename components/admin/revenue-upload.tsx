@@ -17,6 +17,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, User, History, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Artist {
   id: number;
@@ -102,7 +110,9 @@ export function RevenueUpload() {
         const data = await response.json();
         console.log("Upload history data:", data);
         // Filter to only show earnings uploads, not analytics
-        const earningsOnly = (data.uploads || []).filter((upload: any) => upload.upload_type === 'earnings');
+        const earningsOnly = (data.uploads || []).filter(
+          (upload: any) => upload.upload_type === "earnings"
+        );
         setUploadHistory(earningsOnly);
       } else {
         console.error("Failed to fetch upload history:", response.status);
@@ -153,26 +163,26 @@ export function RevenueUpload() {
 
     try {
       setIsUploading(true);
-      
+
       // Use admin-specific upload with authentication
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('artist_id', selectedArtistId);
-      
+      formData.append("file", file);
+      formData.append("artist_id", selectedArtistId);
+
       const token = localStorage.getItem("authToken");
-      const response = await fetch('/api/upload-revenue-report', {
-        method: 'POST',
+      const response = await fetch("/api/upload-revenue-report", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload revenue report');
+        throw new Error(errorData.error || "Failed to upload revenue report");
       }
-      
+
       const result = await response.json();
 
       // Show detailed success message
@@ -181,8 +191,15 @@ export function RevenueUpload() {
 
         📁 File: ${file.name}
         📊 Records Processed: ${result.processed}
-        👤 Artist: ${artists.find((a) => a.id.toString() === selectedArtistId)?.artist_name || "Unknown"}
-        ${result.errors?.length ? `⚠️ Errors: ${result.errors.length}` : "✨ No errors!"}
+        👤 Artist: ${
+          artists.find((a) => a.id.toString() === selectedArtistId)
+            ?.artist_name || "Unknown"
+        }
+        ${
+          result.errors?.length
+            ? `⚠️ Errors: ${result.errors.length}`
+            : "✨ No errors!"
+        }
 
         The earnings data has been added to the artist's wallet.
       `;
@@ -198,7 +215,7 @@ export function RevenueUpload() {
       setSelectedArtistId("");
       // Reset file input
       const fileInput = document.getElementById(
-        "revenue-file",
+        "revenue-file"
       ) as HTMLInputElement;
       if (fileInput) fileInput.value = "";
 
@@ -208,7 +225,10 @@ export function RevenueUpload() {
       console.error("Upload error:", error);
       toast({
         title: "Upload Failed",
-        description: error instanceof Error ? error.message : "Failed to upload revenue report",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to upload revenue report",
         variant: "destructive",
       });
     } finally {
@@ -219,7 +239,7 @@ export function RevenueUpload() {
   const handleDeleteUpload = async (uploadId: number, artistName: string) => {
     if (
       !confirm(
-        `Are you sure you want to delete this upload for ${artistName}? This will also remove all associated earnings data and cannot be undone.`,
+        `Are you sure you want to delete this upload for ${artistName}? This will also remove all associated earnings data and cannot be undone.`
       )
     ) {
       return;
@@ -308,7 +328,7 @@ export function RevenueUpload() {
           </div>
 
           {file && (
-            <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+            <div className="flex items-center gap-2 p-2 bg-muted rounded">
               <FileText className="h-4 w-4" />
               <span className="text-sm truncate">{file.name}</span>
             </div>
@@ -363,7 +383,7 @@ export function RevenueUpload() {
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           {historyLoading ? (
-            <div className="p-4 text-center text-gray-600 dark:text-gray-400">
+            <div className="p-4 text-center text-muted-foreground">
               Loading upload history...
             </div>
           ) : uploadHistory.length > 0 ? (
@@ -371,25 +391,22 @@ export function RevenueUpload() {
               {/* Mobile Card View */}
               <div className="block md:hidden space-y-3 p-4">
                 {uploadHistory.map((upload, index) => (
-                  <Card
-                    key={index}
-                    className="border border-gray-200 dark:border-gray-700"
-                  >
+                  <Card key={index} className="border">
                     <CardContent className="p-4">
                       <div className="space-y-3">
                         <div className="flex justify-between items-start">
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                            <div className="font-medium truncate">
                               {upload.artist_name}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
+                            <div className="text-sm text-muted-foreground truncate mt-1">
                               {upload.filename.slice(0, 20)}
                             </div>
                           </div>
                           <Badge
                             variant={
                               upload.upload_status === "success"
-                                ? "default"
+                                ? "success"
                                 : "destructive"
                             }
                             className="ml-2 flex-shrink-0"
@@ -400,17 +417,15 @@ export function RevenueUpload() {
 
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <span className="text-gray-500 dark:text-gray-400">
-                              Date:
-                            </span>
+                            <span className="text-muted-foreground">Date:</span>
                             <div className="font-medium">
                               {new Date(
-                                upload.uploaded_at,
+                                upload.uploaded_at
                               ).toLocaleDateString()}
                             </div>
                           </div>
                           <div>
-                            <span className="text-gray-500 dark:text-gray-400">
+                            <span className="text-muted-foreground">
                               Records:
                             </span>
                             <div className="font-medium">
@@ -418,10 +433,10 @@ export function RevenueUpload() {
                             </div>
                           </div>
                           <div>
-                            <span className="text-gray-500 dark:text-gray-400">
+                            <span className="text-muted-foreground">
                               Amount:
                             </span>
-                            <div className="font-medium text-green-600 dark:text-green-400">
+                            <div className="font-medium text-success">
                               ${Number(upload.total_amount || 0).toFixed(2)}
                             </div>
                           </div>
@@ -432,7 +447,7 @@ export function RevenueUpload() {
                               onClick={() =>
                                 handleDeleteUpload(
                                   upload.id,
-                                  upload.artist_name,
+                                  upload.artist_name
                                 )
                               }
                               disabled={deletingUploadId === upload.id}
@@ -440,7 +455,7 @@ export function RevenueUpload() {
                             >
                               {deletingUploadId === upload.id ? (
                                 <span className="flex items-center gap-1">
-                                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                                  <div className="w-3 h-3 border border-border border-t-transparent rounded-full animate-spin"></div>
                                   Deleting...
                                 </span>
                               ) : (
@@ -459,106 +474,104 @@ export function RevenueUpload() {
               </div>
 
               {/* Desktop Table View */}
-              <div className="hidden md:block border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-800">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Artist
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          File
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Date
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Records
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Amount
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Type
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Status
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                      {uploadHistory.map((upload, index) => (
-                        <tr
-                          key={index}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                        >
-                          <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                            {upload.artist_name}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                            {upload.filename}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                            {new Date(upload.uploaded_at).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                            {upload.total_records}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+              <div className="hidden md:block border rounded-lg overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap">
+                        Artist
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap">File</TableHead>
+                      <TableHead className="whitespace-nowrap">Date</TableHead>
+                      <TableHead className="whitespace-nowrap">
+                        Records
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap">
+                        Amount
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap">Type</TableHead>
+                      <TableHead className="whitespace-nowrap">
+                        Status
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {uploadHistory.map((upload, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {upload.artist_name}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap max-w-xs truncate">
+                          {upload.filename}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {new Date(upload.uploaded_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {upload.total_records}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <span className="font-semibold text-success">
                             ${Number(upload.total_amount || 0).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge
-                              variant={
-                                upload.upload_type === "earnings"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              {upload.upload_type === "earnings" ? "Earnings" : "Analytics"}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge
-                              variant={
-                                upload.upload_status === "success"
-                                  ? "default"
-                                  : "destructive"
-                              }
-                            >
-                              {upload.upload_status}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() =>
-                                handleDeleteUpload(
-                                  upload.id,
-                                  upload.artist_name,
-                                )
-                              }
-                              disabled={deletingUploadId === upload.id}
-                            >
-                              {deletingUploadId === upload.id
-                                ? "Deleting..."
-                                : "Delete"}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          </span>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge
+                            variant={
+                              upload.upload_type === "earnings"
+                                ? "success"
+                                : "secondary"
+                            }
+                          >
+                            {upload.upload_type === "earnings"
+                              ? "Earnings"
+                              : "Analytics"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge
+                            variant={
+                              upload.upload_status === "success"
+                                ? "success"
+                                : "destructive"
+                            }
+                          >
+                            {upload.upload_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              handleDeleteUpload(upload.id, upload.artist_name)
+                            }
+                            disabled={deletingUploadId === upload.id}
+                          >
+                            {deletingUploadId === upload.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-border mr-2"></div>
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </>
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </>
           ) : (
-            <div className="p-4 text-center text-gray-600 dark:text-gray-400">
+            <div className="p-4 text-center text-muted-foreground">
               No uploads found
             </div>
           )}

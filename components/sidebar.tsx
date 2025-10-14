@@ -32,7 +32,7 @@ export function Sidebar() {
     { name: "Wallet", href: "/dashboard/wallet", icon: Wallet },
     { name: "Fanzone", href: "/dashboard/fanzone", icon: Users },
     ...(user?.isAdmin
-      ? [{ name: "Admin", href: "/dashboard/admin", icon: Users }]
+      ? [{ name: "Admin", href: "/admin/dashboard", icon: Users }]
       : []),
   ];
 
@@ -45,7 +45,7 @@ export function Sidebar() {
 
   return (
     <div className="hidden overflow-y-auto md:flex md:w-72 md:flex-col fixed top-0 left-0 h-screen z-50">
-      <div className="flex flex-col flex-grow border-r border-gray-200 dark:border-gray-800/40 bg-white dark:bg-[#0a0a13] pt-6 shadow-lg transition-colors duration-300">
+      <div className="flex flex-col flex-grow border-r border-border bg-background pt-6 shadow-lg transition-colors duration-300">
         <div className="flex items-center justify-between flex-shrink-0 px-5 mb-4">
           <Link href="/dashboard" className="flex items-center gap-3">
             {/* Light mode logo */}
@@ -68,7 +68,7 @@ export function Sidebar() {
                 className="rounded-sm"
               />
             </div>
-            <span className="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight">
+            <span className="text-2xl font-semibold text-foreground tracking-tight">
               ALERA
             </span>
           </Link>
@@ -84,14 +84,14 @@ export function Sidebar() {
                   href={item.href}
                   className={`group relative flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ease-in-out ${
                     isActive
-                      ? "bg-gradient-to-r from-purple-500/10 to-indigo-500/10 text-purple-600 dark:text-indigo-300 dark:from-purple-600/20 dark:to-indigo-600/20 shadow-sm"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900/50 hover:text-gray-900 dark:hover:text-white"
+                      ? "bg-gradient-to-r from-primary/10 to-info/10 text-primary shadow-sm"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   } hover:shadow-md hover:scale-[1.02] transform`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-active-indicator"
-                      className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-purple-500 to-indigo-500 dark:from-purple-400 dark:to-indigo-400 rounded-r-full"
+                      className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary to-info rounded-r-full"
                       initial={{ opacity: 0, scaleY: 0.8 }}
                       animate={{ opacity: 1, scaleY: 1 }}
                       transition={{
@@ -105,15 +105,14 @@ export function Sidebar() {
                   <item.icon
                     className={`mr-4 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
                       isActive
-                        ? "text-purple-500 dark:text-indigo-300"
-                        : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-200"
+                        ? "text-primary"
+                        : "text-muted-foreground group-hover:text-foreground"
                     }`}
                   />
                   <span className="truncate font-medium">{item.name}</span>
-                  {isActive &&
-                    !["/dashboard"].includes(item.href) && (
-                      <ChevronRight className="ml-auto h-5 w-5 text-purple-500 dark:text-indigo-300 opacity-80 transition-opacity group-hover:opacity-100" />
-                    )}
+                  {isActive && !["/dashboard"].includes(item.href) && (
+                    <ChevronRight className="ml-auto h-5 w-5 text-primary opacity-80 transition-opacity group-hover:opacity-100" />
+                  )}
                 </Link>
               );
             })}
@@ -121,11 +120,11 @@ export function Sidebar() {
         </div>
       </div>
       {/* Bottom section */}
-      <div className="mt-auto pt-5 pb-4 bg-white dark:bg-[#0a0a13] border border-gray-200 dark:border-gray-800/40 ">
+      <div className="mt-auto pt-5 pb-4 bg-background border border-border ">
         <div className="flex flex-col gap-3 px-5">
           <button
             onClick={logout}
-            className="flex items-center gap-4 w-full px-4 py-3 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900/60 rounded-lg transition-all duration-200 hover:shadow-sm"
+            className="flex items-center gap-4 w-full px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all duration-200 hover:shadow-sm"
           >
             <LogOut className="h-6 w-6 transition-colors duration-200" />
             <span className="text-base font-medium">Logout</span>
