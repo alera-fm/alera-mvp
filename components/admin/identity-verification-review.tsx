@@ -17,8 +17,15 @@ import {
   Facebook,
   Music,
   Shield,
+  ExternalLink,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface IdentityVerification {
   id: number;
@@ -43,7 +50,9 @@ export function IdentityVerificationReview() {
     []
   );
   const [loading, setLoading] = useState(true);
-  const [reviewing, setReviewing] = useState<number | null>(null);
+  const [selectedVerification, setSelectedVerification] =
+    useState<IdentityVerification | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [processing, setProcessing] = useState<number | null>(null);
 
@@ -94,8 +103,9 @@ export function IdentityVerificationReview() {
 
       if (response.ok) {
         toast.success(`Identity verification ${decision} successfully`);
-        setReviewing(null);
         setNotes("");
+        setDialogOpen(false);
+        setSelectedVerification(null);
         fetchVerifications(); // Refresh the list
       } else {
         const error = await response.json();
@@ -124,14 +134,11 @@ export function IdentityVerificationReview() {
     }
   };
 
-  // Helper function to determine verification method from data
   const getVerificationMethod = (verification: IdentityVerification) => {
-    // If idv_method is explicitly set, use it
     if (verification.idv_method) {
       return verification.idv_method;
     }
 
-    // Auto-detect based on available data
     if (verification.identity_data && verification.identity_platform) {
       return "social";
     }
@@ -147,7 +154,6 @@ export function IdentityVerificationReview() {
     return "unknown";
   };
 
-  // Helper function to generate profile URLs
   const getProfileUrl = (verification: IdentityVerification) => {
     const username = verification.identity_username?.replace("@", "") || "";
 
@@ -159,19 +165,14 @@ export function IdentityVerificationReview() {
       case "youtube":
         return `https://youtube.com/@${username}`;
       case "facebook":
-        // Handle Facebook URLs that might already be full URLs
         if (username.startsWith("http")) {
-          // Clean up malformed Facebook URLs
           const cleanUrl = username.replace(/^@/, "").trim();
-
-          // If it contains multiple facebook.com URLs, extract the last valid one
           const facebookMatches = cleanUrl.match(
             /https:\/\/www\.facebook\.com\/[^?\s]+/g
           );
           if (facebookMatches && facebookMatches.length > 0) {
             return facebookMatches[facebookMatches.length - 1];
           }
-
           return cleanUrl;
         }
         return `https://facebook.com/${username}`;
@@ -184,7 +185,6 @@ export function IdentityVerificationReview() {
     const data = verification.identity_data;
     if (!data) return null;
 
-    // Handle nested data structure for Instagram
     const userData = data.user || data.data?.user;
 
     switch (verification.identity_platform) {
@@ -222,6 +222,12 @@ export function IdentityVerificationReview() {
     }
   };
 
+  const openVerificationDialog = (verification: IdentityVerification) => {
+    setSelectedVerification(verification);
+    setDialogOpen(true);
+    setNotes("");
+  };
+
   if (loading) {
     return (
       <Card>
@@ -238,133 +244,120 @@ export function IdentityVerificationReview() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          Identity Verification Review
-        </CardTitle>
-        <div className="text-sm text-muted-foreground mb-3">
-          {verifications.length} pending verification
-          {verifications.length !== 1 ? "s" : ""}
-        </div>
-
-        {/* Verification Method Summary */}
-        {verifications.length > 0 && (
-          <div className="flex gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-info rounded-full"></div>
-              <span className="text-muted-foreground">
-                Social Media:{" "}
-                {
-                  verifications.filter(
-                    (v) => getVerificationMethod(v) === "social"
-                  ).length
-                }
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-success rounded-full"></div>
-              <span className="text-muted-foreground">
-                Document:{" "}
-                {
-                  verifications.filter(
-                    (v) => getVerificationMethod(v) === "document"
-                  ).length
-                }
-              </span>
-            </div>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Identity Verification Review
+          </CardTitle>
+          <div className="text-sm text-muted-foreground mb-3">
+            {verifications.length} pending verification
+            {verifications.length !== 1 ? "s" : ""}
           </div>
-        )}
-      </CardHeader>
-      <CardContent>
-        {verifications.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-            <p>No pending identity verifications</p>
-            <p className="text-sm mt-2">
-              All identity verifications have been reviewed
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {verifications.map((verification) => {
-              const verificationMethod = getVerificationMethod(verification);
-              const profileData = getProfileData(verification);
-              const isReviewing = reviewing === verification.id;
-              const isProcessing = processing === verification.id;
 
-              return (
-                <div
-                  key={verification.id}
-                  className="border rounded-lg p-4 bg-card"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <User className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium">
-                            {verification.artist_name}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {verification.email}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Verification Method Badge */}
-                      <div className="flex items-center gap-2 mb-3">
+          {verifications.length > 0 && (
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-info rounded-full"></div>
+                <span className="text-muted-foreground">
+                  Social Media:{" "}
+                  {
+                    verifications.filter(
+                      (v) => getVerificationMethod(v) === "social"
+                    ).length
+                  }
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-success rounded-full"></div>
+                <span className="text-muted-foreground">
+                  Document:{" "}
+                  {
+                    verifications.filter(
+                      (v) => getVerificationMethod(v) === "document"
+                    ).length
+                  }
+                </span>
+              </div>
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          {verifications.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p>No pending identity verifications</p>
+              <p className="text-sm mt-2">
+                All identity verifications have been reviewed
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {verifications.map((verification) => {
+                const verificationMethod = getVerificationMethod(verification);
+                return (
+                  <Card
+                    key={verification.id}
+                    className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200 border-border bg-card"
+                    onClick={() => openVerificationDialog(verification)}
+                  >
+                    <CardContent className="p-4 space-y-3">
+                      {/* Header with Status */}
+                      <div className="flex items-start justify-between">
                         <Badge
                           variant={
                             verificationMethod === "social"
                               ? "default"
                               : "secondary"
                           }
-                          className="font-semibold"
+                          className="text-xs"
                         >
                           {verificationMethod === "social"
-                            ? "Social Media Verification"
+                            ? "Social"
                             : verificationMethod === "document"
-                            ? "Document Verification"
-                            : "Unknown Method"}
+                            ? "Document"
+                            : "Unknown"}
+                        </Badge>
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          <Clock className="h-3 w-3" />
+                          Pending
                         </Badge>
                       </div>
 
+                      {/* Artist Info */}
+                      <div className="space-y-1">
+                        <div className="font-semibold text-foreground truncate">
+                          {verification.artist_name}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {verification.email}
+                        </div>
+                      </div>
+
+                      {/* Platform/Method Info */}
                       {verificationMethod === "social" ? (
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2">
                           {getPlatformIcon(verification.identity_platform)}
-                          <Badge variant="outline" className="capitalize">
-                            {verification.identity_platform}
-                          </Badge>
-                          <span className="text-sm font-medium">
+                          <span className="text-sm text-muted-foreground truncate">
                             @{verification.identity_username}
                           </span>
-                          {getProfileUrl(verification) && (
-                            <a
-                              href={getProfileUrl(verification)!}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-info hover:opacity-80 text-xs ml-2 flex items-center gap-1"
-                            >
-                              🔗 Visit Profile
-                            </a>
-                          )}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2">
                           <Shield className="h-4 w-4 text-info" />
-                          <Badge variant="outline" className="capitalize">
+                          <span className="text-sm text-muted-foreground truncate">
                             {verification.idv_document_type?.replace("_", " ")}
-                          </Badge>
-                          <span className="text-sm font-medium">
-                            {verification.idv_full_name}
                           </span>
                         </div>
                       )}
 
-                      <div className="text-xs text-muted-foreground">
-                        Submitted:{" "}
+                      {/* Submitted Time */}
+                      <div className="text-xs text-muted-foreground pt-2 border-t border-border">
+                        Submitted{" "}
                         {formatDistanceToNow(
                           new Date(
                             verification.identity_verification_submitted_at
@@ -372,87 +365,134 @@ export function IdentityVerificationReview() {
                           { addSuffix: true }
                         )}
                       </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Review Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Identity Verification Details
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedVerification && (
+            <div className="space-y-6">
+              {/* Artist Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    Artist Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="grid grid-cols-[120px_1fr] gap-2">
+                    <span className="text-muted-foreground">Artist Name:</span>
+                    <span className="font-medium">
+                      {selectedVerification.artist_name}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-[120px_1fr] gap-2">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium">
+                      {selectedVerification.email}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-[120px_1fr] gap-2">
+                    <span className="text-muted-foreground">Submitted:</span>
+                    <span className="font-medium">
+                      {formatDistanceToNow(
+                        new Date(
+                          selectedVerification.identity_verification_submitted_at
+                        ),
+                        { addSuffix: true }
+                      )}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Verification Details */}
+              {getVerificationMethod(selectedVerification) === "social" ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      {getPlatformIcon(selectedVerification.identity_platform)}
+                      Social Media Verification
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="capitalize">
+                        {selectedVerification.identity_platform}
+                      </Badge>
+                      <span className="text-sm font-medium">
+                        @{selectedVerification.identity_username}
+                      </span>
+                      {getProfileUrl(selectedVerification) && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          asChild
+                          className="h-auto p-0"
+                        >
+                          <a
+                            href={getProfileUrl(selectedVerification)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Visit Profile
+                          </a>
+                        </Button>
+                      )}
                     </div>
 
-                    <Badge
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      <Clock className="h-3 w-3" />
-                      Pending
-                    </Badge>
-                  </div>
-
-                  {verificationMethod === "social" && (
-                    <div className="mb-4 p-4 bg-background rounded-lg border">
-                      <div className="flex items-center gap-2 mb-3">
-                        {getPlatformIcon(verification.identity_platform)}
-                        <h4 className="font-semibold">
-                          Social Media Profile Data
-                        </h4>
-                      </div>
-
-                      {profileData ? (
-                        <>
-                          <div className="flex items-start gap-4 mb-3">
+                    {(() => {
+                      const profileData = getProfileData(selectedVerification);
+                      return profileData ? (
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-4">
                             {profileData.profilePicture && (
-                              <div className="relative">
-                                <img
-                                  src={`/api/proxy-image?url=${encodeURIComponent(
-                                    profileData.profilePicture
-                                  )}`}
-                                  alt="Profile"
-                                  className="w-16 h-16 rounded-full border-2"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    const originalSrc = target.src;
-
-                                    // If proxy fails, try direct URL as fallback
-                                    if (
-                                      originalSrc.includes("/api/proxy-image")
-                                    ) {
-                                      target.src = profileData.profilePicture;
-                                      return;
-                                    }
-
-                                    // If both fail, show placeholder
-                                    target.style.display = "none";
-                                    const placeholder =
-                                      document.createElement("div");
-                                    placeholder.className =
-                                      "w-16 h-16 rounded-full border-2 bg-muted flex items-center justify-center";
-                                    placeholder.innerHTML =
-                                      '<svg class="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>';
-                                    target.parentNode?.insertBefore(
-                                      placeholder,
-                                      target
-                                    );
-                                  }}
-                                />
-                              </div>
+                              <img
+                                src={`/api/proxy-image?url=${encodeURIComponent(
+                                  profileData.profilePicture
+                                )}`}
+                                alt="Profile"
+                                className="w-16 h-16 rounded-full border-2"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
+                              />
                             )}
                             <div className="flex-1">
-                              <div className="font-medium text-lg mb-1">
+                              <div className="font-medium text-lg">
                                 {profileData.displayName}
                               </div>
-                              <div className="text-sm text-muted-foreground mb-2">
-                                @{verification.identity_username}
-                              </div>
                               {profileData.followers && (
-                                <div className="text-sm font-medium">
+                                <div className="text-sm text-muted-foreground">
                                   👥 {profileData.followers.toLocaleString()}{" "}
                                   followers
                                 </div>
                               )}
                               {profileData.subscribers && (
-                                <div className="text-sm font-medium">
+                                <div className="text-sm text-muted-foreground">
                                   📺 {profileData.subscribers.toLocaleString()}{" "}
                                   subscribers
                                 </div>
                               )}
                             </div>
                           </div>
-
                           {profileData.bio && (
                             <div className="bg-muted p-3 rounded-lg">
                               <div className="text-sm font-medium mb-1">
@@ -461,223 +501,150 @@ export function IdentityVerificationReview() {
                               <div className="text-sm">{profileData.bio}</div>
                             </div>
                           )}
-                        </>
+                        </div>
                       ) : (
                         <div className="p-4 bg-warning/10 rounded-lg border border-warning/20">
                           <div className="text-sm text-warning">
-                            <strong>⚠️ No Profile Data Available:</strong> The
-                            social media profile data could not be retrieved.
-                            Please verify manually by visiting the profile.
-                          </div>
-                          <div className="mt-2 text-sm">
-                            <strong>Profile URL:</strong> @
-                            {verification.identity_username} on{" "}
-                            {verification.identity_platform}
+                            ⚠️ Profile data unavailable. Please verify manually
+                            by visiting the profile.
                           </div>
                         </div>
-                      )}
-
-                      <div className="mt-3 p-3 bg-info/10 rounded-lg">
-                        <div className="text-xs text-info">
-                          <strong>🔍 Verification Check:</strong> Verify that
-                          this social media profile belongs to the artist and
-                          matches their submitted information.
-                        </div>
-                        {getProfileUrl(verification) && (
-                          <div className="mt-2">
-                            <Button
-                              variant="info"
-                              size="sm"
-                              asChild
-                              className="text-xs h-7"
-                            >
-                              <a
-                                href={getProfileUrl(verification)!}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                🌐 Open {verification.identity_platform} Profile
-                              </a>
-                            </Button>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-info" />
+                      Document Verification
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedVerification.idv_document_type && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <div className="text-sm font-medium text-muted-foreground mb-1">
+                            Document Type
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {verificationMethod === "document" && (
-                    <div className="mb-4 p-4 bg-background rounded-lg border">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Shield className="h-5 w-5 text-info" />
-                        <h4 className="font-semibold">
-                          Document Verification Details
-                        </h4>
-                      </div>
-
-                      {verification.idv_full_name ||
-                      verification.idv_document_type ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          {verification.idv_document_type && (
-                            <div className="bg-muted p-3 rounded-lg">
-                              <div className="text-sm font-medium text-muted-foreground mb-1">
-                                📄 Document Type
-                              </div>
-                              <div className="text-sm">
-                                {verification.idv_document_type.replace(
-                                  "_",
-                                  " "
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {verification.idv_full_name && (
-                            <div className="bg-muted p-3 rounded-lg">
-                              <div className="text-sm font-medium text-muted-foreground mb-1">
-                                👤 Full Name
-                              </div>
-                              <div className="text-sm">
-                                {verification.idv_full_name}
-                              </div>
-                            </div>
-                          )}
-
-                          {verification.idv_date_of_birth && (
-                            <div className="bg-muted p-3 rounded-lg">
-                              <div className="text-sm font-medium text-muted-foreground mb-1">
-                                📅 Date of Birth
-                              </div>
-                              <div className="text-sm">
-                                {new Date(
-                                  verification.idv_date_of_birth
-                                ).toLocaleDateString()}
-                              </div>
-                            </div>
-                          )}
-
-                          {verification.idv_document_number && (
-                            <div className="bg-muted p-3 rounded-lg">
-                              <div className="text-sm font-medium text-muted-foreground mb-1">
-                                🔢 Document Number
-                              </div>
-                              <div className="text-sm font-mono">
-                                {verification.idv_document_number}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="p-4 bg-warning/10 rounded-lg border border-warning/20 mb-4">
-                          <div className="text-sm text-warning">
-                            <strong>⚠️ No Document Details Available:</strong>{" "}
-                            The document verification details could not be
-                            retrieved. Please contact the user for additional
-                            information.
+                          <div className="text-sm">
+                            {selectedVerification.idv_document_type.replace(
+                              "_",
+                              " "
+                            )}
                           </div>
                         </div>
                       )}
-
-                      {verification.idv_document_url && (
-                        <div className="mb-4">
-                          <div className="text-sm font-medium text-muted-foreground mb-2">
-                            📸 Document Image
+                      {selectedVerification.idv_full_name && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <div className="text-sm font-medium text-muted-foreground mb-1">
+                            Full Name
                           </div>
-                          <div className="border-2 border-dashed rounded-lg p-4">
-                            <img
-                              src={verification.idv_document_url}
-                              alt="Verification Document"
-                              className="max-w-full h-auto rounded-lg border"
-                              style={{ maxHeight: "400px" }}
-                            />
+                          <div className="text-sm">
+                            {selectedVerification.idv_full_name}
                           </div>
                         </div>
                       )}
-
-                      <div className="p-3 bg-info/10 rounded-lg">
-                        <div className="text-xs text-info">
-                          <strong>🔍 Verification Check:</strong> Verify that
-                          the document is clear, authentic, and the information
-                          matches the artist's submitted details. Check for any
-                          signs of tampering or falsification.
+                      {selectedVerification.idv_date_of_birth && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <div className="text-sm font-medium text-muted-foreground mb-1">
+                            Date of Birth
+                          </div>
+                          <div className="text-sm">
+                            {new Date(
+                              selectedVerification.idv_date_of_birth
+                            ).toLocaleDateString()}
+                          </div>
                         </div>
-                      </div>
+                      )}
+                      {selectedVerification.idv_document_number && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <div className="text-sm font-medium text-muted-foreground mb-1">
+                            Document Number
+                          </div>
+                          <div className="text-sm font-mono">
+                            {selectedVerification.idv_document_number}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {!isReviewing ? (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => setReviewing(verification.id)}
-                        variant="success"
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Review
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
+                    {selectedVerification.idv_document_url && (
                       <div>
-                        <Label htmlFor="notes">Admin Notes (Optional)</Label>
-                        <Textarea
-                          id="notes"
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                          placeholder="Add notes about this verification..."
-                          rows={3}
-                        />
+                        <div className="text-sm font-medium text-muted-foreground mb-2">
+                          Document Image
+                        </div>
+                        <div className="border-2 border-dashed rounded-lg p-4">
+                          <img
+                            src={selectedVerification.idv_document_url}
+                            alt="Verification Document"
+                            className="max-w-full h-auto rounded-lg border"
+                            style={{ maxHeight: "400px" }}
+                          />
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            reviewVerification(verification.id, "approved")
-                          }
-                          disabled={isProcessing}
-                          variant="success"
-                        >
-                          {isProcessing ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
-                          ) : (
-                            <Check className="h-4 w-4 mr-1" />
-                          )}
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            reviewVerification(verification.id, "rejected")
-                          }
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
-                          ) : (
-                            <X className="h-4 w-4 mr-1" />
-                          )}
-                          Reject
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setReviewing(null);
-                            setNotes("");
-                          }}
-                          disabled={isProcessing}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Admin Notes and Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Review & Decision</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="notes">Admin Notes (Optional)</Label>
+                    <Textarea
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Add notes about this verification..."
+                      rows={3}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() =>
+                        reviewVerification(selectedVerification.id, "approved")
+                      }
+                      disabled={processing === selectedVerification.id}
+                      variant="success"
+                      className="flex-1"
+                    >
+                      {processing === selectedVerification.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      ) : (
+                        <Check className="h-4 w-4 mr-2" />
+                      )}
+                      Approve
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() =>
+                        reviewVerification(selectedVerification.id, "rejected")
+                      }
+                      disabled={processing === selectedVerification.id}
+                      className="flex-1"
+                    >
+                      {processing === selectedVerification.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2" />
+                      )}
+                      Reject
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

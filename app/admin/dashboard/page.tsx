@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminOverview } from "@/components/admin/admin-overview";
+import { AdminDashboardStats } from "@/components/admin/admin-dashboard-stats";
 
 export default function AdminDashboardPage() {
   return (
@@ -13,7 +13,7 @@ export default function AdminDashboardPage() {
           Monitor and manage your platform at a glance
         </p>
       </div>
-      <AdminOverview />
+      <AdminDashboardStats />
     </div>
   );
 }

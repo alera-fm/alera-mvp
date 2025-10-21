@@ -27,6 +27,8 @@ import {
   History,
   User,
   Trash2,
+  Search,
+  X,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -85,6 +87,7 @@ export default function AnalyticsUpload() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyDays, setHistoryDays] = useState<string>("30");
   const [filterPlatform, setFilterPlatform] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { toast } = useToast();
 
@@ -506,31 +509,53 @@ export default function AnalyticsUpload() {
               <History className="h-5 w-5" />
               Analytics Upload History
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              <Select value={filterPlatform} onValueChange={setFilterPlatform}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by platform (all)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Platforms</SelectItem>
-                  {PLATFORMS.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={historyDays} onValueChange={setHistoryDays}>
-                <SelectTrigger className="w-full sm:w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="30">30 days</SelectItem>
-                  <SelectItem value="90">90 days</SelectItem>
-                  <SelectItem value="365">1 year</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <Select
+                  value={filterPlatform}
+                  onValueChange={setFilterPlatform}
+                >
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Filter by platform (all)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Platforms</SelectItem>
+                    {PLATFORMS.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={historyDays} onValueChange={setHistoryDays}>
+                  <SelectTrigger className="w-full sm:w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">7 days</SelectItem>
+                    <SelectItem value="30">30 days</SelectItem>
+                    <SelectItem value="90">90 days</SelectItem>
+                    <SelectItem value="365">1 year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by filename, artist, or platform..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-10"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </CardTitle>
         </CardHeader>
@@ -539,153 +564,190 @@ export default function AnalyticsUpload() {
             <div className="p-4 text-center text-muted-foreground">
               Loading analytics upload history...
             </div>
-          ) : uploadHistory.length > 0 ? (
-            <>
-              {/* Mobile Card View */}
-              <div className="block md:hidden space-y-4 p-4">
-                {uploadHistory.map((upload) => (
-                  <Card key={upload.id} className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div className="font-medium truncate">
-                          {upload.filename}
-                        </div>
-                        <Badge variant="info" className="text-xs">
-                          {upload.platform}
-                        </Badge>
-                      </div>
-
-                      <div className="text-sm text-muted-foreground">
-                        Artist: {upload.selected_artist_name || "N/A"}
-                      </div>
-
-                      <div className="text-sm text-muted-foreground">
-                        Reporting Date:{" "}
-                        {new Date(upload.reporting_date).toLocaleDateString()}
-                      </div>
-
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {new Date(upload.uploaded_at).toLocaleDateString()}
-                        </span>
-                        <span className="font-medium">
-                          {upload.total_records} records
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <div className="text-xs text-muted-foreground">
-                          {upload.uploaded_by_name || "Admin"}
-                        </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteUpload(upload.id)}
-                          disabled={deletingId === upload.id}
-                        >
-                          {deletingId === upload.id ? (
-                            <>
-                              <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
-                              Deleting...
-                            </>
-                          ) : (
-                            <>
-                              <Trash2 className="h-4 w-4 mr-1" /> Delete
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden md:block border rounded-lg overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="whitespace-nowrap">
-                        Filename
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Artist
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Platform
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Reporting Date
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Records
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Uploaded
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Uploaded By
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap text-right">
-                        Action
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {uploadHistory.map((upload) => (
-                      <TableRow key={upload.id}>
-                        <TableCell className="whitespace-nowrap max-w-xs truncate font-medium">
-                          {upload.filename}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {upload.selected_artist_name || "N/A"}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <Badge variant="info" className="text-xs">
-                            {upload.platform}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {new Date(upload.reporting_date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {upload.total_records}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {new Date(upload.uploaded_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {upload.uploaded_by_name || "Admin"}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-right">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteUpload(upload.id)}
-                            disabled={deletingId === upload.id}
-                          >
-                            {deletingId === upload.id ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Deleting...
-                              </>
-                            ) : (
-                              <>
-                                <Trash2 className="h-4 w-4 mr-1" /> Delete
-                              </>
-                            )}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
           ) : (
-            <div className="p-4 text-center text-muted-foreground">
-              No analytics uploads found
-            </div>
+            (() => {
+              // Filter upload history based on search query
+              const filteredHistory = uploadHistory.filter((upload) => {
+                if (!searchQuery.trim()) return true;
+                const query = searchQuery.toLowerCase();
+                return (
+                  upload.filename?.toLowerCase().includes(query) ||
+                  upload.platform?.toLowerCase().includes(query) ||
+                  upload.uploaded_by_name?.toLowerCase().includes(query) ||
+                  upload.selected_artist_name?.toLowerCase().includes(query)
+                );
+              });
+
+              return filteredHistory.length > 0 ? (
+                <>
+                  {/* Mobile Card View */}
+                  <div className="block md:hidden space-y-4 p-4">
+                    {filteredHistory.map((upload) => (
+                      <Card key={upload.id} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="font-medium truncate">
+                              {upload.filename}
+                            </div>
+                            <Badge variant="info" className="text-xs">
+                              {upload.platform}
+                            </Badge>
+                          </div>
+
+                          <div className="text-sm text-muted-foreground">
+                            Artist: {upload.selected_artist_name || "N/A"}
+                          </div>
+
+                          <div className="text-sm text-muted-foreground">
+                            Reporting Date:{" "}
+                            {new Date(
+                              upload.reporting_date
+                            ).toLocaleDateString()}
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {new Date(
+                                upload.uploaded_at
+                              ).toLocaleDateString()}
+                            </span>
+                            <span className="font-medium">
+                              {upload.total_records} records
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <div className="text-xs text-muted-foreground">
+                              {upload.uploaded_by_name || "Admin"}
+                            </div>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteUpload(upload.id)}
+                              disabled={deletingId === upload.id}
+                            >
+                              {deletingId === upload.id ? (
+                                <>
+                                  <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                <>
+                                  <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block border rounded-lg overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="whitespace-nowrap">
+                            Filename
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Artist
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Platform
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Reporting Date
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Records
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Uploaded
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Uploaded By
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap text-right">
+                            Action
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredHistory.map((upload) => (
+                          <TableRow key={upload.id}>
+                            <TableCell className="whitespace-nowrap max-w-xs truncate font-medium">
+                              {upload.filename}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              {upload.selected_artist_name || "N/A"}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <Badge variant="info" className="text-xs">
+                                {upload.platform}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              {new Date(
+                                upload.reporting_date
+                              ).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              {upload.total_records}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              {new Date(
+                                upload.uploaded_at
+                              ).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              {upload.uploaded_by_name || "Admin"}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap text-right">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteUpload(upload.id)}
+                                disabled={deletingId === upload.id}
+                              >
+                                {deletingId === upload.id ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                  </>
+                                )}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 text-center text-muted-foreground">
+                  {searchQuery.trim() ? (
+                    <div>
+                      <p>No uploads found matching "{searchQuery}"</p>
+                      <Button
+                        variant="link"
+                        onClick={() => setSearchQuery("")}
+                        className="mt-2"
+                      >
+                        Clear search
+                      </Button>
+                    </div>
+                  ) : (
+                    "No analytics uploads found"
+                  )}
+                </div>
+              );
+            })()
           )}
         </CardContent>
       </Card>

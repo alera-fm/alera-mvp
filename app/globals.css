@@ -39,6 +39,13 @@
     --alera-lime: 75 100% 50%;
     --alera-purple: 274 52% 37%;
     --alera-dark-purple: 254 55% 26%;
+
+    /* Chart colors */
+    --chart-1: 263 85% 50%;
+    --chart-2: 199 89% 48%;
+    --chart-3: 142 76% 36%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 84.2% 60.2%;
   }
 
   .dark {
@@ -76,6 +83,13 @@
     --alera-lime: 75 100% 50%;
     --alera-purple: 274 52% 47%;
     --alera-dark-purple: 254 55% 36%;
+
+    /* Chart colors - dark mode */
+    --chart-1: 263 85% 60%;
+    --chart-2: 199 89% 58%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 60%;
+    --chart-5: 0 63% 45%;
   }
 }
 

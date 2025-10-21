@@ -15,7 +15,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, User, History, Trash2 } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  User,
+  History,
+  Trash2,
+  Search,
+  X,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -56,6 +64,7 @@ export function RevenueUpload() {
   const [historyDays, setHistoryDays] = useState<string>("30");
   const [filterArtistId, setFilterArtistId] = useState<string>("all");
   const [deletingUploadId, setDeletingUploadId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -353,31 +362,53 @@ export function RevenueUpload() {
               <History className="h-5 w-5" />
               Revenue Upload History
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              <Select value={filterArtistId} onValueChange={setFilterArtistId}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by artist (all)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Artists</SelectItem>
-                  {artists.map((artist) => (
-                    <SelectItem key={artist.id} value={artist.id.toString()}>
-                      {artist.artist_name || artist.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={historyDays} onValueChange={setHistoryDays}>
-                <SelectTrigger className="w-full sm:w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="30">30 days</SelectItem>
-                  <SelectItem value="90">90 days</SelectItem>
-                  <SelectItem value="365">1 year</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <Select
+                  value={filterArtistId}
+                  onValueChange={setFilterArtistId}
+                >
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Filter by artist (all)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Artists</SelectItem>
+                    {artists.map((artist) => (
+                      <SelectItem key={artist.id} value={artist.id.toString()}>
+                        {artist.artist_name || artist.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={historyDays} onValueChange={setHistoryDays}>
+                  <SelectTrigger className="w-full sm:w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">7 days</SelectItem>
+                    <SelectItem value="30">30 days</SelectItem>
+                    <SelectItem value="90">90 days</SelectItem>
+                    <SelectItem value="365">1 year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by artist name or filename..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-10"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </CardTitle>
         </CardHeader>
@@ -386,194 +417,234 @@ export function RevenueUpload() {
             <div className="p-4 text-center text-muted-foreground">
               Loading upload history...
             </div>
-          ) : uploadHistory.length > 0 ? (
-            <>
-              {/* Mobile Card View */}
-              <div className="block md:hidden space-y-3 p-4">
-                {uploadHistory.map((upload, index) => (
-                  <Card key={index} className="border">
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">
-                              {upload.artist_name}
+          ) : (
+            (() => {
+              // Filter upload history based on search query
+              const filteredHistory = uploadHistory.filter((upload) => {
+                if (!searchQuery.trim()) return true;
+                const query = searchQuery.toLowerCase();
+                return (
+                  upload.artist_name?.toLowerCase().includes(query) ||
+                  upload.filename?.toLowerCase().includes(query)
+                );
+              });
+
+              return filteredHistory.length > 0 ? (
+                <>
+                  {/* Mobile Card View */}
+                  <div className="block md:hidden space-y-3 p-4">
+                    {filteredHistory.map((upload, index) => (
+                      <Card key={index} className="border">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate">
+                                  {upload.artist_name}
+                                </div>
+                                <div className="text-sm text-muted-foreground truncate mt-1">
+                                  {upload.filename.slice(0, 20)}
+                                </div>
+                              </div>
+                              <Badge
+                                variant={
+                                  upload.upload_status === "success"
+                                    ? "success"
+                                    : "destructive"
+                                }
+                                className="ml-2 flex-shrink-0"
+                              >
+                                {upload.upload_status}
+                              </Badge>
                             </div>
-                            <div className="text-sm text-muted-foreground truncate mt-1">
-                              {upload.filename.slice(0, 20)}
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Date:
+                                </span>
+                                <div className="font-medium">
+                                  {new Date(
+                                    upload.uploaded_at
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Records:
+                                </span>
+                                <div className="font-medium">
+                                  {upload.total_records}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Amount:
+                                </span>
+                                <div className="font-medium text-success">
+                                  ${Number(upload.total_amount || 0).toFixed(2)}
+                                </div>
+                              </div>
+                              <div className="flex justify-end">
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() =>
+                                    handleDeleteUpload(
+                                      upload.id,
+                                      upload.artist_name
+                                    )
+                                  }
+                                  disabled={deletingUploadId === upload.id}
+                                  className="h-8 px-3 text-xs"
+                                >
+                                  {deletingUploadId === upload.id ? (
+                                    <span className="flex items-center gap-1">
+                                      <div className="w-3 h-3 border border-border border-t-transparent rounded-full animate-spin"></div>
+                                      Deleting...
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <Trash2 className="h-3 w-3 mr-1" />
+                                      Delete
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                          <Badge
-                            variant={
-                              upload.upload_status === "success"
-                                ? "success"
-                                : "destructive"
-                            }
-                            className="ml-2 flex-shrink-0"
-                          >
-                            {upload.upload_status}
-                          </Badge>
-                        </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
 
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Date:</span>
-                            <div className="font-medium">
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block border rounded-lg overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="whitespace-nowrap">
+                            Artist
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            File
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Date
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Records
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Amount
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Type
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Status
+                          </TableHead>
+                          <TableHead className="whitespace-nowrap">
+                            Actions
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredHistory.map((upload, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium whitespace-nowrap">
+                              {upload.artist_name}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap max-w-xs truncate">
+                              {upload.filename}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                               {new Date(
                                 upload.uploaded_at
                               ).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Records:
-                            </span>
-                            <div className="font-medium">
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                               {upload.total_records}
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Amount:
-                            </span>
-                            <div className="font-medium text-success">
-                              ${Number(upload.total_amount || 0).toFixed(2)}
-                            </div>
-                          </div>
-                          <div className="flex justify-end">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() =>
-                                handleDeleteUpload(
-                                  upload.id,
-                                  upload.artist_name
-                                )
-                              }
-                              disabled={deletingUploadId === upload.id}
-                              className="h-8 px-3 text-xs"
-                            >
-                              {deletingUploadId === upload.id ? (
-                                <span className="flex items-center gap-1">
-                                  <div className="w-3 h-3 border border-border border-t-transparent rounded-full animate-spin"></div>
-                                  Deleting...
-                                </span>
-                              ) : (
-                                <>
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Delete
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden md:block border rounded-lg overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="whitespace-nowrap">
-                        Artist
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">File</TableHead>
-                      <TableHead className="whitespace-nowrap">Date</TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Records
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Amount
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">Type</TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Status
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {uploadHistory.map((upload, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium whitespace-nowrap">
-                          {upload.artist_name}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap max-w-xs truncate">
-                          {upload.filename}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {new Date(upload.uploaded_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {upload.total_records}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <span className="font-semibold text-success">
-                            ${Number(upload.total_amount || 0).toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <Badge
-                            variant={
-                              upload.upload_type === "earnings"
-                                ? "success"
-                                : "secondary"
-                            }
-                          >
-                            {upload.upload_type === "earnings"
-                              ? "Earnings"
-                              : "Analytics"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <Badge
-                            variant={
-                              upload.upload_status === "success"
-                                ? "success"
-                                : "destructive"
-                            }
-                          >
-                            {upload.upload_status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() =>
-                              handleDeleteUpload(upload.id, upload.artist_name)
-                            }
-                            disabled={deletingUploadId === upload.id}
-                          >
-                            {deletingUploadId === upload.id ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-border mr-2"></div>
-                                Deleting...
-                              </>
-                            ) : (
-                              <>
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
-                              </>
-                            )}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
-          ) : (
-            <div className="p-4 text-center text-muted-foreground">
-              No uploads found
-            </div>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <span className="font-semibold text-success">
+                                ${Number(upload.total_amount || 0).toFixed(2)}
+                              </span>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <Badge
+                                variant={
+                                  upload.upload_type === "earnings"
+                                    ? "success"
+                                    : "secondary"
+                                }
+                              >
+                                {upload.upload_type === "earnings"
+                                  ? "Earnings"
+                                  : "Analytics"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <Badge
+                                variant={
+                                  upload.upload_status === "success"
+                                    ? "success"
+                                    : "destructive"
+                                }
+                              >
+                                {upload.upload_status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() =>
+                                  handleDeleteUpload(
+                                    upload.id,
+                                    upload.artist_name
+                                  )
+                                }
+                                disabled={deletingUploadId === upload.id}
+                              >
+                                {deletingUploadId === upload.id ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-border mr-2"></div>
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Delete
+                                  </>
+                                )}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 text-center text-muted-foreground">
+                  {searchQuery.trim() ? (
+                    <div>
+                      <p>No uploads found matching "{searchQuery}"</p>
+                      <Button
+                        variant="link"
+                        onClick={() => setSearchQuery("")}
+                        className="mt-2"
+                      >
+                        Clear search
+                      </Button>
+                    </div>
+                  ) : (
+                    "No uploads found"
+                  )}
+                </div>
+              );
+            })()
           )}
         </CardContent>
       </Card>

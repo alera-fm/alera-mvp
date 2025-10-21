@@ -1709,8 +1709,6 @@ export function ReleaseManagement() {
                   <TableRow>
                     <TableHead className="whitespace-nowrap">Artist</TableHead>
                     <TableHead className="whitespace-nowrap">Release</TableHead>
-                    <TableHead className="whitespace-nowrap">Type</TableHead>
-                    <TableHead className="whitespace-nowrap">Genre</TableHead>
                     <TableHead className="whitespace-nowrap text-center">
                       Tracks
                     </TableHead>
@@ -1729,32 +1727,12 @@ export function ReleaseManagement() {
                   {releases.map((release) => (
                     <TableRow key={release.id}>
                       <TableCell className="whitespace-nowrap">
-                        <div>
-                          <div className="font-medium">
-                            {release.artist_name}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {release.artist_email}
-                          </div>
-                        </div>
+                        <div className="font-medium">{release.artist_name}</div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div>
-                          <div className="font-medium">
-                            {release.release_title}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            by {release.artist_name}
-                          </div>
+                        <div className="font-medium">
+                          {release.release_title}
                         </div>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <Badge variant="outline">
-                          {release.distribution_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm whitespace-nowrap">
-                        {release.primary_genre}
                       </TableCell>
                       <TableCell className="text-center whitespace-nowrap">
                         {release.track_count}
