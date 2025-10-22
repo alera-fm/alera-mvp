@@ -73,28 +73,28 @@ export function AdminStatsCard({
     >
       <CardContent
         className={cn(
-          "p-6 bg-gradient-to-br",
+          "p-4 md:p-6 bg-gradient-to-br",
           styles.gradient,
-          "min-h-[140px] flex flex-col justify-between"
+          "min-h-[120px] md:min-h-[140px] flex flex-col justify-between"
         )}
       >
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-3 md:mb-4">
           <div
             className={cn(
-              "p-3 rounded-lg backdrop-blur-sm border border-border/50 transition-transform duration-300",
+              "p-2 md:p-3 rounded-lg backdrop-blur-sm border border-border/50 transition-transform duration-300",
               styles.iconBg,
               isClickable && "group-hover:scale-110"
             )}
           >
-            <Icon className={cn("h-5 w-5", styles.iconColor)} />
+            <Icon className={cn("h-4 w-4 md:h-5 md:w-5", styles.iconColor)} />
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-end">
-          <div className="text-3xl md:text-4xl font-bold text-foreground mb-2 tabular-nums">
+          <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-1 md:mb-2 tabular-nums">
             {displayValue}
           </div>
-          <div className="text-sm text-muted-foreground font-medium leading-tight">
+          <div className="text-xs md:text-sm text-muted-foreground font-medium leading-tight">
             {title}
           </div>
           {subtitle && (

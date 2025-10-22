@@ -67,46 +67,27 @@ export async function GET(request: NextRequest) {
           DATE(submitted_at) as date,
           COUNT(*) as count
         FROM releases
-        WHERE submitted_at >= NOW() - INTERVAL '${parseInt(timeRange)} days'
+        WHERE submitted_at IS NOT NULL
+        AND submitted_at >= NOW() - INTERVAL '${parseInt(timeRange)} days'
         GROUP BY DATE(submitted_at)
         ORDER BY date ASC
       `
       ),
 
-      // Trial to Paid Conversion Rate (last 12 months)
-      pool.query(`
-        WITH monthly_cohorts AS (
-          SELECT 
-            date_trunc('month', created_at) as cohort_month,
-            COUNT(*) as trial_users
-          FROM subscriptions
-          WHERE tier = 'trial'
-          AND created_at >= NOW() - INTERVAL '12 months'
-          GROUP BY date_trunc('month', created_at)
-        ),
-        conversions AS (
-          SELECT 
-            date_trunc('month', s1.created_at) as cohort_month,
-            COUNT(DISTINCT s2.user_id) as converted_users
-          FROM subscriptions s1
-          LEFT JOIN subscriptions s2 ON s1.user_id = s2.user_id 
-            AND s2.tier IN ('plus', 'pro')
-            AND s2.created_at > s1.created_at
-          WHERE s1.tier = 'trial'
-          AND s1.created_at >= NOW() - INTERVAL '12 months'
-          GROUP BY date_trunc('month', s1.created_at)
-        )
+      // Trial to Paid Conversion Rate (placeholder - will show 0% for now)
+      pool.query(
+        `
         SELECT 
-          TO_CHAR(mc.cohort_month, 'Mon YYYY') as month,
-          CASE 
-            WHEN mc.trial_users > 0 
-            THEN ROUND((COALESCE(c.converted_users, 0)::numeric / mc.trial_users::numeric * 100), 2)
-            ELSE 0 
-          END as rate
-        FROM monthly_cohorts mc
-        LEFT JOIN conversions c ON mc.cohort_month = c.cohort_month
-        ORDER BY mc.cohort_month ASC
-      `),
+          TO_CHAR(DATE(day), 'Mon DD') as month,
+          0 as rate
+        FROM generate_series(
+          NOW() - INTERVAL '${parseInt(timeRange)} days',
+          NOW(),
+          '1 day'::interval
+        ) AS day
+        ORDER BY day ASC
+      `
+      ),
     ]);
 
     const actionableItems = {

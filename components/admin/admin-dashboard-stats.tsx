@@ -75,17 +75,23 @@ export function AdminDashboardStats() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 md:space-y-8">
         {/* Loading skeleton */}
-        <div className="animate-pulse space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="animate-pulse space-y-6 md:space-y-8">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-[140px] bg-muted rounded-xl"></div>
+              <div
+                key={i}
+                className="h-[120px] md:h-[140px] bg-muted rounded-xl"
+              ></div>
             ))}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-[140px] bg-muted rounded-xl"></div>
+              <div
+                key={i}
+                className="h-[120px] md:h-[140px] bg-muted rounded-xl"
+              ></div>
             ))}
           </div>
         </div>
@@ -110,13 +116,13 @@ export function AdminDashboardStats() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {/* Section 1: Needs Your Attention */}
       <section>
-        <h2 className="text-2xl font-bold mb-4 text-foreground">
+        <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-foreground">
           Needs Your Attention
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
           <AdminStatsCard
             title="Releases to Review"
             value={data.actionableItems.pendingReleases}
@@ -156,17 +162,21 @@ export function AdminDashboardStats() {
             value={data.actionableItems.takedownRequests}
             icon={AlertTriangle}
             variant="warning"
-            onClick={() => router.push("/admin/dashboard/release-management")}
+            onClick={() =>
+              router.push(
+                "/admin/dashboard/release-management?status=takedown_requested"
+              )
+            }
           />
         </div>
       </section>
 
       {/* Section 2: Key Metrics Overview */}
       <section>
-        <h2 className="text-2xl font-bold mb-4 text-foreground">
+        <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-foreground">
           Key Metrics Overview
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <AdminStatsCard
             title="New Users (Last 7 Days)"
             value={data.keyMetrics.newUsersLast7Days}
@@ -197,12 +207,12 @@ export function AdminDashboardStats() {
 
       {/* Section 3: Performance Metrics */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 md:mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">
             Performance Metrics
           </h2>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -213,7 +223,7 @@ export function AdminDashboardStats() {
           </Select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* New Users Over Time */}
           <Card className="border-border bg-card">
             <CardHeader>
@@ -223,7 +233,11 @@ export function AdminDashboardStats() {
             </CardHeader>
             <CardContent>
               {data.performanceMetrics.newUsersOverTime.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer
+                  width="100%"
+                  height={200}
+                  className="md:h-[250px]"
+                >
                   <BarChart data={data.performanceMetrics.newUsersOverTime}>
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -233,15 +247,19 @@ export function AdminDashboardStats() {
                     <XAxis
                       dataKey="date"
                       stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      fontSize={10}
                       tickFormatter={(value) => {
                         const date = new Date(value);
                         return `${date.getMonth() + 1}/${date.getDate()}`;
                       }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
                     />
                     <YAxis
                       stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      fontSize={10}
+                      width={40}
                     />
                     <Tooltip
                       contentStyle={{
@@ -276,7 +294,11 @@ export function AdminDashboardStats() {
             </CardHeader>
             <CardContent>
               {data.performanceMetrics.newReleasesOverTime.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer
+                  width="100%"
+                  height={200}
+                  className="md:h-[250px]"
+                >
                   <BarChart data={data.performanceMetrics.newReleasesOverTime}>
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -286,15 +308,19 @@ export function AdminDashboardStats() {
                     <XAxis
                       dataKey="date"
                       stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      fontSize={10}
                       tickFormatter={(value) => {
                         const date = new Date(value);
                         return `${date.getMonth() + 1}/${date.getDate()}`;
                       }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
                     />
                     <YAxis
                       stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      fontSize={10}
+                      width={40}
                     />
                     <Tooltip
                       contentStyle={{
@@ -323,13 +349,17 @@ export function AdminDashboardStats() {
           {/* Trial to Paid Conversion Rate - Full Width */}
           <Card className="border-border bg-card lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-foreground">
-                Trial-to-Paid Conversion Rate (Last 12 Months)
+              <CardTitle className="text-base md:text-lg font-semibold text-foreground">
+                Trial-to-Paid Conversion Rate
               </CardTitle>
             </CardHeader>
             <CardContent>
               {data.performanceMetrics.trialToPaidConversion.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer
+                  width="100%"
+                  height={200}
+                  className="md:h-[250px]"
+                >
                   <LineChart
                     data={data.performanceMetrics.trialToPaidConversion}
                   >
@@ -341,12 +371,16 @@ export function AdminDashboardStats() {
                     <XAxis
                       dataKey="month"
                       stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      fontSize={10}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
                     />
                     <YAxis
                       stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      fontSize={10}
                       tickFormatter={(value) => `${value}%`}
+                      width={40}
                     />
                     <Tooltip
                       contentStyle={{
@@ -383,44 +417,44 @@ export function AdminDashboardStats() {
 
       {/* Section 4: Quick Access Tools */}
       <section>
-        <h2 className="text-2xl font-bold mb-4 text-foreground">
+        <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-foreground">
           Quick Access Tools
         </h2>
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* Search Bar */}
-          {/* <Card className="border-border bg-card">
+          <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-foreground">
+              <CardTitle className="text-base md:text-lg font-semibold text-foreground">
                 Search
               </CardTitle>
             </CardHeader>
             <CardContent>
               <AdminQuickSearch />
             </CardContent>
-          </Card> */}
+          </Card>
 
           {/* Action Buttons */}
           <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-foreground">
+              <CardTitle className="text-base md:text-lg font-semibold text-foreground">
                 Quick Actions
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+            <CardContent className="flex flex-col gap-2 md:gap-3">
               <Button
                 onClick={() => router.push("/admin/dashboard/revenue-reports")}
-                className="w-full h-12 text-base bg-primary hover:bg-primary/90"
+                className="w-full h-11 md:h-12 text-sm md:text-base bg-primary hover:bg-primary/90"
                 size="lg"
               >
-                <FileUp className="mr-2 h-5 w-5" />
+                <FileUp className="mr-2 h-4 md:h-5 w-4 md:w-5" />
                 Upload Revenue Report
               </Button>
               <Button
                 onClick={() => router.push("/admin/dashboard/analytics")}
-                className="w-full h-12 text-base bg-primary hover:bg-primary/90"
+                className="w-full h-11 md:h-12 text-sm md:text-base bg-primary hover:bg-primary/90"
                 size="lg"
               >
-                <BarChart3 className="mr-2 h-5 w-5" />
+                <BarChart3 className="mr-2 h-4 md:h-5 w-4 md:w-5" />
                 Upload Analytics Report
               </Button>
             </CardContent>

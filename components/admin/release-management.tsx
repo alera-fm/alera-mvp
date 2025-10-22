@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -116,12 +117,15 @@ interface Artist {
 }
 
 export function ReleaseManagement() {
+  const searchParams = useSearchParams();
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRelease, setSelectedRelease] = useState<Release | null>(null);
   const [audioScans, setAudioScans] = useState<any[]>([]);
   const [scanSummary, setScanSummary] = useState<any>(null);
-  const [statusFilter, setStatusFilter] = useState("pending");
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get("status") || "pending"
+  );
   const [filterArtistId, setFilterArtistId] = useState<string>("all");
   const [artists, setArtists] = useState<Artist[]>([]);
   const [adminNotes, setAdminNotes] = useState("");
