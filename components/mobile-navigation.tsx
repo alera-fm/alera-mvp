@@ -1,69 +1,108 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { usePathname } from "next/navigation"
-import Link from "next/link"
-import { Home, BarChart3, Wallet, MessageSquare, Users, Rocket, Music, LogOut, Globe, Settings } from "lucide-react"
-import { useAuth } from "@/context/AuthContext"
-import { useChat } from "@/context/ChatContext"
+import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import {
+  Home,
+  BarChart3,
+  Wallet,
+  MessageSquare,
+  Users,
+  Rocket,
+  Music,
+  LogOut,
+  Globe,
+  Settings,
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useChat } from "@/context/ChatContext";
 
 export function MobileNavigation() {
-  const pathname = usePathname()
-  const { logout, isAuthenticated, user } = useAuth()
-  const { unread } = useChat()
-  const [activeTab, setActiveTab] = useState("home")
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [scrollPosition, setScrollPosition] = useState(0)
+  const pathname = usePathname();
+  const { logout, isAuthenticated, user } = useAuth();
+  const { unread } = useChat();
+  const [activeTab, setActiveTab] = useState("home");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
 
   useEffect(() => {
-    if (pathname === "/dashboard") setActiveTab("home")
-    else if (pathname.startsWith("/dashboard/my-music")) setActiveTab("my-music")
-    else if (pathname.startsWith("/dashboard/my-page")) setActiveTab("my-page")
-    else if (pathname.startsWith("/dashboard/analytics")) setActiveTab("analytics")
-    else if (pathname.startsWith("/dashboard/wallet")) setActiveTab("wallet")
-    else if (pathname.startsWith("/dashboard/fanzone")) setActiveTab("fanzone")
-    else if (pathname.startsWith("/dashboard/new-release")) setActiveTab("new-release")
-    else if (pathname.startsWith("/dashboard/admin")) setActiveTab("admin")
-    else setActiveTab("home")
-  }, [pathname])
+    if (pathname === "/dashboard") setActiveTab("home");
+    else if (pathname.startsWith("/dashboard/my-music"))
+      setActiveTab("my-music");
+    else if (pathname.startsWith("/dashboard/my-page")) setActiveTab("my-page");
+    else if (pathname.startsWith("/dashboard/analytics"))
+      setActiveTab("analytics");
+    else if (pathname.startsWith("/dashboard/wallet")) setActiveTab("wallet");
+    else if (pathname.startsWith("/dashboard/fanzone")) setActiveTab("fanzone");
+    else if (pathname.startsWith("/dashboard/new-release"))
+      setActiveTab("new-release");
+    else if (pathname.startsWith("/admin/dashboard")) setActiveTab("admin");
+    else setActiveTab("home");
+  }, [pathname]);
 
   const navItems = [
-    { name: "New Release", icon: Rocket, path: "/dashboard/new-release", id: "new-release" },
+    {
+      name: "New Release",
+      icon: Rocket,
+      path: "/dashboard/new-release",
+      id: "new-release",
+    },
     { name: "Home", icon: Home, path: "/dashboard", id: "home" },
-    { name: "My Music", icon: Music, path: "/dashboard/my-music", id: "my-music" },
+    {
+      name: "My Music",
+      icon: Music,
+      path: "/dashboard/my-music",
+      id: "my-music",
+    },
     { name: "My Page", icon: Globe, path: "/dashboard/my-page", id: "my-page" },
-    { name: "Analytics", icon: BarChart3, path: "/dashboard/analytics", id: "analytics" },
+    {
+      name: "Analytics",
+      icon: BarChart3,
+      path: "/dashboard/analytics",
+      id: "analytics",
+    },
     { name: "Wallet", icon: Wallet, path: "/dashboard/wallet", id: "wallet" },
     { name: "Fanzone", icon: Users, path: "/dashboard/fanzone", id: "fanzone" },
     ...(user?.isAdmin
-      ? [{ name: "Admin", icon: Settings, path: "/dashboard/admin", id: "admin" }]
+      ? [
+          {
+            name: "Admin",
+            icon: Settings,
+            path: "/admin/dashboard",
+            id: "admin",
+          },
+        ]
       : []),
-  ]
+  ];
 
   const handleNavClick = (id: string) => {
-    setActiveTab(id)
-  }
+    setActiveTab(id);
+  };
 
   // Handle horizontal scroll
   const handleScroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
-      const scrollAmount = 100
+      const scrollAmount = 100;
       const newPosition =
         direction === "left"
           ? Math.max(0, scrollPosition - scrollAmount)
-          : Math.min(scrollRef.current.scrollWidth - scrollRef.current.clientWidth, scrollPosition + scrollAmount)
+          : Math.min(
+              scrollRef.current.scrollWidth - scrollRef.current.clientWidth,
+              scrollPosition + scrollAmount
+            );
 
       scrollRef.current.scrollTo({
         left: newPosition,
         behavior: "smooth",
-      })
-      setScrollPosition(newPosition)
+      });
+      setScrollPosition(newPosition);
     }
-  }
+  };
 
   // Don't render if user is not authenticated
   if (!isAuthenticated) {
-    return null
+    return null;
   }
 
   return (
@@ -75,7 +114,7 @@ export function MobileNavigation() {
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {navItems.map((item) => {
-            const isActive = activeTab === item.id
+            const isActive = activeTab === item.id;
             return (
               <Link
                 key={item.id}
@@ -88,17 +127,25 @@ export function MobileNavigation() {
                       : "text-white p-3" // Inactive state
                   }`}
               >
-                <item.icon className={`h-6 w-6 ${isActive ? "text-black" : "text-white"}`} />
-                {isActive && <span className="ml-2 text-sm font-medium whitespace-nowrap">{item.name}</span>}
+                <item.icon
+                  className={`h-6 w-6 ${
+                    isActive ? "text-black" : "text-white"
+                  }`}
+                />
+                {isActive && (
+                  <span className="ml-2 text-sm font-medium whitespace-nowrap">
+                    {item.name}
+                  </span>
+                )}
               </Link>
-            )
+            );
           })}
 
           {/* ALERA Agent Button - Integrated into menu */}
           <button
             onClick={() => {
               // Dispatch custom event to open ALERA chat
-              window.dispatchEvent(new CustomEvent('openAleraChat'))
+              window.dispatchEvent(new CustomEvent("openAleraChat"));
             }}
             className="relative flex items-center justify-center shrink-0 p-2 ml-1 snap-center"
           >
@@ -123,5 +170,5 @@ export function MobileNavigation() {
         </div>
       </div>
     </div>
-  )
+  );
 }
