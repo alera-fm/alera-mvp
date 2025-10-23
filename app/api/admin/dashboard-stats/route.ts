@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-middleware";
 import type { DashboardStats } from "@/types/admin";
+import { stripe } from "@/lib/stripe";
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,23 +29,14 @@ export async function GET(request: NextRequest) {
           (SELECT COUNT(*) FROM releases WHERE status = 'takedown_requested') as takedown_requests
       `),
 
-      // Key Metrics
+      // Key Metrics (excluding MRR - will fetch from Stripe separately)
       pool.query(`
         SELECT 
           (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '7 days') as new_users_last_7_days,
-          (SELECT COUNT(*) FROM releases WHERE submitted_at >= NOW() - INTERVAL '7 days') as new_releases_last_7_days,
+          (SELECT COUNT(*) FROM releases WHERE status = 'live' AND updated_at >= NOW() - INTERVAL '7 days') as new_releases_last_7_days,
           (SELECT COUNT(*) FROM subscriptions 
            WHERE tier IN ('plus', 'pro') 
-           AND created_at >= date_trunc('month', NOW())) as new_paying_subscribers_this_month,
-          (SELECT COALESCE(SUM(
-            CASE 
-              WHEN tier = 'plus' THEN 9.99
-              WHEN tier = 'pro' THEN 19.99
-              ELSE 0
-            END
-          ), 0) FROM subscriptions 
-          WHERE tier IN ('plus', 'pro') 
-          AND status = 'active') as monthly_recurring_revenue
+           AND created_at >= date_trunc('month', NOW())) as new_paying_subscribers_this_month
       `),
 
       // New Users Over Time
@@ -60,16 +52,16 @@ export async function GET(request: NextRequest) {
       `
       ),
 
-      // New Releases Over Time
+      // New Releases Over Time (releases that went live)
       pool.query(
         `
         SELECT 
-          DATE(submitted_at) as date,
+          DATE(updated_at) as date,
           COUNT(*) as count
         FROM releases
-        WHERE submitted_at IS NOT NULL
-        AND submitted_at >= NOW() - INTERVAL '${parseInt(timeRange)} days'
-        GROUP BY DATE(submitted_at)
+        WHERE status = 'live'
+        AND updated_at >= NOW() - INTERVAL '${parseInt(timeRange)} days'
+        GROUP BY DATE(updated_at)
         ORDER BY date ASC
       `
       ),
@@ -106,6 +98,36 @@ export async function GET(request: NextRequest) {
       ),
     };
 
+    // Fetch actual MRR from Stripe
+    let actualMRR = 0;
+    try {
+      const subscriptions = await stripe.subscriptions.list({
+        status: "active",
+        limit: 100,
+        expand: ["data.items.data.price"],
+      });
+
+      for (const subscription of subscriptions.data) {
+        for (const item of subscription.items.data) {
+          const price = item.price;
+          const quantity = item.quantity || 1;
+
+          if (price.unit_amount && price.recurring?.interval === "month") {
+            actualMRR += (price.unit_amount * quantity) / 100; // Convert from cents
+          } else if (
+            price.unit_amount &&
+            price.recurring?.interval === "year"
+          ) {
+            actualMRR += (price.unit_amount * quantity) / 100 / 12; // Convert annual to monthly
+          }
+        }
+      }
+    } catch (stripeError) {
+      console.error("Error fetching Stripe MRR:", stripeError);
+      // Fallback to 0 if Stripe fails
+      actualMRR = 0;
+    }
+
     const keyMetrics = {
       newUsersLast7Days: parseInt(
         keyMetricsResult.rows[0].new_users_last_7_days
@@ -116,9 +138,7 @@ export async function GET(request: NextRequest) {
       newPayingSubscribersThisMonth: parseInt(
         keyMetricsResult.rows[0].new_paying_subscribers_this_month
       ),
-      monthlyRecurringRevenue: parseFloat(
-        keyMetricsResult.rows[0].monthly_recurring_revenue
-      ),
+      monthlyRecurringRevenue: actualMRR,
     };
 
     const performanceMetrics = {
