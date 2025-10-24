@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
       pool.query(`
         SELECT 
           (SELECT COUNT(*) FROM releases WHERE status = 'pending') as pending_releases,
+          (SELECT COUNT(*) FROM releases WHERE status = 'under_review') as under_review_releases,
           (SELECT COUNT(*) FROM users WHERE identity_verification_status = 'pending') as pending_identity_verifications,
           (SELECT COUNT(*) FROM withdrawal_requests WHERE status = 'pending') as pending_payout_requests,
           (SELECT COUNT(*) FROM payout_methods WHERE status = 'pending') as pending_payout_methods,
@@ -84,6 +85,9 @@ export async function GET(request: NextRequest) {
 
     const actionableItems = {
       pendingReleases: parseInt(actionableItemsResult.rows[0].pending_releases),
+      underReviewReleases: parseInt(
+        actionableItemsResult.rows[0].under_review_releases
+      ),
       pendingIdentityVerifications: parseInt(
         actionableItemsResult.rows[0].pending_identity_verifications
       ),

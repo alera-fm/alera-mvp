@@ -133,10 +133,14 @@ export function AdminDashboardStats() {
         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
           <AdminStatsCard
             title="Releases to Review"
-            value={data.actionableItems.pendingReleases}
+            value={
+              data.actionableItems.pendingReleases +
+              data.actionableItems.underReviewReleases
+            }
             icon={Music}
             variant="warning"
             onClick={() => router.push("/admin/dashboard/release-management")}
+            subtitle={`${data.actionableItems.pendingReleases} pending, ${data.actionableItems.underReviewReleases} under review`}
           />
           <AdminStatsCard
             title="Pending Identity Verifications"

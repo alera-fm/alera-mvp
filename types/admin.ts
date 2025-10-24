@@ -2,6 +2,7 @@
 
 export interface ActionableItems {
   pendingReleases: number;
+  underReviewReleases: number;
   pendingIdentityVerifications: number;
   pendingPayoutRequests: number;
   pendingPayoutMethods: number;
