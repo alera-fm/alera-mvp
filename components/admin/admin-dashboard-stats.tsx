@@ -107,9 +107,17 @@ export function AdminDashboardStats() {
     );
   }
 
-  const formatCurrency = (value: number | string) => {
+  const formatCurrency = (value: number | string, currency: string = "usd") => {
     const num = typeof value === "string" ? parseFloat(value) : value;
-    return `$${num.toLocaleString(undefined, {
+    const currencySymbols: { [key: string]: string } = {
+      usd: "$",
+      aud: "A$",
+      eur: "€",
+      gbp: "£",
+      cad: "C$",
+    };
+    const symbol = currencySymbols[currency.toLowerCase()] || "$";
+    return `${symbol}${num.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -196,11 +204,13 @@ export function AdminDashboardStats() {
             variant="success"
           />
           <AdminStatsCard
-            title="Monthly Recurring Revenue"
+            title="Stripe Balance"
             value={data.keyMetrics.monthlyRecurringRevenue}
             icon={TrendingUp}
             variant="success"
-            formatValue={formatCurrency}
+            formatValue={(value) =>
+              formatCurrency(value, data.keyMetrics.stripeCurrency)
+            }
           />
         </div>
       </section>

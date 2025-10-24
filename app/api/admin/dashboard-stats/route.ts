@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       // Actionable Items
       pool.query(`
         SELECT 
-          (SELECT COUNT(*) FROM releases WHERE status = 'under_review') as pending_releases,
+          (SELECT COUNT(*) FROM releases WHERE status = 'pending') as pending_releases,
           (SELECT COUNT(*) FROM users WHERE identity_verification_status = 'pending') as pending_identity_verifications,
           (SELECT COUNT(*) FROM withdrawal_requests WHERE status = 'pending') as pending_payout_requests,
           (SELECT COUNT(*) FROM payout_methods WHERE status = 'pending') as pending_payout_methods,
@@ -98,34 +98,29 @@ export async function GET(request: NextRequest) {
       ),
     };
 
-    // Fetch actual MRR from Stripe
-    let actualMRR = 0;
+    // Fetch actual Stripe account balance
+    let stripeBalance = 0;
+    let stripeCurrency = "usd";
     try {
-      const subscriptions = await stripe.subscriptions.list({
-        status: "active",
-        limit: 100,
-        expand: ["data.items.data.price"],
-      });
+      const balance = await stripe.balance.retrieve();
 
-      for (const subscription of subscriptions.data) {
-        for (const item of subscription.items.data) {
-          const price = item.price;
-          const quantity = item.quantity || 1;
+      // Get the first currency (usually the main one)
+      const mainCurrency = balance.available[0] || balance.pending[0];
+      if (mainCurrency) {
+        stripeCurrency = mainCurrency.currency;
+        const availableAmount =
+          balance.available.find((b) => b.currency === mainCurrency.currency)
+            ?.amount || 0;
+        const pendingAmount =
+          balance.pending.find((b) => b.currency === mainCurrency.currency)
+            ?.amount || 0;
 
-          if (price.unit_amount && price.recurring?.interval === "month") {
-            actualMRR += (price.unit_amount * quantity) / 100; // Convert from cents
-          } else if (
-            price.unit_amount &&
-            price.recurring?.interval === "year"
-          ) {
-            actualMRR += (price.unit_amount * quantity) / 100 / 12; // Convert annual to monthly
-          }
-        }
+        // Total balance = available + pending
+        stripeBalance = (availableAmount + pendingAmount) / 100; // Convert from cents
       }
     } catch (stripeError) {
-      console.error("Error fetching Stripe MRR:", stripeError);
-      // Fallback to 0 if Stripe fails
-      actualMRR = 0;
+      console.error("Error fetching Stripe balance:", stripeError);
+      stripeBalance = 0;
     }
 
     const keyMetrics = {
@@ -138,7 +133,8 @@ export async function GET(request: NextRequest) {
       newPayingSubscribersThisMonth: parseInt(
         keyMetricsResult.rows[0].new_paying_subscribers_this_month
       ),
-      monthlyRecurringRevenue: actualMRR,
+      monthlyRecurringRevenue: stripeBalance,
+      stripeCurrency: stripeCurrency,
     };
 
     const performanceMetrics = {

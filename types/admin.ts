@@ -13,6 +13,7 @@ export interface KeyMetrics {
   newReleasesLast7Days: number;
   newPayingSubscribersThisMonth: number;
   monthlyRecurringRevenue: number;
+  stripeCurrency: string;
 }
 
 export interface TimeSeriesData {
