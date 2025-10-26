@@ -386,6 +386,16 @@ export async function checkReleaseLimit(
     console.log(
       `User ${userId} has ${subscription.status} status - treating as trial user`
     );
+
+    // Users with payment issues can only create Singles (1 song)
+    if (releaseType && releaseType !== "Single") {
+      return {
+        allowed: false,
+        reason:
+          "Your payment is pending or failed. You can only create Single releases (1 song) until your payment is processed. Upgrade to Plus or Pro to create EPs and Albums.",
+        upgradeRequired: "plus",
+      };
+    }
   }
 
   // Paid users (with active status) have unlimited releases
@@ -405,7 +415,17 @@ export async function checkReleaseLimit(
       };
     }
 
-    // Trial users can create their first release
+    // Trial users can only create Singles (1 song)
+    if (releaseType && releaseType !== "Single") {
+      return {
+        allowed: false,
+        reason:
+          "Trial users can only create Single releases (1 song). Upgrade to Plus or Pro to create EPs and Albums.",
+        upgradeRequired: "plus",
+      };
+    }
+
+    // Trial users can create their first Single release
     return { allowed: true };
   }
 

@@ -128,20 +128,13 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Check actual release count for trial users
-    const releaseCountResult = await query(
-      `SELECT COUNT(*) FROM releases WHERE artist_id = $1`,
-      [userId]
-    );
-    const totalReleases = parseInt(releaseCountResult.rows[0]?.count || "0");
-
     // Release limits (users with payment issues get trial limits)
     const releaseLimits = {
       pending: pendingReleases,
       limit: isTrialOrPaymentIssue
-        ? totalReleases >= 1
-          ? 0 // Trial user has already created a release
-          : 1 // Trial users get 1 release if they haven't created one yet
+        ? subscription.free_release_used
+          ? 0 // Trial user has already used their free release
+          : 1 // Trial users get 1 release if they haven't used it yet
         : -1, // -1 means unlimited for paid users
     };
 

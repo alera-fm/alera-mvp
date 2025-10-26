@@ -422,6 +422,11 @@ export function DistributionFlow({
         // Check if user can create new releases
         const canCreate = await canAccessFeature("release_creation");
         setCanCreateRelease(canCreate);
+
+        // For trial users, automatically set distribution type to "Single"
+        if (subscription.tier === "trial" && !formData.distribution_type) {
+          updateFormData("distribution_type", "Single");
+        }
       } catch (error) {
         console.error("Error checking release access:", error);
         setCanCreateRelease(false);
@@ -878,10 +883,29 @@ export function DistributionFlow({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Single">Single (1 track)</SelectItem>
-                <SelectItem value="EP">EP (2-8 tracks)</SelectItem>
-                <SelectItem value="Album">Album (8+ tracks)</SelectItem>
+                {subscription?.tier !== "trial" &&
+                  subscription?.status !== "pending_payment" &&
+                  subscription?.status !== "payment_failed" && (
+                    <>
+                      <SelectItem value="EP">EP (2-8 tracks)</SelectItem>
+                      <SelectItem value="Album">Album (8+ tracks)</SelectItem>
+                    </>
+                  )}
               </SelectContent>
             </Select>
+            {subscription?.tier === "trial" && (
+              <p className="text-sm text-muted-foreground">
+                Trial users can only create Single releases. Upgrade to Plus or
+                Pro to create EPs and Albums.
+              </p>
+            )}
+            {(subscription?.status === "pending_payment" ||
+              subscription?.status === "payment_failed") && (
+              <p className="text-sm text-muted-foreground">
+                Your payment is being processed. You can only create Single
+                releases until your payment is confirmed.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

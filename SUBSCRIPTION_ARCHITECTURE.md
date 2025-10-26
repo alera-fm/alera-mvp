@@ -6,12 +6,13 @@ ALERA implements a 3-tier subscription system with a one-release free trial that
 
 ## Subscription Tiers
 
-### 1. **Trial (Free - One Release)**
+### 1. **Trial (Free - One Single)**
 
 - **Duration**: Until first release submission (not time-based)
 - **Access**: Full feature access with specific limitations
 - **Limitations**:
-  - **Release Limit**: ONE free release allowed (trial ends after submission)
+  - **Release Limit**: ONE free Single release allowed (1 song only)
+  - **Release Type**: Singles only (EPs and Albums require Plus/Pro)
   - **AI Agent**: 1,500 tokens per day
 - **Expiration Behavior**: Trial ends immediately after successful release submission, user must upgrade to create more releases
 
