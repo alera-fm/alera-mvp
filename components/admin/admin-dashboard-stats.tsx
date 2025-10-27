@@ -35,17 +35,21 @@ import {
 } from "recharts";
 import { AdminStatsCard } from "./admin-stats-card";
 import { AdminQuickSearch } from "./admin-quick-search";
+import { OnboardingFunnel } from "./onboarding-funnel";
+import { RevenueMetrics } from "./revenue-metrics";
+import { RiskHealthMetrics } from "./risk-health-metrics";
+import { AIAgentAnalytics } from "./ai-agent-analytics";
+import { TopAITopics } from "./top-ai-topics";
 import type { DashboardStats } from "@/types/admin";
 
 export function AdminDashboardStats() {
   const [data, setData] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("30");
   const router = useRouter();
 
   useEffect(() => {
     fetchDashboardData();
-  }, [timeRange]);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -53,14 +57,11 @@ export function AdminDashboardStats() {
       if (!token) return;
 
       setLoading(true);
-      const response = await fetch(
-        `/api/admin/dashboard-stats?range=${timeRange}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/admin/dashboard-stats?range=30`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         const result = await response.json();
@@ -78,7 +79,7 @@ export function AdminDashboardStats() {
       <div className="space-y-6 md:space-y-8">
         {/* Loading skeleton */}
         <div className="animate-pulse space-y-6 md:space-y-8">
-          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
@@ -130,7 +131,7 @@ export function AdminDashboardStats() {
         <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-foreground">
           Needs Your Attention
         </h2>
-        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
           <AdminStatsCard
             title="Releases to Review"
             value={
@@ -219,22 +220,37 @@ export function AdminDashboardStats() {
         </div>
       </section>
 
+      {/* Section 2.5: Onboarding Funnel */}
+      <section>
+        <OnboardingFunnel />
+      </section>
+
+      {/* Section 2.6: Revenue Metrics */}
+      <section>
+        <RevenueMetrics />
+      </section>
+
+      {/* Section 2.7: Risk & Health Metrics */}
+      <section>
+        <RiskHealthMetrics />
+      </section>
+
+      {/* Section 2.8: AI Agent Analytics */}
+      <section>
+        <AIAgentAnalytics />
+      </section>
+
+      {/* Section 2.9: Top AI Topics */}
+      <section>
+        <TopAITopics />
+      </section>
+
       {/* Section 3: Performance Metrics */}
       <section>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 md:mb-4">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">
             Performance Metrics
           </h2>
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Select range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 Days</SelectItem>
-              <SelectItem value="30">Last 30 Days</SelectItem>
-              <SelectItem value="90">Last 90 Days</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">

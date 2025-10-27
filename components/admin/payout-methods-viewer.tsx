@@ -275,7 +275,7 @@ export function PayoutMethodsViewer() {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="block md:hidden space-y-4">
+            <div className="block lg:hidden space-y-4">
               {filteredMethods.map((method) => (
                 <Card
                   key={method.id}
@@ -320,7 +320,7 @@ export function PayoutMethodsViewer() {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block rounded-md border overflow-x-auto">
+            <div className="hidden lg:block rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

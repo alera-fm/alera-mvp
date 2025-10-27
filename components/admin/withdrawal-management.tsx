@@ -195,7 +195,7 @@ export function WithdrawalManagement() {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="block md:hidden space-y-4 p-4">
+            <div className="block lg:hidden space-y-4 p-4">
               {withdrawals.map((withdrawal) => (
                 <Card key={withdrawal.id} className="p-4">
                   <div className="space-y-3">
@@ -262,7 +262,7 @@ export function WithdrawalManagement() {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block rounded-md border overflow-x-auto">
+            <div className="hidden lg:block rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

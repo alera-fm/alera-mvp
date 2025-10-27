@@ -581,7 +581,7 @@ export default function AnalyticsUpload() {
               return filteredHistory.length > 0 ? (
                 <>
                   {/* Mobile Card View */}
-                  <div className="block md:hidden space-y-4 p-4">
+                  <div className="block lg:hidden space-y-4 p-4">
                     {filteredHistory.map((upload) => (
                       <Card key={upload.id} className="p-4">
                         <div className="space-y-3">
@@ -644,7 +644,7 @@ export default function AnalyticsUpload() {
                   </div>
 
                   {/* Desktop Table View */}
-                  <div className="hidden md:block border rounded-lg overflow-x-auto">
+                  <div className="hidden lg:block border rounded-lg overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
