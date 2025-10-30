@@ -152,7 +152,7 @@ export function OnboardingFunnel() {
       description: "Trial users with approved ID verification",
       conversion: getConversionRate(
         data.trialUsersPassingIdCheck,
-        data.trialUsersAttemptingIdCheck
+        data.totalTrialSignups
       ),
     },
     {
@@ -164,7 +164,7 @@ export function OnboardingFunnel() {
       description: "Trial users who submitted their first release",
       conversion: getConversionRate(
         data.trialUsersSubmittingFirstRelease,
-        data.trialUsersPassingIdCheck
+        data.totalTrialSignups
       ),
     },
     {
@@ -176,7 +176,7 @@ export function OnboardingFunnel() {
       description: "Trial users with approved/completed releases",
       conversion: getConversionRate(
         data.trialUsersFirstReleaseApproved,
-        data.trialUsersSubmittingFirstRelease
+        data.totalTrialSignups
       ),
     },
   ];

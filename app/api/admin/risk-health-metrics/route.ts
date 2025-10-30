@@ -77,24 +77,25 @@ export async function GET(request: NextRequest) {
 }
 
 async function getRiskHealthData(startDate: Date, endDate: Date) {
-  // Get total releases submitted in period
+  // Get total decisions in period (releases whose status was finalized/updated during the range)
   const totalReleasesResult = await query(
     `
     SELECT COUNT(*) as count
     FROM releases
-    WHERE submitted_at >= $1 AND submitted_at <= $2
+    WHERE updated_at >= $1 AND updated_at <= $2
+      AND status IN ('approved', 'published', 'live', 'sent_to_store', 'rejected')
     `,
     [startDate, endDate]
   );
   const totalReleases = parseInt(totalReleasesResult.rows[0]?.count || "0");
 
-  // Get rejected releases in period
+  // Get rejected releases where rejection happened during the selected range
   const rejectedReleasesResult = await query(
     `
     SELECT COUNT(*) as count
     FROM releases
-    WHERE submitted_at >= $1 AND submitted_at <= $2
-    AND status = 'rejected'
+    WHERE updated_at >= $1 AND updated_at <= $2
+      AND status = 'rejected'
     `,
     [startDate, endDate]
   );
@@ -102,8 +103,10 @@ async function getRiskHealthData(startDate: Date, endDate: Date) {
     rejectedReleasesResult.rows[0]?.count || "0"
   );
 
-  // If no releases in period, get overall rejection rate for context
+  // If no releases in selected period, show 0% (avoid misleading display like "0 of 0 = 88.9%")
+  // Optionally, a separate field can expose historical context if needed by the UI.
   let releaseRejectionRate = 0;
+  let historicalRejectionRate: number | null = null;
   if (totalReleases === 0) {
     const overallReleasesResult = await query(
       `
@@ -118,8 +121,10 @@ async function getRiskHealthData(startDate: Date, endDate: Date) {
     const overallRejected = parseInt(
       overallReleasesResult.rows[0]?.rejected || "0"
     );
-    releaseRejectionRate =
+    historicalRejectionRate =
       overallTotal > 0 ? (overallRejected / overallTotal) * 100 : 0;
+    // Displayed metric for this period remains 0 when there are no releases
+    releaseRejectionRate = 0;
   } else {
     releaseRejectionRate = (rejectedReleases / totalReleases) * 100;
   }
@@ -163,6 +168,7 @@ async function getRiskHealthData(startDate: Date, endDate: Date) {
     rejectedReleases,
     totalUsers,
     activeUsers,
+    historicalRejectionRate,
   };
 }
 

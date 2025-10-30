@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Users with trial subscription OR users with pending/failed payment status (treated as trial)
     const totalTrialSignupsResult = await query(
       `
-      SELECT COUNT(*) as count
+      SELECT COUNT(DISTINCT u.id) as count
       FROM users u
       LEFT JOIN subscriptions s ON u.id = s.user_id
       WHERE u.created_at >= $1 AND u.created_at <= $2
@@ -53,13 +53,13 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 2: Trial Users Attempting ID Check
-    // Trial users who submitted ID verification during time range (regardless of current status)
+    // Trial users who signed up in time range AND submitted ID verification (any time)
     const trialUsersAttemptingIdCheckResult = await query(
       `
-      SELECT COUNT(*) as count
+      SELECT COUNT(DISTINCT u.id) as count
       FROM users u
       LEFT JOIN subscriptions s ON u.id = s.user_id
-      WHERE u.identity_verification_submitted_at >= $1 AND u.identity_verification_submitted_at <= $2
+      WHERE u.created_at >= $1 AND u.created_at <= $2
       AND u.identity_verification_submitted_at IS NOT NULL
       AND (
         s.tier = 'trial' 
@@ -74,13 +74,13 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 3: Trial Users Passing ID Check
-    // Trial users who got approved during time range (regardless of when they submitted)
+    // Trial users who signed up in time range AND got ID verified (any time)
     const trialUsersPassingIdCheckResult = await query(
       `
-      SELECT COUNT(*) as count
+      SELECT COUNT(DISTINCT u.id) as count
       FROM users u
       LEFT JOIN subscriptions s ON u.id = s.user_id
-      WHERE u.identity_verified_at >= $1 AND u.identity_verified_at <= $2
+      WHERE u.created_at >= $1 AND u.created_at <= $2
       AND u.identity_verified_at IS NOT NULL
       AND (
         s.tier = 'trial' 
@@ -95,19 +95,25 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 4: Trial Users Submitting First Release
-    // Trial users who have submitted at least one release (submitted during time range)
+    // Trial users who signed up in time range AND created their FIRST release (any time)
     const trialUsersSubmittingFirstReleaseResult = await query(
       `
       SELECT COUNT(DISTINCT u.id) as count
       FROM users u
       LEFT JOIN subscriptions s ON u.id = s.user_id
       INNER JOIN releases r ON u.id = r.artist_id
-      WHERE r.submitted_at >= $1 AND r.submitted_at <= $2
-      AND r.submitted_at IS NOT NULL
+      WHERE u.created_at >= $1 AND u.created_at <= $2
+      AND r.created_at IS NOT NULL
       AND (
         s.tier = 'trial' 
         OR s.status IN ('pending_payment', 'payment_failed')
         OR s.id IS NULL
+      )
+      AND r.created_at = (
+        SELECT MIN(r2.created_at) 
+        FROM releases r2 
+        WHERE r2.artist_id = u.id 
+        AND r2.created_at IS NOT NULL
       )
       `,
       [startDate, endDate]
@@ -117,15 +123,20 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 5: Trial Users First Release Approved/Completed
-    // Trial users with approved or published releases (approved during time range)
+    // Trial users who signed up in time range AND whose FIRST release is live or sent to store (approved, published, live, sent_to_store)
     const trialUsersFirstReleaseApprovedResult = await query(
       `
       SELECT COUNT(DISTINCT u.id) as count
       FROM users u
       LEFT JOIN subscriptions s ON u.id = s.user_id
       INNER JOIN releases r ON u.id = r.artist_id
-      WHERE r.updated_at >= $1 AND r.updated_at <= $2
-      AND r.status IN ('approved', 'published')
+      WHERE u.created_at >= $1 AND u.created_at <= $2
+      AND r.created_at = (
+        SELECT MIN(r2.created_at)
+        FROM releases r2
+        WHERE r2.artist_id = u.id AND r2.created_at IS NOT NULL
+      )
+      AND r.status IN ('approved', 'published', 'live', 'sent_to_store')
       AND (
         s.tier = 'trial' 
         OR s.status IN ('pending_payment', 'payment_failed')

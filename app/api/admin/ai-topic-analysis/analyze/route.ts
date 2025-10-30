@@ -116,6 +116,7 @@ async function getUserMessagesForAnalysis(
     WHERE cm.is_user_message = true
     AND cm.created_at >= $1 
     AND cm.created_at <= $2
+    AND u.created_at <= $2
     AND EXISTS (
       SELECT 1 FROM login_history lh 
       WHERE lh.user_id = u.id 
@@ -171,16 +172,20 @@ async function processAnalysisWithAI(
       [analysisId]
     );
 
-    // Prepare messages for AI analysis
-    const messageTexts = messages.map((m) => m.content).join("\n\n");
+    // Prepare for analysis
     const totalUsers = new Set(messages.map((m) => m.user_id)).size;
 
-    // Call AI analysis
-    const analysisResult = await analyzeTopicsWithAI(
-      messageTexts,
-      userTier,
-      timeRangeDays
-    );
+    // Prefer real AI analysis when API key is configured; fallback to deterministic analysis
+    let analysisResult;
+    if (process.env.OPENAI_API_KEY) {
+      analysisResult = await analyzeWithOpenAI(
+        messages,
+        userTier,
+        timeRangeDays
+      );
+    } else {
+      analysisResult = simpleTopicAnalysis(messages);
+    }
 
     // Save results to database
     await query(
@@ -221,103 +226,238 @@ async function processAnalysisWithAI(
   }
 }
 
-async function analyzeTopicsWithAI(
-  messageTexts: string,
+async function analyzeWithOpenAI(
+  messages: any[],
   userTier: string,
   timeRangeDays: number
 ) {
-  // This is where you would integrate with your AI service (OpenAI, Anthropic, etc.)
-  // For now, I'll create a mock analysis that simulates AI processing
-
-  const prompt = `
-Analyze the following user messages from a music distribution platform and extract:
-1. Top 10 topics/themes users are asking about
-2. Keywords for each topic
-3. Word cloud data with word frequency and colors
-
-User Tier: ${userTier}
-Time Range: ${timeRangeDays} days
-Total Messages: ${messageTexts.split("\n\n").length}
-
-Messages:
-${messageTexts}
-
-Please return a JSON response with this structure:
+  const total = messages.length;
+  const system = `You are analyzing end-user chat messages to extract topics and a wordcloud.
+Return STRICT JSON that conforms to this TypeScript type:
 {
-  "topics": [
-    {
-      "name": "Topic Name",
-      "count": 25,
-      "percentage": 15.2,
-      "keywords": ["keyword1", "keyword2", "keyword3"]
-    }
-  ],
-  "wordcloud": [
-    {
-      "text": "word",
-      "value": 50,
-      "color": "#3B82F6"
-    }
-  ]
+  topics: { name: string; count: number; percentage: number; keywords: string[]; }[];
+  wordcloud: { text: string; value: number; color: string; }[];
 }
+Rules:
+- topics.length <= 10
+- Sum of topic counts MUST equal ${total}
+- percentage = (count / ${total}) * 100, rounded to 1 decimal
+- keywords length between 3 and 6
+- wordcloud 10-30 items, values are positive integers
+- Do NOT include any additional fields.
 `;
 
-  // Mock AI response - replace with actual AI service call
-  const mockAnalysis = {
-    topics: [
-      {
-        name: "Release Distribution",
-        count: 45,
-        percentage: 28.1,
-        keywords: ["release", "distribute", "upload", "music", "tracks"],
-      },
-      {
-        name: "Payment & Payouts",
-        count: 32,
-        percentage: 20.0,
-        keywords: ["payment", "payout", "money", "earnings", "royalties"],
-      },
-      {
-        name: "Account & Subscription",
-        count: 28,
-        percentage: 17.5,
-        keywords: ["account", "subscription", "upgrade", "billing", "plan"],
-      },
-      {
-        name: "Technical Support",
-        count: 22,
-        percentage: 13.8,
-        keywords: ["help", "error", "problem", "fix", "support"],
-      },
-      {
-        name: "Analytics & Reports",
-        count: 18,
-        percentage: 11.3,
-        keywords: ["analytics", "reports", "stats", "data", "insights"],
-      },
-      {
-        name: "Copyright & Legal",
-        count: 15,
-        percentage: 9.4,
-        keywords: ["copyright", "legal", "rights", "permission", "license"],
-      },
-    ],
-    wordcloud: [
-      { text: "release", value: 45, color: "#3B82F6" },
-      { text: "music", value: 38, color: "#10B981" },
-      { text: "payment", value: 32, color: "#F59E0B" },
-      { text: "upload", value: 28, color: "#EF4444" },
-      { text: "account", value: 25, color: "#8B5CF6" },
-      { text: "help", value: 22, color: "#06B6D4" },
-      { text: "analytics", value: 18, color: "#84CC16" },
-      { text: "subscription", value: 16, color: "#F97316" },
-      { text: "tracks", value: 14, color: "#EC4899" },
-      { text: "support", value: 12, color: "#6B7280" },
-    ],
-  };
+  const user = `Metadata:\nUser Tier: ${userTier}\nTime Range (days): ${timeRangeDays}\nTotal Messages: ${total}\n\nMessages (JSON array):\n${JSON.stringify(
+    messages.map((m) => ({ id: m.id, user_id: m.user_id, text: m.content }))
+  )}`;
 
-  // Simulate AI processing delay
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  const completion = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      temperature: 0.2,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      response_format: { type: "json_object" },
+    }),
+  });
 
-  return mockAnalysis;
+  if (!completion.ok) {
+    const errText = await completion.text();
+    throw new Error(`OpenAI request failed: ${errText}`);
+  }
+
+  const data = await completion.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch (e) {
+    throw new Error("OpenAI returned non-JSON content");
+  }
+
+  // Validate and normalize
+  const topics = Array.isArray(parsed.topics) ? parsed.topics : [];
+  const wordcloud = Array.isArray(parsed.wordcloud) ? parsed.wordcloud : [];
+
+  // Ensure counts sum to total and percentages are correct
+  const sumCounts = topics.reduce((s: number, t: any) => s + (t.count || 0), 0);
+  if (sumCounts !== total && total > 0) {
+    // Scale proportionally, then fix rounding drift
+    let remaining = total;
+    for (let i = 0; i < topics.length; i++) {
+      const t = topics[i];
+      const raw = t.count || 0;
+      const scaled = Math.max(
+        0,
+        Math.round((raw / Math.max(1, sumCounts)) * total)
+      );
+      t.count = scaled;
+      remaining -= scaled;
+    }
+    // Distribute remaining to top topics
+    let idx = 0;
+    while (remaining > 0 && topics.length > 0) {
+      topics[idx % topics.length].count += 1;
+      remaining -= 1;
+      idx += 1;
+    }
+  }
+  for (const t of topics) {
+    const pct = total > 0 ? (t.count / total) * 100 : 0;
+    t.percentage = Math.round(pct * 10) / 10;
+    if (!Array.isArray(t.keywords)) t.keywords = [];
+  }
+
+  const palette = [
+    "#3B82F6",
+    "#10B981",
+    "#F59E0B",
+    "#EF4444",
+    "#8B5CF6",
+    "#06B6D4",
+    "#84CC16",
+    "#F97316",
+    "#EC4899",
+    "#6B7280",
+  ];
+  const wc = wordcloud.slice(0, 30).map((w: any, i: number) => ({
+    text: String(w.text || ""),
+    value: Math.max(1, parseInt(String(w.value || 1), 10)),
+    color: w.color || palette[i % palette.length],
+  }));
+
+  return { topics: topics.slice(0, 10), wordcloud: wc };
+}
+
+function simpleTopicAnalysis(messages: any[]) {
+  const total = messages.length;
+  const topics = [
+    {
+      name: "Release Distribution",
+      keywords: [
+        "release",
+        "distribute",
+        "distribution",
+        "upload",
+        "track",
+        "song",
+        "music",
+        "stores",
+      ],
+    },
+    {
+      name: "Payment & Payouts",
+      keywords: [
+        "payment",
+        "payout",
+        "pay",
+        "money",
+        "earnings",
+        "royalties",
+        "withdraw",
+        "stripe",
+      ],
+    },
+    {
+      name: "Account & Subscription",
+      keywords: [
+        "account",
+        "subscription",
+        "upgrade",
+        "billing",
+        "plan",
+        "tier",
+        "trial",
+        "pro",
+        "plus",
+      ],
+    },
+    {
+      name: "Technical Support",
+      keywords: ["error", "issue", "bug", "problem", "fix", "support", "help"],
+    },
+    {
+      name: "Analytics & Reports",
+      keywords: [
+        "analytics",
+        "report",
+        "stats",
+        "data",
+        "insights",
+        "dashboard",
+      ],
+    },
+    {
+      name: "Copyright & Legal",
+      keywords: [
+        "copyright",
+        "legal",
+        "rights",
+        "license",
+        "permission",
+        "dmca",
+      ],
+    },
+  ];
+
+  const counts = new Array(topics.length).fill(0);
+  const wordFreq: Record<string, number> = {};
+
+  for (const m of messages) {
+    const text = String(m.content || "").toLowerCase();
+    // word frequency
+    for (const token of text.split(/[^a-z0-9]+/).filter(Boolean)) {
+      wordFreq[token] = (wordFreq[token] || 0) + 1;
+    }
+    // assign each message to at most one topic (first match) to ensure sum == total
+    let assigned = false;
+    for (let i = 0; i < topics.length && !assigned; i++) {
+      if (topics[i].keywords.some((k) => text.includes(k))) {
+        counts[i]++;
+        assigned = true;
+      }
+    }
+  }
+
+  const results = topics
+    .map((t, i) => ({
+      name: t.name,
+      count: counts[i],
+      percentage: total > 0 ? (counts[i] / total) * 100 : 0,
+      keywords: t.keywords.slice(0, 5),
+    }))
+    .filter((t) => t.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(10); // cap to top 10 if needed
+
+  // build wordcloud from top words
+  const palette = [
+    "#3B82F6",
+    "#10B981",
+    "#F59E0B",
+    "#EF4444",
+    "#8B5CF6",
+    "#06B6D4",
+    "#84CC16",
+    "#F97316",
+    "#EC4899",
+    "#6B7280",
+  ];
+  const wordcloud = Object.entries(wordFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(20)
+    .map(([text, value], idx) => ({
+      text,
+      value,
+      color: palette[idx % palette.length],
+    }));
+
+  return { topics: results, wordcloud };
 }

@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
       previousEndDate
     );
 
-    // Get trend data (last 12 periods for chart)
-    const trendData = await getTrendData(days, endDate);
+    // Get trend data limited to the selected range only
+    const trendData = await getTrendData(days, startDate, endDate);
 
     return NextResponse.json({
       trialToPaidConversionRate: currentPeriodData.trialToPaidConversionRate,
@@ -110,34 +110,38 @@ async function getRevenueData(startDate: Date, endDate: Date) {
   const trialToPaidConversionRate =
     totalTrialUsers > 0 ? (paidUsers / totalTrialUsers) * 100 : 0;
 
-  // Get MRR (Monthly Recurring Revenue) - current active subscriptions
+  // Get MRR (Monthly Recurring Revenue) as-of endDate snapshot
   const mrrResult = await query(
     `
     SELECT 
-      SUM(
+      COALESCE(SUM(
         CASE 
           WHEN s.tier = 'plus' THEN 4.99
           WHEN s.tier = 'pro' THEN 14.99
           ELSE 0
         END
-      ) as mrr
+      ), 0) as mrr
     FROM subscriptions s
     WHERE s.tier IN ('plus', 'pro')
-    AND s.status = 'active'
+      AND s.status = 'active'
+      AND s.created_at <= $1
+      AND (s.subscription_expires_at IS NULL OR s.subscription_expires_at > $1)
     `,
-    []
+    [endDate]
   );
   const monthlyRecurringRevenue = parseFloat(mrrResult.rows[0]?.mrr || "0");
 
-  // Get total active paid users for ARPU calculation
+  // Get total active paid users as-of endDate snapshot for ARPU calculation
   const totalActivePaidUsersResult = await query(
     `
     SELECT COUNT(*) as count
     FROM subscriptions s
     WHERE s.tier IN ('plus', 'pro')
-    AND s.status = 'active'
+      AND s.status = 'active'
+      AND s.created_at <= $1
+      AND (s.subscription_expires_at IS NULL OR s.subscription_expires_at > $1)
     `,
-    []
+    [endDate]
   );
   const totalActivePaidUsers = parseInt(
     totalActivePaidUsersResult.rows[0]?.count || "0"
@@ -156,37 +160,42 @@ async function getRevenueData(startDate: Date, endDate: Date) {
   };
 }
 
-async function getTrendData(periodDays: number, endDate: Date) {
-  const trendData = [];
-  const periods = 12; // Last 12 periods for trend chart
+async function getTrendData(days: number, startDate: Date, endDate: Date) {
+  const trendData = [] as Array<{
+    period: string;
+    conversionRate: number;
+    mrr: number;
+    arpu: number;
+  }>;
 
-  for (let i = periods - 1; i >= 0; i--) {
-    const periodEndDate = new Date(endDate);
-    periodEndDate.setDate(periodEndDate.getDate() - i * periodDays);
+  // Decide bucket size
+  let bucketDays = 1; // default daily
+  if (days > 30 && days <= 90) bucketDays = 7; // weekly for 31-90 days
+  if (days > 90) bucketDays = 30; // monthly-ish buckets for >90 days
 
-    const periodStartDate = new Date(periodEndDate);
-    periodStartDate.setDate(periodStartDate.getDate() - periodDays);
+  const bucketStart = new Date(startDate);
+  while (bucketStart <= endDate) {
+    const bucketEnd = new Date(bucketStart);
+    bucketEnd.setDate(bucketEnd.getDate() + bucketDays);
+    // clamp to endDate
+    if (bucketEnd > endDate) bucketEnd.setTime(endDate.getTime());
 
-    const periodData = await getRevenueData(periodStartDate, periodEndDate);
+    const periodData = await getRevenueData(bucketStart, bucketEnd);
 
-    // Format period label based on period length
-    let periodLabel;
-    if (periodDays <= 7) {
-      periodLabel = periodEndDate.toLocaleDateString("en-US", {
+    // Label formatting
+    let periodLabel: string;
+    if (bucketDays <= 1) {
+      periodLabel = bucketStart.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       });
-    } else if (periodDays <= 30) {
-      periodLabel = periodEndDate.toLocaleDateString("en-US", {
+    } else if (bucketDays === 7) {
+      periodLabel = bucketStart.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
-      });
-    } else if (periodDays <= 90) {
-      periodLabel = periodEndDate.toLocaleDateString("en-US", {
-        month: "short",
       });
     } else {
-      periodLabel = periodEndDate.toLocaleDateString("en-US", {
+      periodLabel = bucketStart.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
       });
@@ -198,6 +207,9 @@ async function getTrendData(periodDays: number, endDate: Date) {
       mrr: periodData.monthlyRecurringRevenue,
       arpu: periodData.averageRevenuePerUser,
     });
+
+    // advance to next bucket
+    bucketStart.setDate(bucketStart.getDate() + bucketDays);
   }
 
   return trendData;
