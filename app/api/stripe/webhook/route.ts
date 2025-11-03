@@ -1,115 +1,131 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyWebhookSignature, getTierFromPriceId } from '@/lib/stripe'
-import { updateSubscriptionTier } from '@/lib/subscription-utils'
-import { query } from '@/lib/db'
-import Stripe from 'stripe'
+import { NextRequest, NextResponse } from "next/server";
+import { verifyWebhookSignature, getTierFromPriceId } from "@/lib/stripe";
+import { updateSubscriptionTier } from "@/lib/subscription-utils";
+import { query } from "@/lib/db";
+import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.text()
-    const signature = request.headers.get('stripe-signature')
-    
+    const body = await request.text();
+    const signature = request.headers.get("stripe-signature");
+
     if (!signature) {
-      return NextResponse.json({ error: 'No signature provided' }, { status: 400 })
+      return NextResponse.json(
+        { error: "No signature provided" },
+        { status: 400 }
+      );
     }
-    
+
     // Verify webhook signature
-    let event: Stripe.Event
+    let event: Stripe.Event;
     try {
-      event = verifyWebhookSignature(body, signature)
+      event = verifyWebhookSignature(body, signature);
     } catch (error) {
-      console.error('Webhook signature verification failed:', error)
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+      console.error("Webhook signature verification failed:", error);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
-    
-    console.log('Received Stripe webhook:', event.type)
-    
+
+    console.log("Received Stripe webhook:", event.type);
+
     // Handle the event
     switch (event.type) {
-      case 'customer.subscription.created':
-        await handleSubscriptionCreated(event.data.object as Stripe.Subscription)
-        break
-        
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription)
-        break
-        
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
-        break
-        
-      case 'invoice.payment_succeeded':
-        await handlePaymentSucceeded(event.data.object as Stripe.Invoice)
-        break
-        
-      case 'invoice.payment_failed':
-        await handlePaymentFailed(event.data.object as Stripe.Invoice)
-        break
-        
-      case 'checkout.session.completed':
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
-        break
-        
+      case "customer.subscription.created":
+        await handleSubscriptionCreated(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.updated":
+        await handleSubscriptionUpdated(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.deleted":
+        await handleSubscriptionDeleted(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "invoice.payment_succeeded":
+        await handlePaymentSucceeded(event.data.object as Stripe.Invoice);
+        break;
+
+      case "invoice.payment_failed":
+        await handlePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+
+      case "checkout.session.completed":
+        await handleCheckoutCompleted(
+          event.data.object as Stripe.Checkout.Session
+        );
+        break;
+
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        console.log(`Unhandled event type: ${event.type}`);
     }
-    
-    return NextResponse.json({ received: true })
+
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error("Webhook error:", error);
     return NextResponse.json(
-      { error: 'Webhook processing failed' },
+      { error: "Webhook processing failed" },
       { status: 500 }
-    )
+    );
   }
 }
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   try {
-    console.log('Handling subscription created:', subscription.id)
-    
-    const customerId = subscription.customer as string
-    const priceId = subscription.items.data[0].price.id
-    
+    console.log("Handling subscription created:", subscription.id);
+
+    const customerId = subscription.customer as string;
+    const priceId = subscription.items.data[0].price.id;
+
     // Get tier from price ID
-    const tier = getTierFromPriceId(priceId)
+    const tier = getTierFromPriceId(priceId);
     if (!tier) {
-      console.error('Unknown price ID:', priceId)
-      return
+      console.error("Unknown price ID:", priceId);
+      return;
     }
-    
+
     // Find user by customer ID
     const userResult = await query(
-      'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
+      "SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1",
       [customerId]
-    )
-    
+    );
+
     if (userResult.rows.length === 0) {
-      console.error('No user found for customer:', customerId)
-      return
+      console.error("No user found for customer:", customerId);
+      return;
     }
-    
-    const userId = userResult.rows[0].user_id
-    
+
+    const userId = userResult.rows[0].user_id;
+
     // Safely convert Unix timestamp to Date
-    let subscriptionExpiresAt: Date | undefined
+    let subscriptionExpiresAt: Date | undefined;
     try {
       if (subscription.current_period_end) {
-        subscriptionExpiresAt = new Date(subscription.current_period_end * 1000)
+        subscriptionExpiresAt = new Date(
+          subscription.current_period_end * 1000
+        );
         // Validate the date is valid
         if (isNaN(subscriptionExpiresAt.getTime())) {
-          console.warn('Invalid subscription expiration date, setting to undefined')
-          subscriptionExpiresAt = undefined
+          console.warn(
+            "Invalid subscription expiration date, setting to undefined"
+          );
+          subscriptionExpiresAt = undefined;
         }
       }
     } catch (error) {
-      console.warn('Error converting subscription expiration date:', error)
-      subscriptionExpiresAt = undefined
+      console.warn("Error converting subscription expiration date:", error);
+      subscriptionExpiresAt = undefined;
     }
-    
+
     // CRITICAL FIX: Only store subscription info, don't upgrade tier yet
     // Wait for payment success before upgrading user
-    await query(`
+    await query(
+      `
       UPDATE subscriptions 
       SET stripe_subscription_id = $1,
           tier = $2,
@@ -117,25 +133,32 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
           subscription_expires_at = $3,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $4
-    `, [subscription.id, tier, subscriptionExpiresAt, userId])
+    `,
+      [subscription.id, tier, subscriptionExpiresAt, userId]
+    );
 
-    // Log subscription event
-    await query(`
+    // Log subscription event - use 'created' event type (valid in schema)
+    await query(
+      `
       INSERT INTO subscription_events (user_id, event_type, event_data)
-      VALUES ($1, 'subscription_created_pending', $2)
-    `, [
-      userId,
-      JSON.stringify({
-        tier,
-        customerId,
-        subscriptionId: subscription.id,
-        expiresAt: subscriptionExpiresAt,
-        status: 'pending_payment'
-      })
-    ]);
+      VALUES ($1, 'created', $2)
+    `,
+      [
+        userId,
+        JSON.stringify({
+          tier,
+          customerId,
+          subscriptionId: subscription.id,
+          expiresAt: subscriptionExpiresAt,
+          status: "pending_payment",
+          note: "Subscription created, pending payment",
+        }),
+      ]
+    );
 
     // Add to billing history as pending
-    await query(`
+    await query(
+      `
       INSERT INTO billing_history (
         user_id,
         amount,
@@ -146,93 +169,105 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         payment_method
       )
       VALUES ($1, $2, 'subscription', 'pending', $3, $4, $5)
-    `, [
-      userId,
-      subscription.items.data[0]?.price?.unit_amount ? subscription.items.data[0].price.unit_amount / 100 : 0,
-      `New subscription created (pending payment): ${tier} plan`,
-      subscription.id,
-      'card' // Default to card as it's through Stripe Checkout
-    ])
-    
-    console.log(`Subscription created (pending payment) for user ${userId}: ${tier}`)
+    `,
+      [
+        userId,
+        subscription.items.data[0]?.price?.unit_amount
+          ? subscription.items.data[0].price.unit_amount / 100
+          : 0,
+        `New subscription created (pending payment): ${tier} plan`,
+        subscription.id,
+        "card", // Default to card as it's through Stripe Checkout
+      ]
+    );
+
+    console.log(
+      `Subscription created (pending payment) for user ${userId}: ${tier}`
+    );
   } catch (error) {
-    console.error('Error handling subscription created:', error)
+    console.error("Error handling subscription created:", error);
   }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
-    console.log('Handling subscription updated:', subscription.id)
-    
-    const customerId = subscription.customer as string
-    const priceId = subscription.items.data[0].price.id
-    
+    console.log("Handling subscription updated:", subscription.id);
+
+    const customerId = subscription.customer as string;
+    const priceId = subscription.items.data[0].price.id;
+
     // Get tier from price ID
-    const tier = getTierFromPriceId(priceId)
+    const tier = getTierFromPriceId(priceId);
     if (!tier) {
-      console.error('Unknown price ID:', priceId)
-      return
+      console.error("Unknown price ID:", priceId);
+      return;
     }
-    
+
     // Find user by customer ID
     const userResult = await query(
-      'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
+      "SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1",
       [customerId]
-    )
-    
+    );
+
     if (userResult.rows.length === 0) {
-      console.error('No user found for customer:', customerId)
-      return
+      console.error("No user found for customer:", customerId);
+      return;
     }
-    
-    const userId = userResult.rows[0].user_id
-    
+
+    const userId = userResult.rows[0].user_id;
+
     // Get current period end from Stripe subscription
-    let subscriptionExpiresAt: string | null = null
+    let subscriptionExpiresAt: string | null = null;
     try {
       // Log the raw value for debugging
-      console.log('Raw current_period_end:', subscription.current_period_end)
-      
+      console.log("Raw current_period_end:", subscription.current_period_end);
+
       if (subscription.current_period_end) {
         // Stripe sends timestamps in seconds, convert to milliseconds
         const timestamp = subscription.current_period_end * 1000;
-          
-        const expiresAtDate = new Date(timestamp)
-        
+
+        const expiresAtDate = new Date(timestamp);
+
         // Log the converted date for debugging
-        console.log('Converted date:', expiresAtDate)
-        
+        console.log("Converted date:", expiresAtDate);
+
         // Validate the date is valid
         if (!isNaN(expiresAtDate.getTime())) {
-          subscriptionExpiresAt = expiresAtDate.toISOString()
-          console.log('Final ISO string:', subscriptionExpiresAt)
+          subscriptionExpiresAt = expiresAtDate.toISOString();
+          console.log("Final ISO string:", subscriptionExpiresAt);
         } else {
-          console.warn('Invalid date conversion result')
+          console.warn("Invalid date conversion result");
         }
       } else {
-        console.warn('No current_period_end provided by Stripe')
+        console.warn("No current_period_end provided by Stripe");
       }
     } catch (error) {
-      console.error('Error processing subscription expiration date:', error)
+      console.error("Error processing subscription expiration date:", error);
     }
-    
+
     // Determine status based on Stripe subscription state
-    let dbStatus = 'active'
-    if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-      dbStatus = 'cancelled'
+    let dbStatus = "active";
+    if (
+      subscription.status === "canceled" ||
+      subscription.status === "unpaid"
+    ) {
+      dbStatus = "cancelled";
     } else if (subscription.cancel_at_period_end) {
       // Subscription is cancelled but still active until period end
-      dbStatus = 'cancelling'
-    } else if (subscription.status === 'active') {
-      dbStatus = 'active'
+      dbStatus = "cancelling";
+    } else if (subscription.status === "active") {
+      dbStatus = "active";
     } else {
-      dbStatus = 'cancelled'
+      dbStatus = "cancelled";
     }
 
-    console.log(`Subscription status mapping: Stripe=${subscription.status}, cancel_at_period_end=${subscription.cancel_at_period_end}, DB=${dbStatus}`)
+    console.log(
+      `Subscription status mapping: Stripe=${subscription.status}, cancel_at_period_end=${subscription.cancel_at_period_end}, DB=${dbStatus}`
+    );
 
     // Update subscription
-    await query(`
+    await query(
+      `
       UPDATE subscriptions 
       SET tier = $1, 
           status = $2,
@@ -240,57 +275,90 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
           subscription_expires_at = $4,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $5
-    `, [
-      tier,
-      dbStatus,
-      subscription.id,
-      subscriptionExpiresAt,
-      userId
-    ])
+    `,
+      [tier, dbStatus, subscription.id, subscriptionExpiresAt, userId]
+    );
+
+    // Get previous tier BEFORE updating
+    const previousTierResult = await query(
+      "SELECT tier, status FROM subscriptions WHERE user_id = $1",
+      [userId]
+    );
+    const previousTier = previousTierResult.rows[0]?.tier;
+    const previousStatus = previousTierResult.rows[0]?.status;
 
     // Log subscription event
-    await query(`
+    await query(
+      `
       INSERT INTO subscription_events (user_id, event_type, event_data)
       VALUES ($1, 'updated', $2)
-    `, [
-      userId,
-      JSON.stringify({
-        tier,
-        status: subscription.status,
-        subscriptionId: subscription.id,
-        expiresAt: subscriptionExpiresAt,
-        previousTier: (await query('SELECT tier FROM subscriptions WHERE user_id = $1', [userId])).rows[0]?.tier
-      })
-    ])
-    
-    console.log(`Subscription updated for user ${userId}: ${tier} (${subscription.status})`)
+    `,
+      [
+        userId,
+        JSON.stringify({
+          tier,
+          previousTier,
+          status: subscription.status,
+          previousStatus,
+          subscriptionId: subscription.id,
+          expiresAt: subscriptionExpiresAt,
+          note: "Subscription updated via webhook",
+        }),
+      ]
+    );
+
+    // If tier changed from trial to plus/pro, also log as 'upgraded'
+    if (previousTier === "trial" && (tier === "plus" || tier === "pro")) {
+      await query(
+        `
+        INSERT INTO subscription_events (user_id, event_type, event_data)
+        VALUES ($1, 'upgraded', $2)
+      `,
+        [
+          userId,
+          JSON.stringify({
+            previousTier: "trial",
+            newTier: tier,
+            subscriptionId: subscription.id,
+            note: "Upgraded from trial",
+          }),
+        ]
+      );
+    }
+
+    console.log(
+      `Subscription updated for user ${userId}: ${tier} (${subscription.status})`
+    );
   } catch (error) {
-    console.error('Error handling subscription updated:', error)
+    console.error("Error handling subscription updated:", error);
   }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   try {
-    console.log('Handling subscription deleted:', subscription.id)
-    
+    console.log("Handling subscription deleted:", subscription.id);
+
     // Find user by subscription ID
     const userResult = await query(
-      'SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1',
+      "SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1",
       [subscription.id]
-    )
-    
+    );
+
     if (userResult.rows.length === 0) {
-      console.error('No user found for subscription:', subscription.id)
-      return
+      console.error("No user found for subscription:", subscription.id);
+      return;
     }
-    
-    const userId = userResult.rows[0].user_id
-    
+
+    const userId = userResult.rows[0].user_id;
+
     // Get current tier before update
-    const currentTier = (await query('SELECT tier FROM subscriptions WHERE user_id = $1', [userId])).rows[0]?.tier
+    const currentTier = (
+      await query("SELECT tier FROM subscriptions WHERE user_id = $1", [userId])
+    ).rows[0]?.tier;
 
     // Revert to trial status (expired) and clear Stripe IDs
-    await query(`
+    await query(
+      `
       UPDATE subscriptions 
       SET tier = 'trial',
           status = 'expired',
@@ -299,22 +367,28 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
           subscription_expires_at = NULL,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $1
-    `, [userId])
+    `,
+      [userId]
+    );
 
     // Log subscription event
-    await query(`
+    await query(
+      `
       INSERT INTO subscription_events (user_id, event_type, event_data)
       VALUES ($1, 'cancelled', $2)
-    `, [
-      userId,
-      JSON.stringify({
-        previousTier: currentTier,
-        subscriptionId: subscription.id
-      })
-    ]);
+    `,
+      [
+        userId,
+        JSON.stringify({
+          previousTier: currentTier,
+          subscriptionId: subscription.id,
+        }),
+      ]
+    );
 
     // Add to billing history
-    await query(`
+    await query(
+      `
       INSERT INTO billing_history (
         user_id,
         amount,
@@ -325,56 +399,99 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
         payment_method
       )
       VALUES ($1, 0, 'subscription', 'completed', $2, $3, $4)
-    `, [
-      userId,
-      `Subscription cancelled: ${currentTier} plan`,
-      subscription.id,
-      'card'
-    ])
-    
-    console.log(`Subscription cancelled for user ${userId}`)
+    `,
+      [
+        userId,
+        `Subscription cancelled: ${currentTier} plan`,
+        subscription.id,
+        "card",
+      ]
+    );
+
+    console.log(`Subscription cancelled for user ${userId}`);
   } catch (error) {
-    console.error('Error handling subscription deleted:', error)
+    console.error("Error handling subscription deleted:", error);
   }
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
-    console.log('Handling payment succeeded:', invoice.id)
-    
+    console.log("Handling payment succeeded:", invoice.id);
+
     if (invoice.subscription) {
       // Find user by subscription ID
       const userResult = await query(
-        'SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1',
+        "SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1",
         [invoice.subscription]
-      )
-      
+      );
+
       if (userResult.rows.length > 0) {
-        const userId = userResult.rows[0].user_id
-        
+        const userId = userResult.rows[0].user_id;
+
+        // Get current subscription info before updating
+        const subscriptionResult = await query(
+          "SELECT tier, status FROM subscriptions WHERE user_id = $1",
+          [userId]
+        );
+        const currentTier = subscriptionResult.rows[0]?.tier;
+        const previousStatus = subscriptionResult.rows[0]?.status;
+
         // Update subscription status to active
-        await query(`
+        await query(
+          `
           UPDATE subscriptions 
           SET status = 'active',
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = $1
-        `, [userId])
+        `,
+          [userId]
+        );
 
-        // Log subscription event
-        await query(`
+        // Log payment succeeded event
+        await query(
+          `
           INSERT INTO subscription_events (user_id, event_type, event_data)
           VALUES ($1, 'payment_succeeded', $2)
-        `, [
-          userId,
-          JSON.stringify({
-            invoiceId: invoice.id,
-            amount: invoice.amount_paid,
-            subscriptionId: invoice.subscription
-          })
-        ]);
+        `,
+          [
+            userId,
+            JSON.stringify({
+              invoiceId: invoice.id,
+              amount: invoice.amount_paid,
+              subscriptionId: invoice.subscription,
+              tier: currentTier,
+              previousStatus,
+              note: "Payment succeeded, subscription activated",
+            }),
+          ]
+        );
+
+        // If this was a new upgrade (status was pending_payment and tier is plus/pro), log as upgraded
+        if (
+          previousStatus === "pending_payment" &&
+          (currentTier === "plus" || currentTier === "pro")
+        ) {
+          await query(
+            `
+            INSERT INTO subscription_events (user_id, event_type, event_data)
+            VALUES ($1, 'upgraded', $2)
+          `,
+            [
+              userId,
+              JSON.stringify({
+                previousTier: "trial",
+                newTier: currentTier,
+                subscriptionId: invoice.subscription,
+                invoiceId: invoice.id,
+                note: "Upgraded from trial after payment succeeded",
+              }),
+            ]
+          );
+        }
 
         // Add to billing history
-        await query(`
+        await query(
+          `
           INSERT INTO billing_history (
             user_id,
             amount,
@@ -385,81 +502,119 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
             payment_method
           )
           VALUES ($1, $2, 'subscription', 'completed', $3, $4, $5)
-        `, [
-          userId,
-          invoice.amount_paid / 100, // Convert cents to dollars
-          `Subscription payment for ${invoice.lines.data[0]?.price?.nickname || 'plan'}`,
-          invoice.id,
-          invoice.payment_intent ? 'card' : 'unknown'
-        ]);
-        
+        `,
+          [
+            userId,
+            invoice.amount_paid / 100, // Convert cents to dollars
+            `Subscription payment for ${
+              invoice.lines.data[0]?.price?.nickname || "plan"
+            }`,
+            invoice.id,
+            invoice.payment_intent ? "card" : "unknown",
+          ]
+        );
+
         // Send subscription confirmation email
         try {
-          const { triggerSubscriptionConfirmationEmail } = await import('@/lib/email-automation')
+          const { triggerSubscriptionConfirmationEmail } = await import(
+            "@/lib/email-automation"
+          );
           const subscriptionResult = await query(
-            'SELECT tier FROM subscriptions WHERE user_id = $1',
+            "SELECT tier FROM subscriptions WHERE user_id = $1",
             [userId]
-          )
+          );
           if (subscriptionResult.rows.length > 0) {
-            const tier = subscriptionResult.rows[0].tier
-            const billingCycle = invoice.lines.data[0]?.price?.recurring?.interval === 'year' ? 'Annual' : 'Monthly'
-            await triggerSubscriptionConfirmationEmail(userId, tier, billingCycle)
+            const tier = subscriptionResult.rows[0].tier;
+            const billingCycle =
+              invoice.lines.data[0]?.price?.recurring?.interval === "year"
+                ? "Annual"
+                : "Monthly";
+            await triggerSubscriptionConfirmationEmail(
+              userId,
+              tier,
+              billingCycle
+            );
           }
         } catch (emailError) {
-          console.error('Error sending subscription confirmation email:', emailError)
+          console.error(
+            "Error sending subscription confirmation email:",
+            emailError
+          );
           // Don't fail the payment processing if email fails
         }
-        
-        console.log(`Payment succeeded for user ${userId}`)
+
+        console.log(`Payment succeeded for user ${userId}`);
       }
     }
   } catch (error) {
-    console.error('Error handling payment succeeded:', error)
+    console.error("Error handling payment succeeded:", error);
   }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
-    console.log('Handling payment failed:', invoice.id)
-    
+    console.log("Handling payment failed:", invoice.id);
+
     if (invoice.subscription) {
       // Find user by subscription ID
       const userResult = await query(
-        'SELECT user_id, tier FROM subscriptions WHERE stripe_subscription_id = $1',
+        "SELECT user_id, tier FROM subscriptions WHERE stripe_subscription_id = $1",
         [invoice.subscription]
-      )
-      
+      );
+
       if (userResult.rows.length > 0) {
-        const userId = userResult.rows[0].user_id
-        const currentTier = userResult.rows[0].tier
-        
+        const userId = userResult.rows[0].user_id;
+        const currentTier = userResult.rows[0].tier;
+
         // CRITICAL FIX: Downgrade user immediately on payment failure
-        await query(`
+        await query(
+          `
           UPDATE subscriptions 
           SET status = 'payment_failed',
               tier = 'trial', -- Downgrade to trial immediately
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = $1
-        `, [userId])
+        `,
+          [userId]
+        );
 
-        // Log subscription event
-        await query(`
+        // Log subscription event - use 'payment_failed' and 'downgraded' events
+        await query(
+          `
           INSERT INTO subscription_events (user_id, event_type, event_data)
-          VALUES ($1, 'payment_failed_downgraded', $2)
-        `, [
-          userId,
-          JSON.stringify({
-            invoiceId: invoice.id,
-            amount: invoice.amount_due,
-            subscriptionId: invoice.subscription,
-            failureReason: 'Payment failed',
-            previousTier: currentTier,
-            newTier: 'trial'
-          })
-        ]);
+          VALUES ($1, 'payment_failed', $2)
+        `,
+          [
+            userId,
+            JSON.stringify({
+              invoiceId: invoice.id,
+              amount: invoice.amount_due,
+              subscriptionId: invoice.subscription,
+              failureReason: "Payment failed",
+              previousTier: currentTier,
+            }),
+          ]
+        );
+
+        // Also log downgrade event
+        await query(
+          `
+          INSERT INTO subscription_events (user_id, event_type, event_data)
+          VALUES ($1, 'downgraded', $2)
+        `,
+          [
+            userId,
+            JSON.stringify({
+              previousTier: currentTier,
+              newTier: "trial",
+              reason: "Payment failed",
+            }),
+          ]
+        );
 
         // Add to billing history
-        await query(`
+        await query(
+          `
           INSERT INTO billing_history (
             user_id,
             amount,
@@ -470,63 +625,95 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
             payment_method
           )
           VALUES ($1, $2, 'subscription', 'failed', $3, $4, $5)
-        `, [
-          userId,
-          invoice.amount_due / 100, // Convert cents to dollars
-          `Failed subscription payment for ${invoice.lines.data[0]?.price?.nickname || 'plan'}: Payment failed`,
-          invoice.id,
-          invoice.payment_intent ? 'card' : 'unknown'
-        ]);
-        
+        `,
+          [
+            userId,
+            invoice.amount_due / 100, // Convert cents to dollars
+            `Failed subscription payment for ${
+              invoice.lines.data[0]?.price?.nickname || "plan"
+            }: Payment failed`,
+            invoice.id,
+            invoice.payment_intent ? "card" : "unknown",
+          ]
+        );
+
         // Send subscription payment failed email
         try {
-          const { triggerSubscriptionPaymentFailedEmail } = await import('@/lib/email-automation')
-          await triggerSubscriptionPaymentFailedEmail(userId, currentTier)
+          const { triggerSubscriptionPaymentFailedEmail } = await import(
+            "@/lib/email-automation"
+          );
+          await triggerSubscriptionPaymentFailedEmail(userId, currentTier);
         } catch (emailError) {
-          console.error('Error sending subscription payment failed email:', emailError)
+          console.error(
+            "Error sending subscription payment failed email:",
+            emailError
+          );
           // Don't fail the payment processing if email fails
         }
-        
-        console.log(`Payment failed for user ${userId} - downgraded from ${currentTier} to trial`)
+
+        console.log(
+          `Payment failed for user ${userId} - downgraded from ${currentTier} to trial`
+        );
       }
     }
   } catch (error) {
-    console.error('Error handling payment failed:', error)
+    console.error("Error handling payment failed:", error);
   }
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   try {
-    console.log('Handling checkout completed:', session.id)
-    
-    const customerId = session.customer as string
-    const subscriptionId = session.subscription as string
-    
+    console.log("Handling checkout completed:", session.id);
+
+    const customerId = session.customer as string;
+    const subscriptionId = session.subscription as string;
+
     if (customerId && subscriptionId) {
       // Find user by customer ID
       const userResult = await query(
-        'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
+        "SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1",
         [customerId]
-      )
-      
+      );
+
       if (userResult.rows.length > 0) {
-        const userId = userResult.rows[0].user_id
-        
+        const userId = userResult.rows[0].user_id;
+
         // CRITICAL FIX: Only store subscription ID, don't set active yet
         // Wait for payment success before activating subscription
-        await query(`
+        await query(
+          `
           UPDATE subscriptions 
           SET stripe_subscription_id = $1,
               stripe_customer_id = $2,
               status = 'pending_payment', -- Keep pending until payment succeeds
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = $3
-        `, [subscriptionId, customerId, userId])
-        
-        console.log(`Checkout completed (pending payment) for user ${userId}`)
+        `,
+          [subscriptionId, customerId, userId]
+        );
+
+        // Log checkout completed event
+        await query(
+          `
+          INSERT INTO subscription_events (user_id, event_type, event_data)
+          VALUES ($1, 'created', $2)
+        `,
+          [
+            userId,
+            JSON.stringify({
+              subscriptionId: subscriptionId,
+              customerId: customerId,
+              sessionId: session.id,
+              status: "pending_payment",
+              note: "Checkout completed, pending payment",
+            }),
+          ]
+        );
+
+        console.log(`Checkout completed (pending payment) for user ${userId}`);
       }
     }
   } catch (error) {
-    console.error('Error handling checkout completed:', error)
+    console.error("Error handling checkout completed:", error);
   }
 }

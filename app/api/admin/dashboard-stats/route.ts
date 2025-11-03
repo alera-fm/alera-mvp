@@ -51,26 +51,51 @@ export async function GET(request: NextRequest) {
           -- Total Plus Users (all time, active)
           (SELECT COUNT(*) FROM subscriptions 
            WHERE tier = 'plus' AND status = 'active') as total_plus_users,
-          -- New Plus Users in last 7 days (subscriptions that became Plus or were created as Plus in last 7 days)
-          -- Count subscriptions that are currently Plus and active, and were created or updated in last 7 days
-          (SELECT COUNT(*) FROM subscriptions 
-           WHERE tier = 'plus' 
-           AND status = 'active'
+          -- New Plus Users in last 7 days
+          -- Count subscriptions that are Plus/active and were created or updated in last 7 days
+          -- Note: We check created_at for new subscriptions and updated_at for upgrades
+          (SELECT COUNT(DISTINCT s.user_id) 
+           FROM subscriptions s
+           WHERE s.tier = 'plus' 
+           AND s.status = 'active'
            AND (
-             created_at >= NOW() - INTERVAL '7 days'
-             OR updated_at >= NOW() - INTERVAL '7 days'
+             -- Subscription created in last 7 days (new Plus subscription)
+             s.created_at >= NOW() - INTERVAL '7 days'
+             OR
+             -- Subscription updated in last 7 days (upgrade to Plus or payment succeeded)
+             s.updated_at >= NOW() - INTERVAL '7 days'
+             OR
+             -- Check for payment_succeeded events in last 7 days (fallback)
+             EXISTS (
+               SELECT 1 FROM subscription_events se
+               WHERE se.user_id = s.user_id
+               AND se.event_type = 'payment_succeeded'
+               AND se.created_at >= NOW() - INTERVAL '7 days'
+             )
            )) as new_plus_users_last_7_days,
           
           -- Total Pro Users (all time, active)
           (SELECT COUNT(*) FROM subscriptions 
            WHERE tier = 'pro' AND status = 'active') as total_pro_users,
-          -- New Pro Users in last 7 days (subscriptions that became Pro or were created as Pro in last 7 days)
-          (SELECT COUNT(*) FROM subscriptions 
-           WHERE tier = 'pro' 
-           AND status = 'active'
+          -- New Pro Users in last 7 days
+          (SELECT COUNT(DISTINCT s.user_id) 
+           FROM subscriptions s
+           WHERE s.tier = 'pro' 
+           AND s.status = 'active'
            AND (
-             created_at >= NOW() - INTERVAL '7 days'
-             OR updated_at >= NOW() - INTERVAL '7 days'
+             -- Subscription created in last 7 days (new Pro subscription)
+             s.created_at >= NOW() - INTERVAL '7 days'
+             OR
+             -- Subscription updated in last 7 days (upgrade to Pro or payment succeeded)
+             s.updated_at >= NOW() - INTERVAL '7 days'
+             OR
+             -- Check for payment_succeeded events in last 7 days (fallback)
+             EXISTS (
+               SELECT 1 FROM subscription_events se
+               WHERE se.user_id = s.user_id
+               AND se.event_type = 'payment_succeeded'
+               AND se.created_at >= NOW() - INTERVAL '7 days'
+             )
            )) as new_pro_users_last_7_days
       `),
 
