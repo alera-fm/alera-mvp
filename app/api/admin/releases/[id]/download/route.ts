@@ -3,6 +3,9 @@ import { pool } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
 import JSZip from "jszip";
 
+// Extend timeout to 5 minutes for large releases with many audio files
+export const maxDuration = 300;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -76,6 +79,11 @@ export async function GET(
     const release = releaseResult.rows[0];
     const zip = new JSZip();
 
+    // Pre-parse tracks once to avoid multiple parsing
+    const tracks = Array.isArray(release.tracks)
+      ? release.tracks
+      : JSON.parse(release.tracks || "[]");
+
     // Add release metadata as JSON
     const releaseMetadata = {
       ...release,
@@ -93,50 +101,107 @@ export async function GET(
     const readme = generateReadmeContent(release);
     zip.file("README.txt", readme);
 
-    // Download and add album cover if exists
-    if (release.album_cover_url) {
+    // Helper function to fetch with timeout
+    const fetchWithTimeout = async (
+      url: string,
+      timeoutMs: number = 30000
+    ): Promise<Response> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const coverResponse = await fetch(release.album_cover_url);
-        if (coverResponse.ok) {
-          const coverBuffer = await coverResponse.arrayBuffer();
-          const fileExtension =
-            getFileExtension(release.album_cover_url) || "jpg";
-          zip.file(`album_cover.${fileExtension}`, coverBuffer);
-        }
+        const response = await fetch(url, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response;
       } catch (error) {
-        console.error("Error downloading album cover:", error);
-        // Continue without the cover - don't fail the entire download
+        clearTimeout(timeoutId);
+        throw error;
       }
-    }
+    };
 
-    // Download and add audio files
+    // Download album cover and audio files in parallel for maximum speed
     const audioFolder = zip.folder("audio_files");
-    const tracks = Array.isArray(release.tracks)
-      ? release.tracks
-      : JSON.parse(release.tracks || "[]");
 
-    for (const track of tracks) {
-      if (track.audio_file_url) {
-        try {
-          const audioResponse = await fetch(track.audio_file_url);
-          if (audioResponse.ok) {
-            const audioBuffer = await audioResponse.arrayBuffer();
-            const fileName =
-              track.audio_file_name || `track_${track.track_number}.mp3`;
-            audioFolder?.file(fileName, audioBuffer);
+    // Start album cover download (if exists) in parallel with audio files
+    const coverDownloadPromise = release.album_cover_url
+      ? (async () => {
+          try {
+            const coverResponse = await fetchWithTimeout(
+              release.album_cover_url,
+              30000
+            );
+            if (coverResponse.ok) {
+              const coverBuffer = await coverResponse.arrayBuffer();
+              const fileExtension =
+                getFileExtension(release.album_cover_url) || "jpg";
+              return {
+                type: "cover" as const,
+                extension: fileExtension,
+                buffer: coverBuffer,
+              };
+            }
+            return null;
+          } catch (error) {
+            console.error("Error downloading album cover:", error);
+            return null;
           }
-        } catch (error) {
-          console.error(
-            `Error downloading audio file for track ${track.track_number}:`,
-            error
-          );
-          // Continue with other files - don't fail the entire download
-        }
+        })()
+      : Promise.resolve(null);
+
+    // Download all audio files in parallel with timeout
+    const audioDownloadPromises = tracks.map(async (track: any) => {
+      if (!track.audio_file_url) {
+        return null;
       }
+
+      try {
+        const audioResponse = await fetchWithTimeout(
+          track.audio_file_url,
+          60000
+        ); // 60 second timeout per file
+        if (audioResponse.ok) {
+          const audioBuffer = await audioResponse.arrayBuffer();
+          const fileName =
+            track.audio_file_name || `track_${track.track_number}.mp3`;
+          return { type: "audio" as const, fileName, buffer: audioBuffer };
+        }
+        return null;
+      } catch (error) {
+        console.error(
+          `Error downloading audio file for track ${track.track_number}:`,
+          error
+        );
+        // Continue with other files - don't fail the entire download
+        return null;
+      }
+    });
+
+    // Wait for all downloads to complete in parallel (cover + all audio files)
+    const [coverData, ...audioFiles] = await Promise.all([
+      coverDownloadPromise,
+      ...audioDownloadPromises,
+    ]);
+
+    // Add album cover to zip if downloaded
+    if (coverData) {
+      zip.file(`album_cover.${coverData.extension}`, coverData.buffer);
     }
 
-    // Generate the zip file
-    const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+    // Add downloaded audio files to zip
+    audioFiles.forEach((file) => {
+      if (file) {
+        audioFolder?.file(file.fileName, file.buffer);
+      }
+    });
+
+    // Generate the zip file with fast compression (level 1) for speed
+    // Trade-off: slightly larger file size but much faster generation
+    const zipBuffer = await zip.generateAsync({
+      type: "nodebuffer",
+      compression: "DEFLATE",
+      compressionOptions: { level: 1 },
+    });
 
     // Return the zip file
     const fileName = `${release.release_title.replace(
