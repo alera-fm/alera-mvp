@@ -30,14 +30,48 @@ export async function GET(request: NextRequest) {
           (SELECT COUNT(*) FROM releases WHERE status = 'takedown_requested') as takedown_requests
       `),
 
-      // Key Metrics (excluding MRR - will fetch from Stripe separately)
+      // Key Metrics - Total Releases and User Counts with 7-day change
       pool.query(`
         SELECT 
-          (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '7 days') as new_users_last_7_days,
-          (SELECT COUNT(*) FROM releases WHERE status = 'live' AND updated_at >= NOW() - INTERVAL '7 days') as new_releases_last_7_days,
+          -- Total Releases (all time)
+          (SELECT COUNT(*) FROM releases) as total_releases,
+          -- New Releases in last 7 days (for change calculation)
+          (SELECT COUNT(*) FROM releases WHERE created_at >= NOW() - INTERVAL '7 days') as new_releases_last_7_days,
+          
+          -- Total Free/Trial Users (all time) - users with trial tier or no subscription
+          (SELECT COUNT(*) FROM users u
+           LEFT JOIN subscriptions s ON u.id = s.user_id
+           WHERE s.tier = 'trial' OR s.id IS NULL) as total_free_users,
+          -- New Free/Trial Users in last 7 days (users created in last 7 days who are still free/trial)
+          (SELECT COUNT(*) FROM users u
+           LEFT JOIN subscriptions s ON u.id = s.user_id
+           WHERE u.created_at >= NOW() - INTERVAL '7 days'
+           AND (s.tier = 'trial' OR s.id IS NULL)) as new_free_users_last_7_days,
+          
+          -- Total Plus Users (all time, active)
           (SELECT COUNT(*) FROM subscriptions 
-           WHERE tier IN ('plus', 'pro') 
-           AND created_at >= date_trunc('month', NOW())) as new_paying_subscribers_this_month
+           WHERE tier = 'plus' AND status = 'active') as total_plus_users,
+          -- New Plus Users in last 7 days (subscriptions that became Plus or were created as Plus in last 7 days)
+          -- Count subscriptions that are currently Plus and active, and were created or updated in last 7 days
+          (SELECT COUNT(*) FROM subscriptions 
+           WHERE tier = 'plus' 
+           AND status = 'active'
+           AND (
+             created_at >= NOW() - INTERVAL '7 days'
+             OR updated_at >= NOW() - INTERVAL '7 days'
+           )) as new_plus_users_last_7_days,
+          
+          -- Total Pro Users (all time, active)
+          (SELECT COUNT(*) FROM subscriptions 
+           WHERE tier = 'pro' AND status = 'active') as total_pro_users,
+          -- New Pro Users in last 7 days (subscriptions that became Pro or were created as Pro in last 7 days)
+          (SELECT COUNT(*) FROM subscriptions 
+           WHERE tier = 'pro' 
+           AND status = 'active'
+           AND (
+             created_at >= NOW() - INTERVAL '7 days'
+             OR updated_at >= NOW() - INTERVAL '7 days'
+           )) as new_pro_users_last_7_days
       `),
 
       // New Users Over Time
@@ -127,18 +161,29 @@ export async function GET(request: NextRequest) {
       stripeBalance = 0;
     }
 
+    const row = keyMetricsResult.rows[0];
+    const totalReleases = parseInt(row.total_releases || "0");
+    const newReleasesLast7Days = parseInt(row.new_releases_last_7_days || "0");
+    const totalFreeUsers = parseInt(row.total_free_users || "0");
+    const newFreeUsersLast7Days = parseInt(
+      row.new_free_users_last_7_days || "0"
+    );
+    const totalPlusUsers = parseInt(row.total_plus_users || "0");
+    const newPlusUsersLast7Days = parseInt(
+      row.new_plus_users_last_7_days || "0"
+    );
+    const totalProUsers = parseInt(row.total_pro_users || "0");
+    const newProUsersLast7Days = parseInt(row.new_pro_users_last_7_days || "0");
+
     const keyMetrics = {
-      newUsersLast7Days: parseInt(
-        keyMetricsResult.rows[0].new_users_last_7_days
-      ),
-      newReleasesLast7Days: parseInt(
-        keyMetricsResult.rows[0].new_releases_last_7_days
-      ),
-      newPayingSubscribersThisMonth: parseInt(
-        keyMetricsResult.rows[0].new_paying_subscribers_this_month
-      ),
-      monthlyRecurringRevenue: stripeBalance,
-      stripeCurrency: stripeCurrency,
+      totalReleases,
+      totalReleasesChange: newReleasesLast7Days,
+      totalFreeUsers,
+      totalFreeUsersChange: newFreeUsersLast7Days,
+      totalPlusUsers,
+      totalPlusUsersChange: newPlusUsersLast7Days,
+      totalProUsers,
+      totalProUsersChange: newProUsersLast7Days,
     };
 
     const performanceMetrics = {

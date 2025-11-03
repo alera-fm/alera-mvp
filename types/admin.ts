@@ -10,11 +10,14 @@ export interface ActionableItems {
 }
 
 export interface KeyMetrics {
-  newUsersLast7Days: number;
-  newReleasesLast7Days: number;
-  newPayingSubscribersThisMonth: number;
-  monthlyRecurringRevenue: number;
-  stripeCurrency: string;
+  totalReleases: number;
+  totalReleasesChange: number;
+  totalFreeUsers: number;
+  totalFreeUsersChange: number;
+  totalPlusUsers: number;
+  totalPlusUsersChange: number;
+  totalProUsers: number;
+  totalProUsersChange: number;
 }
 
 export interface TimeSeriesData {

@@ -21,6 +21,9 @@ import {
   TrendingUp,
   FileUp,
   BarChart3,
+  Users,
+  Crown,
+  Zap,
 } from "lucide-react";
 import {
   LineChart,
@@ -191,30 +194,55 @@ export function AdminDashboardStats() {
         </h2>
         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <AdminStatsCard
-            title="New Users (Last 7 Days)"
-            value={data.keyMetrics.newUsersLast7Days}
-            icon={UserPlus}
-            variant="info"
-          />
-          <AdminStatsCard
-            title="New Releases (Last 7 Days)"
-            value={data.keyMetrics.newReleasesLast7Days}
+            title="Total Releases"
+            value={data.keyMetrics.totalReleases}
             icon={Music}
             variant="info"
+            subtitle={
+              data.keyMetrics.totalReleasesChange !== 0
+                ? `${data.keyMetrics.totalReleasesChange > 0 ? "+" : ""}${
+                    data.keyMetrics.totalReleasesChange
+                  } last 7 days`
+                : "No change last 7 days"
+            }
           />
           <AdminStatsCard
-            title="New Paying Subscribers (This Month)"
-            value={data.keyMetrics.newPayingSubscribersThisMonth}
-            icon={CreditCard}
-            variant="success"
+            title="Total Free Users"
+            value={data.keyMetrics.totalFreeUsers}
+            icon={Users}
+            variant="info"
+            subtitle={
+              data.keyMetrics.totalFreeUsersChange !== 0
+                ? `${data.keyMetrics.totalFreeUsersChange > 0 ? "+" : ""}${
+                    data.keyMetrics.totalFreeUsersChange
+                  } last 7 days`
+                : "No change last 7 days"
+            }
           />
           <AdminStatsCard
-            title="Stripe Balance"
-            value={data.keyMetrics.monthlyRecurringRevenue}
-            icon={TrendingUp}
+            title="Total Plus Users"
+            value={data.keyMetrics.totalPlusUsers}
+            icon={Zap}
             variant="success"
-            formatValue={(value) =>
-              formatCurrency(value, data.keyMetrics.stripeCurrency)
+            subtitle={
+              data.keyMetrics.totalPlusUsersChange !== 0
+                ? `${data.keyMetrics.totalPlusUsersChange > 0 ? "+" : ""}${
+                    data.keyMetrics.totalPlusUsersChange
+                  } last 7 days`
+                : "No change last 7 days"
+            }
+          />
+          <AdminStatsCard
+            title="Total Pro Users"
+            value={data.keyMetrics.totalProUsers}
+            icon={Crown}
+            variant="success"
+            subtitle={
+              data.keyMetrics.totalProUsersChange !== 0
+                ? `${data.keyMetrics.totalProUsersChange > 0 ? "+" : ""}${
+                    data.keyMetrics.totalProUsersChange
+                  } last 7 days`
+                : "No change last 7 days"
             }
           />
         </div>

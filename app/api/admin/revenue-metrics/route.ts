@@ -150,7 +150,7 @@ async function getRevenueData(startDate: Date, endDate: Date) {
   // Calculate ARPU (Average Revenue Per User)
   const averageRevenuePerUser =
     totalActivePaidUsers > 0
-      ? monthlyRecurringRevenue / totalActivePaidUsers
+      ? (monthlyRecurringRevenue / totalActivePaidUsers) * 12
       : 0;
 
   return {
